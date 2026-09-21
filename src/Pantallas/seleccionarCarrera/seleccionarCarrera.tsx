@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import Sidebar from '../../componentes/Sidebar';
-import './seleccionarCarrera.css';
+import './SeleccionarCarrera.css';
 
 const SeleccionarCarrera = () => {
 
