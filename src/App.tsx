@@ -1,7 +1,8 @@
 import { HashRouter, Routes, Route, Link } from 'react-router-dom';
 // Asegúrate de que la ruta de importación coincida con la ubicación real de tu archivo
-import Login from './Pantallas/login/login'; 
-import SeleccionarCarrera from './Pantallas/seleccionarCarrera/seleccionarCarrera'
+import Login from './Pantallas/login/Login'; 
+import SeleccionarCarrera from './Pantallas/seleccionarCarrera/SeleccionarCarrera'
+import DashboardClasificacion from './Pantallas/clasificacion/DashboardClasificacion';
 // Componente temporal que representa tu pantalla principal
 const PantallaInicio = () => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px', fontFamily: 'sans-serif' }}>
@@ -28,6 +29,8 @@ function App() {
         {/* La ruta "/login" carga tu componente Login.jsx */}
         <Route path="/login" element={<Login />} />
         <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
+     
+        <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
       
       </Routes>
     </HashRouter>
