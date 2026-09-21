@@ -1,0 +1,369 @@
+/* Heredamos variables de SeleccionarCarrera.css */
+.dashboard-content {
+  padding: 24px 32px;
+  max-width: 1200px;
+}
+
+/* Cabecera del Dashboard */
+.dashboard-header h1 {
+  font-size: 28px;
+  color: var(--text-dark);
+  margin: 0 0 12px 0;
+  font-weight: 800;
+}
+
+.subtitle-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-gray);
+  font-size: 14px;
+  margin: 0 0 24px 0;
+}
+
+.subtitle-info svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.subtitle-info .dot {
+  margin: 0 4px;
+  opacity: 0.5;
+}
+
+/* Tarjeta del Cronómetro Principal */
+.timer-main-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 24px 32px;
+  margin-bottom: 24px;
+  border-left: 4px solid var(--primary-green);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.timer-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.badge-light-green {
+  background-color: #DCFCE7;
+  color: #166534;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #166534;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.timer-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.timer-display {
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+.btn-large {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Grid de Estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background-color: white;
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.stat-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-gray);
+}
+
+.stat-label svg {
+  width: 16px;
+  height: 16px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.stat-value-small {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background-color: #E5E7EB;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #DBEAFE; /* Azul suave para 0% */
+  border-radius: 4px;
+}
+
+/* Layout 2 Columnas */
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+/* Panel de Participantes */
+.participants-panel, .actions-panel {
+  background-color: white;
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.panel-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.panel-header h2 svg {
+  width: 18px;
+  height: 18px;
+}
+
+.panel-filters {
+  display: flex;
+  gap: 12px;      
+}
+
+/* Tabla de Participantes */
+.table-container {
+  overflow-x: auto;
+  max-height: 350px; 
+  overflow-y: auto;  
+}
+
+.table-container::-webkit-scrollbar {
+  width: 6px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background-color: var(--border-gray);
+  border-radius: 4px;
+}
+
+.participants-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.participants-table th {
+  text-align: left;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-gray);
+  border-bottom: 2px solid #F3F4F6;
+  border-top: 1px solid #F3F4F6;
+  background-color: #F9FAFB;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.participants-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #F3F4F6;
+  font-size: 13px;
+  color: var(--text-dark);
+  vertical-align: middle;
+}
+
+.dorsal-cell {
+  font-size: 15px;
+}
+
+.athlete-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.athlete-name {
+  font-weight: 600;
+}
+
+.athlete-dni {
+  font-size: 11px;
+  color: var(--text-gray);
+}
+
+.badge-gray-solid {
+  background-color: #E5E7EB;
+  color: #374151;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-gray);
+  padding: 32px !important;
+}
+
+/* Panel de Acciones Rápidas */
+.actions-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-gray);
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.primary-action {
+  background-color: var(--primary-green);
+  color: white;
+  border: none;
+  justify-content: space-between;
+}
+
+.primary-action:hover {
+  background-color: #1ea34d;
+}
+
+.primary-action .action-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.primary-action svg {
+  width: 20px;
+  height: 20px;
+}
+
+.action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-text strong {
+  font-size: 13px;
+}
+
+.action-text span {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.secondary-action {
+  background-color: white;
+  border: 1px solid var(--border-gray);
+  color: var(--text-dark);
+}
+
+.secondary-action:hover {
+  background-color: #F9FAFB;
+}
+
+.secondary-action svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-gray);
+}
+
+.secondary-action strong {
+  font-size: 13px;
+  font-weight: 600;
+}
