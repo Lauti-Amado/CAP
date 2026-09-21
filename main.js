@@ -18,6 +18,8 @@ function createWindow() {
 
   // Apunta a Vite
   mainWindow.loadURL('http://localhost:5173');
+
+  mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
