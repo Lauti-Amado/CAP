@@ -41,15 +41,15 @@ const Sidebar = () => {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 21h8M12 17v4M7 4h10l3 5v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9l3-5z"></path></svg>
             Grand Prix
           </a>
-          <a href="#" className="nav-item">
+          <Link to="/entrega-kits" className="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
             Entrega de Kits
-          </a>
+          </Link>
         </div>
 
         <div className="nav-section">
           <span className="section-title">ADMINISTRADOR</span>
-          <Link to="/seleccionar-carrera" className="nav-item">
+          <Link to="/carreras" className="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 4v16M17 4v16M9 4v16M5 4v16"></path></svg>
             Carreras
           </Link>
