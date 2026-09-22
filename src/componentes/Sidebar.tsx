@@ -1,8 +1,8 @@
 import '../Pantallas/seleccionarCarrera/seleccionarCarrera.css';
-import { Link } from 'react-router-dom';
-
+import { Link, useNavigate } from 'react-router-dom';
 
 const Sidebar = () => {
+  const navigate = useNavigate();
 
   return (
     <aside className="sidebar">

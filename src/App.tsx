@@ -1,15 +1,18 @@
-import { HashRouter, Routes, Route, Link } from 'react-router-dom';
-// Asegúrate de que la ruta de importación coincida con la ubicación real de tu archivo
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Login from './Pantallas/login/Login'; 
-import SeleccionarCarrera from './Pantallas/seleccionarCarrera/SeleccionarCarrera'
+import SeleccionarCarrera from './Pantallas/seleccionarCarrera/SeleccionarCarrera';
 import DashboardClasificacion from './Pantallas/clasificacion/DashboardClasificacion';
-// Componente temporal que representa tu pantalla principal
+import BuscarCorredor from './Pantallas/entregaKits/BuscarCorredor';
+import Carreras from './Pantallas/carreras/Carreras';
+import DetalleCarrera from './Pantallas/carreras/DetalleCarrera';
+
+// Componente temporal que representa la pantalla principal
 const PantallaInicio = () => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px', fontFamily: 'sans-serif' }}>
     <h1>Bienvenido al sistema base</h1>
     <p>Elige a dónde quieres ir:</p>
 
-    {/* Este es el enlace que te lleva al Login */}
+    {/* Enlace que lleva al Login */}
     <Link 
       to="/login" 
       style={{ padding: '10px 20px', backgroundColor: '#006F3D', color: 'white', textDecoration: 'none', borderRadius: '6px' }}
@@ -21,19 +24,20 @@ const PantallaInicio = () => (
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
-        {/* La ruta "/" es lo primero que carga al abrir la app */}
+        {/* Rutas Base */}
         <Route path="/" element={<PantallaInicio />} />
-
-        {/* La ruta "/login" carga tu componente Login.jsx */}
         <Route path="/login" element={<Login />} />
+        
+        {/* Rutas de Funcionalidades */}
         <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
-     
         <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
-      
+        <Route path="/carreras" element={<Carreras />} />
+        <Route path="/carreras/:id" element={<DetalleCarrera />} />
+        <Route path="/entrega-kits" element={<BuscarCorredor />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
