@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
-import Login from './Pantallas/login/login' 
-import SeleccionarCarrera from './Pantallas/seleccionarCarrera/seleccionarCarrera'
-import BuscarCorredor from './Pantallas/entregaKits/BuscarCorredor'
-import Carreras from './Pantallas/carreras/Carreras'
-import DetalleCarrera from './Pantallas/carreras/DetalleCarrera'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import Login from './Pantallas/login/Login'; 
+import SeleccionarCarrera from './Pantallas/seleccionarCarrera/SeleccionarCarrera';
+import DashboardClasificacion from './Pantallas/clasificacion/DashboardClasificacion';
+import BuscarCorredor from './Pantallas/entregaKits/BuscarCorredor';
+import Carreras from './Pantallas/carreras/Carreras';
+import DetalleCarrera from './Pantallas/carreras/DetalleCarrera';
 
 // Componente temporal que representa la pantalla principal
 const PantallaInicio = () => (
@@ -25,15 +26,19 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rutas Base */}
         <Route path="/" element={<PantallaInicio />} />
         <Route path="/login" element={<Login />} />
+        
+        {/* Rutas de Funcionalidades */}
         <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
+        <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
         <Route path="/carreras" element={<Carreras />} />
         <Route path="/carreras/:id" element={<DetalleCarrera />} />
         <Route path="/entrega-kits" element={<BuscarCorredor />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

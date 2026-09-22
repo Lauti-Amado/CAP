@@ -1,9 +1,9 @@
 import '../Pantallas/seleccionarCarrera/seleccionarCarrera.css';
-import { useNavigate } from 'react-router-dom';
-
+import { Link, useNavigate } from 'react-router-dom';
 
 const Sidebar = () => {
   const navigate = useNavigate();
+
   return (
     <aside className="sidebar">
       {/* Header del Sidebar */}
@@ -29,10 +29,10 @@ const Sidebar = () => {
 
         <div className="nav-section">
           <span className="section-title">CLASIFICADOR</span>
-          <a href="#" className="nav-item">
+          <Link to="/dashboard-clasificacion" className="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             Clasificación
-          </a>
+          </Link>
           <a href="#" className="nav-item active">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
             Resultados
