@@ -33,7 +33,7 @@ const Sidebar = () => {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             Clasificación
           </Link>
-          <a href="#" className="nav-item active">
+          <a href="#" className="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
             Resultados
           </a>
@@ -49,10 +49,10 @@ const Sidebar = () => {
 
         <div className="nav-section">
           <span className="section-title">ADMINISTRADOR</span>
-          <a href="#" className="nav-item">
+          <Link to="/seleccionar-carrera" className="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 4v16M17 4v16M9 4v16M5 4v16"></path></svg>
             Carreras
-          </a>
+          </Link>
           <a href="#" className="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             Corredores
