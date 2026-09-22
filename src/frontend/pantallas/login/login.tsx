@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/logoCAP.png'; // Asegúrate de que la ruta de importación coincida con la ubicación real de tu archivo
+import logo from '../../../assets/logoCAP.png'; // Asegúrate de que la ruta de importación coincida con la ubicación real de tu archivo
 
 const Login = () => {
   const [email, setEmail] = useState('');
