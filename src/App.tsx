@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import Login from './Pantallas/login/Login'; 
-import SeleccionarCarrera from './Pantallas/seleccionarCarrera/SeleccionarCarrera';
-import DashboardClasificacion from './Pantallas/clasificacion/DashboardClasificacion';
-import BuscarCorredor from './Pantallas/entregaKits/BuscarCorredor';
-import Carreras from './Pantallas/carreras/Carreras';
-import DetalleCarrera from './Pantallas/carreras/DetalleCarrera';
+import Login from './frontend/pantallas/login/login'; 
+import SeleccionarCarrera from './frontend/pantallas/seleccionarCarrera/seleccionarCarrera';
+import DashboardClasificacion from './frontend/pantallas/clasificacion/DashboardClasificacion';
+import BuscarCorredor from './frontend/pantallas/entregaKits/BuscarCorredor';
+import Carreras from './frontend/pantallas/carreras/Carreras';
+import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
 
 // Componente temporal que representa la pantalla principal
 const PantallaInicio = () => (
