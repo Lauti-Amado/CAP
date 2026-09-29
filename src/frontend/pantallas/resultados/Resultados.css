@@ -1,0 +1,467 @@
+/* Contenedor principal de la pantalla de resultados */
+.resultados-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #F8FAFC;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Topbar interna */
+.resultados-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: white;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.breadcrumb .separator {
+  margin: 0 6px;
+}
+
+.breadcrumb strong {
+  color: #111827;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon-btn, .profile-btn {
+  background: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4B5563;
+  transition: background 0.2s;
+}
+
+.icon-btn:hover, .profile-btn:hover {
+  background-color: #F3F4F6;
+}
+
+.icon-btn svg, .profile-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Contenido de la página */
+.resultados-content {
+  padding: 32px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Cabecera principal */
+.resultados-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.title-with-badge h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.badge-gray {
+  background-color: #F3F4F6;
+  color: #4B5563;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot-gray {
+  width: 6px;
+  height: 6px;
+  background-color: #9CA3AF;
+  border-radius: 50%;
+}
+
+.subtitle-race {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* Botones de exportación */
+.export-buttons-group {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-export {
+  background-color: white;
+  border: 1px solid #D1D5DB;
+  color: #374151;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export:hover {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+.btn-export svg {
+  width: 16px;
+  height: 16px;
+  color: #16A34A; /* Tonalidad verde en el icono */
+}
+
+/* Tarjeta de Filtros */
+.filters-card {
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.filters-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.filter-group select {
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  cursor: pointer;
+}
+
+.filter-group select:focus {
+  border-color: #16A34A;
+}
+
+.search-box-full {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box-full svg {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: #9CA3AF;
+}
+
+.search-box-full input {
+  width: 100%;
+  padding: 10px 14px 10px 42px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: white;
+}
+
+.search-box-full input:focus {
+  border-color: #16A34A;
+}
+
+/* Tabla de Resultados */
+.table-wrapper-results {
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table th {
+  background-color: #F8FAFC;
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  border-bottom: 2px solid #E2E8F0;
+  letter-spacing: 0.5px;
+}
+
+.results-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #1E293B;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+/* Estilo para filas de podio (Top 3) */
+.podium-row {
+  background-color: #F0FDF4; /* Verde muy suave */
+}
+
+.puesto-cell {
+  font-size: 15px;
+}
+
+.puesto-1 { color: #16A34A; }
+.puesto-2 { color: #0D9488; }
+.puesto-3 { color: #CA8A04; }
+
+.runner-cell-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-initial {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.avatar-podium {
+  background-color: #15803D;
+}
+
+.avatar-normal {
+  background-color: #64748B;
+}
+
+.runner-name {
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.dni-text {
+  color: #475569;
+}
+
+.badge-category {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-cat-green {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.badge-cat-gray {
+  background-color: #F1F5F9;
+  color: #475569;
+}
+
+.time-text {
+  color: #334155;
+}
+
+.time-official {
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.empty-results {
+  text-align: center;
+  color: #64748B;
+  padding: 32px !important;
+}
+
+/* Paginación */
+.pagination-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: white;
+  border-top: 1px solid #E2E8F0;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #64748B;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.page-num-btn, .page-nav-btn {
+  background: none;
+  border: 1px solid #CBD5E1;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-num-btn.active {
+  background-color: #16A34A;
+  border-color: #16A34A;
+  color: white;
+}
+
+.page-num-btn:hover:not(.active), .page-nav-btn:hover {
+  background-color: #F1F5F9;
+}
+
+.page-nav-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Banner inferior de Certificados */
+.certificates-banner-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #EEF2FF, #E0E7FF);
+  border: 1px solid #C7D2FE;
+  border-radius: 10px;
+  padding: 24px 32px;
+}
+
+.cert-info-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cert-icon-container {
+  width: 48px;
+  height: 48px;
+  background-color: #16A34A;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cert-icon-container svg {
+  width: 24px;
+  height: 24px;
+}
+
+.cert-text-content h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 4px 0;
+}
+
+.cert-text-content p {
+  font-size: 13px;
+  color: #475569;
+  margin: 0;
+  max-width: 600px;
+}
+
+.btn-cert-action {
+  background-color: #16A34A;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-cert-action:hover {
+  background-color: #15803D;
+}
+
+.btn-cert-action svg {
+  width: 16px;
+  height: 16px;
+}
