@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import './BuscarCorredor.css'
-import Sidebar from '../../componentes/Sidebar'
 
 type CarreraActiva = {
   id: number
@@ -112,7 +111,6 @@ function BuscarCorredor() {
         </section>
       )}
 
-      <Sidebar />
     </main>
   )
 }
