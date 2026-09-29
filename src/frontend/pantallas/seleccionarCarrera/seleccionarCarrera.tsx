@@ -1,5 +1,4 @@
 import {useState} from 'react';
-import Sidebar from '../../componentes/Sidebar';
 import './SeleccionarCarrera.css';
 
 const SeleccionarCarrera = () => {
@@ -10,7 +9,7 @@ const SeleccionarCarrera = () => {
 
   return (
     <div className="layout-container">
-      <Sidebar />
+      
       
       <main className="main-content">
         {/* Topbar superior */}

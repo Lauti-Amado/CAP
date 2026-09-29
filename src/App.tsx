@@ -1,43 +1,34 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+﻿import { HashRouter, Routes, Route } from 'react-router-dom';
+import MainLayout from './frontend/layout/MainLayout';
 import Login from './frontend/pantallas/login/login'; 
 import SeleccionarCarrera from './frontend/pantallas/seleccionarCarrera/seleccionarCarrera';
 import DashboardClasificacion from './frontend/pantallas/clasificacion/DashboardClasificacion';
+import GrandPrix from './frontend/pantallas/grandPrix/GrandPrix';
+import Certificates from './frontend/pantallas/certificados/Certificates';
 import BuscarCorredor from './frontend/pantallas/entregaKits/BuscarCorredor';
-import Carreras from './frontend/pantallas/carreras/Carreras';
-import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
-
-// Componente temporal que representa la pantalla principal
-const PantallaInicio = () => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px', fontFamily: 'sans-serif' }}>
-    <h1>Bienvenido al sistema base</h1>
-    <p>Elige a dónde quieres ir:</p>
-
-    {/* Enlace que lleva al Login */}
-    <Link 
-      to="/login" 
-      style={{ padding: '10px 20px', backgroundColor: '#006F3D', color: 'white', textDecoration: 'none', borderRadius: '6px' }}
-    >
-      Ir a Iniciar Sesión
-    </Link>
-  </div>
-);
+import Carreras from './frontend/pantallas/carreras/Carreras'; ''
+//import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
-        {/* Rutas Base */}
-        <Route path="/" element={<PantallaInicio />} />
-        <Route path="/login" element={<Login />} />
-        
-        {/* Rutas de Funcionalidades */}
-        <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
-        <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
-        <Route path="/carreras" element={<Carreras />} />
-        <Route path="/carreras/:id" element={<DetalleCarrera />} />
-        <Route path="/entrega-kits" element={<BuscarCorredor />} />
+        {/* Ruta pública sin Sidebar */}
+        <Route path="/" element={<Login />} />
+
+        {/* Rutas principales que comparten el Layout con el Sidebar */}
+        <Route element={<MainLayout />}>
+         {/*<Route path="/" element={<dashboardData data={dashboardData} />} />*/}
+          <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
+          <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
+          <Route path="/carreras" element={<Carreras />} />
+          {/*Agregar pantalla de resultados */}
+          <Route path="/entrega-kits" element={<BuscarCorredor />} />
+          <Route path="/grand-prix" element={<GrandPrix />} />
+          <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
+        </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
