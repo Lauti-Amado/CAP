@@ -7,6 +7,8 @@ import GrandPrix from './frontend/pantallas/grandPrix/GrandPrix';
 import Certificates from './frontend/pantallas/certificados/Certificates';
 import BuscarCorredor from './frontend/pantallas/entregaKits/BuscarCorredor';
 import Carreras from './frontend/pantallas/carreras/Carreras'; ''
+import Resultados from './frontend/pantallas/resultados/Resultados';
+import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
 //import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
@@ -23,8 +25,10 @@ function App() {
           <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
           <Route path="/carreras" element={<Carreras />} />
           {/*Agregar pantalla de resultados */}
+          <Route path="/resultados" element={<Resultados />} />
           <Route path="/entrega-kits" element={<BuscarCorredor />} />
           <Route path="/grand-prix" element={<GrandPrix />} />
+          <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
         </Route>
       </Routes>
