@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
 import './DashboardClasificacion.css'
+import { useNavigate } from 'react-router-dom';
 
 const DashboardClasificacion = () => {
  
+  const navigate = useNavigate();
 
   // Estados para los filtros y búsqueda
   const [busqueda, setBusqueda] = useState('');
@@ -11,7 +13,7 @@ const DashboardClasificacion = () => {
 
   // Funciones preparadas para la navegación futura
   const handleIniciarCarrera = () => console.log("Lógica para iniciar el cronómetro");
-  const handleVerClasificacionTiempoReal = () =>  console.log("Lógica ir a clasificacion en tiempo real");
+  const handleVerClasificacionTiempoReal = () => {navigate('/clasificacion-tiempo-real')}; ;
   const handleVerParticipantes = () =>  console.log("Lógica para ver participantes");
   const handleVerClasificacionCompleta = () =>  console.log("Lógica para ver clasificacion completa");
 
