@@ -18,7 +18,7 @@ import '../../App.css';
 const navigation = [
   {
     label: 'HOME',
-    items: [{ label: 'Dashboard', icon: LayoutDashboard, path: '/' }],
+    items: [{ label: 'Dashboard (arreglar)', icon: LayoutDashboard, path: '/' }],
   },
   {
     label: 'CLASIFICADOR',
@@ -33,9 +33,8 @@ const navigation = [
     label: 'ADMINISTRADOR',
     items: [
       { label: 'Carreras', icon: Footprints, path: '/carreras' },
-      { label: 'Corredores', icon: UsersRound, path: '/corredores' },
       { label: 'Certificados', icon: BadgeCheck, path: '/certificados' },
-      { label: 'Administración', icon: Settings, path: '/admin' },
+      { label: 'Administración (no hecha)', icon: Settings, path: '/admin' },
     ],
   },
 ];
@@ -80,7 +79,7 @@ export default function MainLayout() {
         <div className="sidebar-footer">
           <button className="logout-button" type="button" onClick={() => navigate('/login')}>
             <LogOut size={17} strokeWidth={2} aria-hidden="true" />
-            <span>Cerrar Sesión</span>
+            <span>Cerrar Sesión (arreglar)</span>
           </button>
         </div>
       </aside>
