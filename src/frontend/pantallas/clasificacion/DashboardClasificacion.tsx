@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../componentes/Sidebar';
+
 import './DashboardClasificacion.css'
 
 const DashboardClasificacion = () => {
-  const navigate = useNavigate();
+ 
 
   // Estados para los filtros y búsqueda
   const [busqueda, setBusqueda] = useState('');
@@ -34,7 +33,6 @@ const DashboardClasificacion = () => {
   return (
     <div className="layout-container">
       {/* Asumimos que tu Sidebar ya maneja el estado activo de la pestaña "Clasificación" */}
-      <Sidebar />
       
       <main className="main-content">
         {/* Topbar superior */}
