@@ -9,6 +9,7 @@ import BuscarCorredor from './frontend/pantallas/entregaKits/BuscarCorredor';
 import Carreras from './frontend/pantallas/carreras/Carreras'; ''
 import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
+import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
 //import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
           <Route path="/grand-prix" element={<GrandPrix />} />
           <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
+          <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
         </Route>
       </Routes>
     </HashRouter>
