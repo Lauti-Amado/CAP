@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Resultados.css';
 import { Tabla, type Columna } from '../../componentes/carreras/tabla/Tabla';
 
@@ -20,8 +20,12 @@ const Resultados: React.FC = () => {
   const [categoria, setCategoria] = useState('General');
   const [busqueda, setBusqueda] = useState('');
   const [paginaActual, setPaginaActual] = useState(1);
-
-  // Datos mock de atletas finalizados
+  const [datosTabla, setDatosTabla] = useState<ResultadoAtleta[]>([]);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [totalRegistros, setTotalRegistros] = useState(0);
+  const elementosPorPagina = 50;
+  
+  // Datos mock de atletas finalizados (simulando una base de datos)
   const resultadosMock: ResultadoAtleta[] = [
     { id: 1, puesto: 1, dorsal: '1042', nombre: 'Juan Pérez', dni: '32.456.789', categoria: '30-39 M', tiempoNeto: '02:15:34', tiempoOficial: '02:15:35' },
     { id: 2, puesto: 2, dorsal: '2105', nombre: 'María González', dni: '28.123.456', categoria: '40-49 F', tiempoNeto: '02:18:12', tiempoOficial: '02:18:15' },
@@ -29,6 +33,35 @@ const Resultados: React.FC = () => {
     { id: 4, puesto: 4, dorsal: '3012', nombre: 'Laura Martínez', dni: '35.654.321', categoria: '30-39 F', tiempoNeto: '02:25:40', tiempoOficial: '02:25:45' },
     { id: 5, puesto: 5, dorsal: '1508', nombre: 'Diego Fernández', dni: '25.333.111', categoria: '50-59 M', tiempoNeto: '02:28:15', tiempoOficial: '02:28:22' },
   ];
+
+  // Simulación de consulta a base de datos / API con paginación - MODIFICAR CUANDO SE HAGA LA CONSULTA A LA BASE DE DATOS REAL
+  useEffect(() => {
+    // 1. Filtramos el mock (en tu backend real, esto lo hace SQL / Prisma con LIMIT y OFFSET)
+    const filtrados = resultadosMock.filter(atleta => {
+      const textoBusqueda = busqueda.toLowerCase().trim();
+      return (
+        atleta.nombre.toLowerCase().includes(textoBusqueda) || 
+        atleta.dorsal.includes(textoBusqueda) || 
+        atleta.dni.includes(textoBusqueda)
+      );
+    });
+
+    setTotalRegistros(filtrados.length);
+    const paginasTotalesCalculadas = Math.ceil(filtrados.length / elementosPorPagina) || 1;
+    setTotalPaginas(paginasTotalesCalculadas);
+
+    // 2. Recortamos los datos para la página actual (simulando el paginado del backend)
+    const indiceUltimo = paginaActual * elementosPorPagina;
+    const indicePrimero = indiceUltimo - elementosPorPagina;
+    const datosPagina = filtrados.slice(indicePrimero, indiceUltimo);
+
+    setDatosTabla(datosPagina);
+  }, [busqueda, paginaActual, distancia, sexo, categoria]);
+
+  // Cálculos para el texto informativo inferior
+  const primerItem = totalRegistros > 0 ? (paginaActual - 1) * elementosPorPagina + 1 : 0;
+  const ultimoItem = Math.min(paginaActual * elementosPorPagina, totalRegistros);
+  const textoPaginacion = `Mostrando ${primerItem} - ${ultimoItem} de ${totalRegistros} resultados`;
 
   const columnasResultados: Columna<ResultadoAtleta>[] = [
     { 
@@ -92,16 +125,6 @@ const Resultados: React.FC = () => {
     },
   ];
 
-  // Lógica de filtrado dinámico
-  const resultadosFiltrados = resultadosMock.filter(atleta => {
-    const textoBusqueda = busqueda.toLowerCase().trim();
-    const coincideBusqueda = 
-      atleta.nombre.toLowerCase().includes(textoBusqueda) || 
-      atleta.dorsal.includes(textoBusqueda) || 
-      atleta.dni.includes(textoBusqueda);
-    return coincideBusqueda;
-  });
-
   // Funciones para exportación (mock)
   const handleExportPDF = () => console.log('Exportando a PDF...');
   const handleExportExcel = () => console.log('Exportando a Excel...');
@@ -134,18 +157,9 @@ const Resultados: React.FC = () => {
             <p className="subtitle-race">Maratón de la Ciudad 2024 - 42K / 21K / 10K</p>
           </div>
           <div className="export-buttons-group">
-            <button className="btn-export" onClick={handleExportPDF}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              PDF
-            </button>
-            <button className="btn-export" onClick={handleExportExcel}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
-              Excel
-            </button>
-            <button className="btn-export" onClick={handleExportCSV}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-              CSV
-            </button>
+            <button className="btn-export" onClick={handleExportPDF}>PDF</button>
+            <button className="btn-export" onClick={handleExportExcel}>Excel</button>
+            <button className="btn-export" onClick={handleExportCSV}>CSV</button>
           </div>
         </div>
 
@@ -155,7 +169,7 @@ const Resultados: React.FC = () => {
           <div className="filters-grid">
             <div className="filter-group">
               <label>Distancia</label>
-              <select value={distancia} onChange={(e) => setDistancia(e.target.value)}>
+              <select value={distancia} onChange={(e) => { setDistancia(e.target.value); setPaginaActual(1); }}>
                 <option value="42K - Maratón">42K - Maratón</option>
                 <option value="21K - Media Maratón">21K - Media Maratón</option>
                 <option value="10K">10K</option>
@@ -163,7 +177,7 @@ const Resultados: React.FC = () => {
             </div>
             <div className="filter-group">
               <label>Sexo</label>
-              <select value={sexo} onChange={(e) => setSexo(e.target.value)}>
+              <select value={sexo} onChange={(e) => { setSexo(e.target.value); setPaginaActual(1); }}>
                 <option value="Todos">Todos</option>
                 <option value="Masculino">Masculino</option>
                 <option value="Femenino">Femenino</option>
@@ -171,7 +185,7 @@ const Resultados: React.FC = () => {
             </div>
             <div className="filter-group">
               <label>Categoría</label>
-              <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+              <select value={categoria} onChange={(e) => { setCategoria(e.target.value); setPaginaActual(1); }}>
                 <option value="General">General</option>
                 <option value="18-29">18-29</option>
                 <option value="30-39">30-39</option>
@@ -186,30 +200,25 @@ const Resultados: React.FC = () => {
               type="text" 
               placeholder="Buscar corredor o dorsal..." 
               value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={(e) => {
+                setBusqueda(e.target.value);
+                setPaginaActual(1); // ¡Fundamental: volver a la página 1 al buscar!
+              }}
             />
           </div>
         </div>
 
-        {/* Tabla de Resultados */}
+        {/* Tabla de Resultados (con paginación integrada del componente) */}
         <div className="table-wrapper-results">
-          <Tabla
-            columnas={columnasResultados}
-            datos={resultadosFiltrados}
-            mensajeVacio="No se encontraron resultados para los filtros aplicados."
+          <Tabla 
+            columnas={columnasResultados} 
+            datos={datosTabla} 
+            paginaActual={paginaActual}
+            totalPaginas={totalPaginas}
+            onCambiarPagina={(nuevaPag) => setPaginaActual(nuevaPag)}
+            textoPaginacion={textoPaginacion}
+            mensajeVacio="No se encontraron corredores."
           />
-
-          {/* Paginación de la tabla */}
-          <div className="pagination-footer">
-            <span className="pagination-info">Mostrando 1 - 50 de 1245 resultados</span>
-            <div className="pagination-controls">
-              <button className="page-nav-btn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-              <button className={`page-num-btn ${paginaActual === 1 ? 'active' : ''}`} onClick={() => setPaginaActual(1)}>1</button>
-              <button className={`page-num-btn ${paginaActual === 2 ? 'active' : ''}`} onClick={() => setPaginaActual(2)}>2</button>
-              <button className={`page-num-btn ${paginaActual === 3 ? 'active' : ''}`} onClick={() => setPaginaActual(3)}>3</button>
-              <button className="page-nav-btn" onClick={() => setPaginaActual(p => p + 1)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-            </div>
-          </div>
         </div>
 
         {/* Tarjeta inferior: Certificados de Finisher */}
@@ -224,7 +233,6 @@ const Resultados: React.FC = () => {
             </div>
           </div>
           <button className="btn btn-primary btn-cert-action" onClick={handleEnviarCertificados}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             Enviar Certificados
           </button>
         </div>
