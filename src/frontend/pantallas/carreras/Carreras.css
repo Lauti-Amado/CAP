@@ -96,9 +96,49 @@
 
 .carreras-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.carreras-paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-bottom: 10px;
+}
+
+.carreras-paginacion__pagina,
+.carreras-paginacion__flecha {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d5ddd7;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.carreras-paginacion__pagina:hover,
+.carreras-paginacion__flecha:hover:not(:disabled) {
+  border-color: #15803d;
+  color: #15803d;
+}
+
+.carreras-paginacion__pagina.activa {
+  background-color: #087f3d;
+  border-color: #087f3d;
+  color: #ffffff;
+}
+
+.carreras-paginacion__flecha:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1100px) {
