@@ -14,11 +14,16 @@
   z-index: 1000;
 }
 
+
+/* =========================
+   MODAL
+   ========================= */
+
 .corredor-no-encontrado {
   width: 100%;
-  max-width: 360px;
+  max-width: 330px;
 
-  padding: 28px 24px;
+  padding: 26px 24px 22px;
 
   box-sizing: border-box;
 
@@ -27,6 +32,7 @@
   align-items: center;
 
   background-color: #ffffff;
+
   border-radius: 8px;
 
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
@@ -40,22 +46,20 @@
    ========================= */
 
 .corredor-no-encontrado__icono {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
+
+  margin-bottom: 14px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin-bottom: 14px;
-
   border-radius: 50%;
 
-  background-color: #fff4e5;
-  color: #d97706;
+  background-color: #fff1f1;
 
-  font-size: 20px;
-  font-weight: 700;
+  color: #c62828;
 }
 
 
@@ -78,15 +82,70 @@
    DESCRIPCION
    ========================= */
 
-.corredor-no-encontrado p {
+.corredor-no-encontrado > p {
   max-width: 280px;
 
-  margin: 8px 0 22px;
+  margin: 9px 0 18px;
 
   font-size: 10px;
   line-height: 1.5;
 
-  color: #6b7280;
+  color: #59635e;
+}
+
+.corredor-no-encontrado > p strong {
+  font-weight: 700;
+
+  color: #172033;
+}
+
+
+/* =========================
+   DATOS
+   ========================= */
+
+.corredor-no-encontrado__datos {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  border-radius: 6px;
+
+  background-color: #eef1ff;
+}
+
+.corredor-no-encontrado__datos > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  text-align: left;
+}
+
+.corredor-no-encontrado__datos span {
+  font-size: 8px;
+
+  color: #59635e;
+}
+
+.corredor-no-encontrado__datos strong {
+  font-size: 8px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+.corredor-no-encontrado__datos > div:last-child strong {
+  color: #c62828;
 }
 
 
@@ -97,29 +156,41 @@
 .corredor-no-encontrado__acciones {
   width: 100%;
 
+  margin-top: 18px;
+
   display: flex;
   flex-direction: column;
+
   gap: 8px;
 }
 
 .corredor-no-encontrado__acciones button {
   width: 100%;
 
-  padding: 9px 12px;
+  min-height: 34px;
 
-  border: none;
+  padding: 8px 12px;
+
   border-radius: 6px;
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
 
   cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 
-/* Inscribir */
+/* =========================
+   INSCRIBIR
+   ========================= */
 
 .corredor-no-encontrado__acciones button:first-child {
+  border: 1px solid #087f3f;
+
   background-color: #087f3f;
   color: #ffffff;
 }
@@ -129,13 +200,32 @@
 }
 
 
-/* Volver */
+/* =========================
+   INGRESAR OTRO DNI
+   ========================= */
 
 .corredor-no-encontrado__acciones button:last-child {
-  background-color: #f1f3f2;
+  border: 1px solid #bfc8c2;
+
+  background-color: #ffffff;
   color: #172033;
 }
 
 .corredor-no-encontrado__acciones button:last-child:hover {
-  background-color: #e5e8e6;
+  background-color: #f5f7f6;
+}
+
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 500px) {
+  .corredor-no-encontrado__overlay {
+    padding: 16px;
+  }
+
+  .corredor-no-encontrado {
+    max-width: 100%;
+  }
 }
