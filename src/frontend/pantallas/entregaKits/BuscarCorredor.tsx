@@ -1,52 +1,76 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Search, PackageCheck, Flag } from 'lucide-react'
 import './BuscarCorredor.css'
+import DetalleCorredor from './DetalleCorredor'
+import CorredorNoEncontrado from './CorredorNoEncontrado'
+import type { CorredorDetalle } from '../../types/entregaKits'
+//Borrar lo siguiente para sacar MOCK
+import {
+  carreraActivaMock,
+  corredoresMock,
+  ultimasEntregasMock,
+} from './entregaKitsMock'
 
-type CarreraActiva = {
-  id: number
-  nombre: string
-  edicion: number
-}
-
-type UltimaEntrega = {
-  id: number
-  nombreCorredor: string
-  numeroKit: number
-  distancia: string
-}
-
-type ResultadoBusqueda = 'encontrado' | 'no-encontrado' | null
 
 function BuscarCorredor() {
   const [dni, setDni] = useState('')
 
   const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null)
 
-  const [resultadoBusqueda, setResultadoBusqueda] = useState<ResultadoBusqueda>(null)
+  const [mostrarNoEncontrado, setMostrarNoEncontrado] =
+  useState(false)
 
-  const [carreraActiva] = useState<CarreraActiva | null>(null)
+  const carreraActiva = carreraActivaMock
+  const ultimasEntregas = ultimasEntregasMock
 
-  const [ultimasEntregas] = useState<UltimaEntrega[]>([])
+  const navigate = useNavigate()
 
   const buscarCorredor = () => {
-    if (dni.trim() === '') {
-      setErrorBusqueda('Por favor, ingrese un DNI válido.')
-      return
-    }
-    setErrorBusqueda(null)
-    // Aquí puedes agregar la lógica para buscar al corredor por DNI
+     const dniIngresado = dni.trim()
+      if (dniIngresado === '') {
+        setErrorBusqueda('Por favor, ingrese un DNI válido.')
+        return
+      }
+      setErrorBusqueda(null)
+      //mock de búsqueda de corredor por DNI
+      const corredor: CorredorDetalle | undefined = corredoresMock.find(
+        (corredor) => corredor.dni === dniIngresado
+      )
+      //borrar hasta aca para sacar MOCK
+      //Luego quedaria:
+      //GET /api/corredores/{dni}
+      if (corredor) {
+        navigate(`/entrega-kits/corredor/${corredor.dni}`)
+        return
+      }
+
+      setMostrarNoEncontrado(true)
   }
 
   return (
     <main className="buscar-corredor">
 
       <section className="buscar-corredor__cabecera">
+        <div className="buscar-corredor__carrera-icono">
+          <Flag size={20} />
+        </div>
         <div>
           {carreraActiva && (
             <>
+            <div className="buscar-corredor__carrera-nombre">
               <span>
-                {carreraActiva.nombre}
+                {carreraActiva.nombre} 
               </span>
+               <span>
+                {carreraActiva.distancias.join(' / ')}
+               </span>
 
+              <span className="buscar-corredor__estado">
+                <span>●</span>
+                {carreraActiva.estado}
+              </span>
+            </div>
               <small>
                 Edición {carreraActiva.edicion}
               </small>
@@ -62,7 +86,7 @@ function BuscarCorredor() {
       <section className="buscar-corredor__contenido">
 
         <div className="buscar-corredor__icono">
-          ♧
+          <PackageCheck size={24} />
         </div>
 
         <h1>Buscar corredor</h1>
@@ -80,8 +104,7 @@ function BuscarCorredor() {
           />
 
           <button type="button"
-            onClick={buscarCorredor}>
-            Buscar
+            onClick={buscarCorredor}> <Search size={18} />
           </button>
         </div>
         {errorBusqueda && (
@@ -90,6 +113,18 @@ function BuscarCorredor() {
           </p>
         )}
       </section>
+      {mostrarNoEncontrado && (
+        <CorredorNoEncontrado
+          dni={dni}
+          onInscribir={() => {
+            console.log('Ir a inscripción presencial')
+          }}
+          onVolver={() => {
+            setMostrarNoEncontrado(false)
+            setDni('')
+          }}
+        />
+      )}
 
       {ultimasEntregas.length > 0 && (
         <section className="buscar-corredor__ultimas">
