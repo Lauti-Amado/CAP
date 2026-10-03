@@ -6,7 +6,8 @@ import DashboardClasificacion from './frontend/pantallas/clasificacion/Dashboard
 import GrandPrix from './frontend/pantallas/grandPrix/GrandPrix';
 import Certificates from './frontend/pantallas/certificados/Certificates';
 import BuscarCorredor from './frontend/pantallas/entregaKits/BuscarCorredor';
-import Carreras from './frontend/pantallas/carreras/Carreras'; ''
+import Carreras from './frontend/pantallas/carreras/Carreras';
+import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
 import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
 import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
@@ -25,12 +26,19 @@ function App() {
           <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
           <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
           <Route path="/carreras" element={<Carreras />} />
-          {/*Agregar pantalla de resultados */}
+          <Route path="/carreras/:id" element={<DetalleCarrera />} />
           <Route path="/resultados" element={<Resultados />} />
           <Route path="/entrega-kits" element={<BuscarCorredor />} />
           <Route path="/grand-prix" element={<GrandPrix />} />
           <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
+          {/* Dashboard de clasificación de una carrera específica */}
+          {/* 
+          <Route
+            path="/dashboard-clasificacion-modificar/:id"
+            element={<DashboardClasificacionModificar />}
+          />
+          */}
           <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
         </Route>
       </Routes>

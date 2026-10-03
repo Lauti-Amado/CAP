@@ -1,36 +1,17 @@
 import './DetalleCarrera.css'
 import { useEffect, useState } from 'react'
-import './DetalleCarrera.css'
+import { useParams, useNavigate } from 'react-router-dom'
+import type { Carrera } from '../../types/carrera'
+import {
+  UsersRound,
+  PackageCheck,
+  Timer,
+} from 'lucide-react'
+//BORRAR DESPUES ES MOCK
+import { carrerasDetalleMock } from './detalleCarreraMock'
 
-type Distancia = {
-  kilometraje: number
-  tipoDistancia: string
-}
-
-type DistanciaCarrera = {
-  id: number
-  precioDistancia: number
-  distancia: Distancia
-}
-
-type CarreraDetalle = {
-  id: number
-  nombre: string
-  estado: string
-  cupoMax: number
-  fechaHora: string
-  imagenUrl: string
-  descripcion: string
-
-  lugar: {
-    nombre: string
-    localidad: {
-      nombre: string
-    }
-  }
-
-  distanciaCarrera: DistanciaCarrera[]
-
+//este tipo extiende a Carrera para incluir los datos calculados
+type CarreraDetalle = Carrera & {
   // Estos datos vendrán calculados desde el backend
   cantidadInscriptos: number
   cantidadKitsEntregados: number
@@ -41,11 +22,33 @@ function DetalleCarrera() {
   const [carrera, setCarrera] = useState<CarreraDetalle | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  
   useEffect(() => {
     const obtenerCarrera = async () => {
       try {
-        // Acá después irá el GET de una carrera por ID.
+         if (!id) {
+          throw new Error('No se recibió el ID de la carrera')
+        }
+      //BORRAR DESPUES ES MOCK
+      const carreraMock = carrerasDetalleMock.find((c) => c.id === Number(id))
+      if (carreraMock) {
+        setCarrera(carreraMock)
+        setError(null)
+      } else {
+        throw new Error('Carrera no encontrada')
+      }
+      // Cuando esté definido el endpoint del backend:
+      // const respuesta = await fetch(`/api/carreras/${id}`)
+
+      // if (!respuesta.ok) {
+      //   throw new Error('No se pudo obtener la carrera')
+      // }
+
+      // const datos = await respuesta.json()
+      // setCarrera(datos)
+        setError(null)
       } catch (error) {
         console.error(error)
         setError('No se pudo cargar la carrera')
@@ -55,7 +58,7 @@ function DetalleCarrera() {
     }
 
     obtenerCarrera()
-  }, [])
+  }, [id])
 
   if (cargando) {
     return <p>Cargando carrera...</p>
@@ -85,6 +88,7 @@ function DetalleCarrera() {
       <button
         type="button"
         className="detalle-carrera__volver"
+        onClick={() => navigate('/carreras')}
       >
         ← Volver al listado de carreras
       </button>
@@ -108,6 +112,7 @@ function DetalleCarrera() {
           <button
             type="button"
             className="detalle-carrera__clasificacion"
+            onClick={() => navigate(`/dashboard-clasificacion-modificar/${id}`)}
           >
             MODIFICAR
             <br />
@@ -190,17 +195,39 @@ function DetalleCarrera() {
           <section className="detalle-carrera__estadisticas">
 
             <article>
-              <span>INSCRIPTOS<br />TOTALES</span>
-              <strong>{carrera.cantidadInscriptos}</strong>
+              <div className="detalle-carrera__estadistica-header">
+                <span>
+                  INSCRIPTOS
+                  <br />
+                  TOTALES
+                </span>
+
+                <UsersRound size={18} />
+              </div>
+
+              <strong>{carrera.cantidadInscriptos}</strong>            
+            </article>
+            <article>
+              <div className="detalle-carrera__estadistica-header">
+                <span>
+                  KITS
+                  <br />
+                  ENTREGADOS
+                </span>
+
+                <PackageCheck size={18} />
+              </div>
+
+              <strong>{carrera.cantidadKitsEntregados}</strong>            
             </article>
 
             <article>
-              <span>KITS<br />ENTREGADOS</span>
-              <strong>{carrera.cantidadKitsEntregados}</strong>
-            </article>
+              <div className="detalle-carrera__estadistica-header">
+                <span>CLASIFICADOS</span>
 
-            <article>
-              <span>CLASIFICADOS</span>
+                <Timer size={18} />
+              </div>
+
               <strong>{carrera.cantidadClasificados}</strong>
             </article>
 
