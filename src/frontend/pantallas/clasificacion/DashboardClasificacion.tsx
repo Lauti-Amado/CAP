@@ -146,7 +146,7 @@ const DashboardClasificacion = () => {
                   <tbody>
                     {participantesFiltrados.length > 0 ? (
                       participantesFiltrados.map((p) => (
-                        <tr key={p.id}>
+                        <tr key={p.id} onClick={() => navigate(`/modificar-clasificacion/${p.id}`)} style={{ cursor: 'pointer' }}>
                           <td className="dorsal-cell"><strong>{p.dorsal}</strong></td>
                           <td>
                             <div className="athlete-info">

@@ -10,6 +10,7 @@ import Carreras from './frontend/pantallas/carreras/Carreras';
 import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
 import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
+import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
 //import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             element={<DashboardClasificacionModificar />}
           />
           */}
+          <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
         </Route>
       </Routes>
     </HashRouter>
