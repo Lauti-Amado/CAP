@@ -10,10 +10,10 @@ import {
   Settings,
   Timer,
   Trophy,
-  UsersRound,
 } from 'lucide-react';
 import capLogo from '../../assets/logoCAP.png';
 import '../../App.css';
+import Navbar from '../componentes/navegacion/Navbar';
 
 const navigation = [
   {
@@ -85,7 +85,10 @@ export default function MainLayout() {
       </aside>
 
       {/* Aquí se renderizarán de forma dinámica las vistas hijas según la ruta de React Router */}
-      <Outlet />
+      <div className="app-content">
+        <Navbar />
+        <Outlet />
+      </div>
     </div>
   );
 }
