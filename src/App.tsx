@@ -12,6 +12,7 @@ import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
 import DetalleCorredor from './frontend/pantallas/entregaKits/DetalleCorredor';
 //import InscripcionCorredor from './frontend/pantallas/entregaKits/InscripcionCorredor';
+import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
 //import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
             element={<DashboardClasificacionModificar />}
           />
           */}
+          <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
         </Route>
       </Routes>
     </HashRouter>
