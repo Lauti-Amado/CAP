@@ -10,6 +10,8 @@ import Carreras from './frontend/pantallas/carreras/Carreras';
 import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
 import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
+import DetalleCorredor from './frontend/pantallas/entregaKits/DetalleCorredor';
+//import InscripcionCorredor from './frontend/pantallas/entregaKits/InscripcionCorredor';
 import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
 //import { DashboardData, dashboardData } from './dashboardData';
 
@@ -29,9 +31,13 @@ function App() {
           <Route path="/carreras/:id" element={<DetalleCarrera />} />
           <Route path="/resultados" element={<Resultados />} />
           <Route path="/entrega-kits" element={<BuscarCorredor />} />
+          <Route path="/entrega-kits/corredor/:dni" element={<DetalleCorredor />} />
           <Route path="/grand-prix" element={<GrandPrix />} />
           <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
+          
+          {/* <Route path="/entrega-kits/inscripcion" element={<InscripcionCorredor />} /> */}
+          
           {/* Dashboard de clasificación de una carrera específica */}
           {/* 
           <Route
