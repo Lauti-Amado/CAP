@@ -1,0 +1,76 @@
+.app-layout > .app-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Las pantallas ahora ocupan el espacio disponible junto a la sidebar. */
+.app-content > .layout-container {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  flex: 1;
+  overflow: visible;
+}
+
+.app-content > .rt-container,
+.app-content > .resultados-container {
+  min-height: 0;
+  flex: 1;
+}
+
+.cap-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.cap-breadcrumbs { min-width: 0; }
+.cap-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+.cap-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cap-breadcrumbs svg { flex-shrink: 0; color: #9ca3af; }
+.cap-breadcrumbs a { color: #2d6045; text-decoration: none; }
+.cap-breadcrumbs a:hover { text-decoration: underline; }
+.cap-breadcrumbs [aria-current] { color: #263044; font-weight: 600; }
+.cap-navbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.cap-navbar-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+}
+.cap-navbar-actions button:hover { background: #f0f5f1; }
+.cap-breadcrumbs a:focus-visible,
+.cap-navbar-actions button:focus-visible { outline: 2px solid #2d6045; outline-offset: 3px; }
+
+@media (max-width: 600px) {
+  .cap-navbar { padding: 12px 16px; flex-wrap: wrap; }
+}
