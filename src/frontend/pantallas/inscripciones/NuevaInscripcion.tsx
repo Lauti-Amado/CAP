@@ -1,7 +1,5 @@
 import { useState } from 'react'
-
-import { useNavigate } from 'react-router-dom'
-
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Check,
@@ -51,6 +49,18 @@ type DatosCorredor = {
 
 function NuevaInscripcion() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  /*
+   * Si se llega a esta pantalla desde el modal
+   * "Corredor no encontrado", el DNI viene en la URL:
+   *
+   * /entrega-kits/inscripciones/nueva?dni=12345678
+   *
+   * Si se entra normalmente a Nueva inscripción,
+   * no habrá DNI y el campo quedará vacío.
+   */
+  const dniInicial = searchParams.get('dni') ?? ''
 
   const [paso, setPaso] = useState(1)
 
@@ -63,7 +73,7 @@ function NuevaInscripcion() {
       apellido: '',
       genero: '',
       fechaNacimiento: '',
-      dni: '',
+      dni: dniInicial,
       telefono: '',
       discapacidad: '',
       aptoMedico: false,
@@ -379,6 +389,7 @@ function NuevaInscripcion() {
             paso > 1 ? 'completado' : ''
           }`}
         >
+
           <span>
             {paso > 1
               ? <Check size={13} />
@@ -389,6 +400,7 @@ function NuevaInscripcion() {
           <strong>
             Datos del corredor
           </strong>
+
         </div>
 
 
@@ -402,6 +414,7 @@ function NuevaInscripcion() {
             paso > 2 ? 'completado' : ''
           }`}
         >
+
           <span>
             {paso > 2
               ? <Check size={13} />
@@ -412,6 +425,7 @@ function NuevaInscripcion() {
           <strong>
             Datos de inscripción
           </strong>
+
         </div>
 
 
@@ -423,6 +437,7 @@ function NuevaInscripcion() {
             paso === 3 ? 'activo' : ''
           }`}
         >
+
           <span>
             3
           </span>
@@ -430,6 +445,7 @@ function NuevaInscripcion() {
           <strong>
             Confirmación
           </strong>
+
         </div>
 
       </div>
@@ -698,6 +714,7 @@ function NuevaInscripcion() {
                 </label>
 
               </div>
+
 
             </div>
 
@@ -1178,6 +1195,7 @@ function NuevaInscripcion() {
         ===================================================== */}
 
         {paso === 3 && (
+
           <div className="nueva-inscripcion__confirmacion">
 
             {/* =========================
@@ -1217,7 +1235,9 @@ function NuevaInscripcion() {
                 <div className="nueva-inscripcion__confirmacion-card-header">
 
                   <div className="nueva-inscripcion__confirmacion-card-icono">
+
                     <UserRoundPlus size={14} />
+
                   </div>
 
                   <h3>
@@ -1267,7 +1287,9 @@ function NuevaInscripcion() {
                 <div className="nueva-inscripcion__confirmacion-card-header">
 
                   <div className="nueva-inscripcion__confirmacion-card-icono">
+
                     <Footprints size={14} />
+
                   </div>
 
                   <h3>
@@ -1333,7 +1355,9 @@ function NuevaInscripcion() {
                 <div className="nueva-inscripcion__confirmacion-card-header">
 
                   <div className="nueva-inscripcion__confirmacion-card-icono">
+
                     <CreditCard size={14} />
+
                   </div>
 
                   <h3>
@@ -1352,8 +1376,11 @@ function NuevaInscripcion() {
                     </span>
 
                     <strong className="nueva-inscripcion__estado-pagado">
+
                       <span />
+
                       Pagado
+
                     </strong>
 
                   </div>
@@ -1413,8 +1440,11 @@ function NuevaInscripcion() {
                   className="nueva-inscripcion__confirmacion-confirmar"
                   onClick={confirmarInscripcion}
                 >
+
                   <Check size={14} />
+
                   Confirmar inscripción
+
                 </button>
 
               </div>
@@ -1428,8 +1458,11 @@ function NuevaInscripcion() {
                   className="nueva-inscripcion__confirmacion-ver"
                   onClick={verInscripcion}
                 >
+
                   <Eye size={14} />
+
                   Ver inscripción
+
                 </button>
 
 
@@ -1438,8 +1471,11 @@ function NuevaInscripcion() {
                   className="nueva-inscripcion__confirmacion-nueva"
                   onClick={nuevaInscripcion}
                 >
+
                   <Plus size={14} />
+
                   Nueva inscripción
+
                 </button>
 
               </div>
@@ -1447,6 +1483,7 @@ function NuevaInscripcion() {
             )}
 
           </div>
+
         )}
 
       </section>
@@ -1604,6 +1641,7 @@ function NuevaInscripcion() {
               >
                 Cancelar
               </button>
+
 
               <button
                 type="button"
