@@ -78,7 +78,10 @@ function BuscarCorredor() {
           )}
         </div>
 
-        <button type="button">
+        <button 
+          type="button"
+          onClick={() => navigate('/entrega-kits/inscripciones')}
+        >
           Ingresar a lista de inscripciones
         </button>
       </section>

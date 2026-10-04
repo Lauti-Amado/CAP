@@ -29,6 +29,13 @@ export type CorredorDetalle = {
   }
 
   habilitadoParaRetirarKit: boolean
+    // Estado de la entrega física del kit
+  kitEntregado: boolean
+   
+  // Solo existen cuando el kit fue entregado
+  dorsal?: string
+  chipRfid?: string
+  fechaEntregaKit?: string
 }
 
 export type UltimaEntrega = {
