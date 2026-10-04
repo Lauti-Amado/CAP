@@ -11,8 +11,10 @@ import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
 import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
 import DetalleCorredor from './frontend/pantallas/entregaKits/DetalleCorredor';
-//import InscripcionCorredor from './frontend/pantallas/entregaKits/InscripcionCorredor';
+import Inscripciones from './frontend/pantallas/inscripciones/Inscripciones';
 import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
+import DetalleInscripcion from './frontend/pantallas/inscripciones/DetalleInscripcion';
+import NuevaInscripcion from './frontend/pantallas/inscripciones/NuevaInscripcion';
 //import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
@@ -35,9 +37,9 @@ function App() {
           <Route path="/grand-prix" element={<GrandPrix />} />
           <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
-          
-          {/* <Route path="/entrega-kits/inscripcion" element={<InscripcionCorredor />} /> */}
-          
+          <Route path="/entrega-kits/inscripciones" element={<Inscripciones />} />
+          <Route path="/entrega-kits/inscripciones/nueva" element={<NuevaInscripcion />} />
+          <Route path="/entrega-kits/inscripciones/:id" element={<DetalleInscripcion />} />
           {/* Dashboard de clasificación de una carrera específica */}
           {/* 
           <Route

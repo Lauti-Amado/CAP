@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CarreraCard from '../../componentes/carreras/CarreraCard'
-import { Tabla } from '../../componentes/carreras/tabla/Tabla'
+import { Tabla } from '../../componentes/tabla/Tabla'
 import type { Carrera } from '../../types/carrera'
 import './Carreras.css'
 //borrar con el mock

@@ -32,6 +32,10 @@ export const corredoresMock: CorredorDetalle[] = [
 
     habilitadoParaRetirarKit: true,
 
+    kitEntregado: false,
+    dorsal: undefined,
+    chipRfid: undefined,
+    fechaEntregaKit: undefined,
   },
 
   {
@@ -47,8 +51,16 @@ export const corredoresMock: CorredorDetalle[] = [
       estado: 'pagado',
     },
 
+    aptoMedico: {
+      estado: 'verificado',
+    },
+
     habilitadoParaRetirarKit: true,
 
+    kitEntregado: false,
+    dorsal: undefined,
+    chipRfid: undefined,
+    fechaEntregaKit: undefined,
   },
 
   {
@@ -70,6 +82,10 @@ export const corredoresMock: CorredorDetalle[] = [
 
     habilitadoParaRetirarKit: false,
 
+    kitEntregado: false,
+    dorsal: undefined,
+    chipRfid: undefined,
+    fechaEntregaKit: undefined,
   },
 ]
 

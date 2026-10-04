@@ -1,0 +1,1488 @@
+.nueva-inscripcion {
+  width: 900px;
+  max-width: calc(100% - 40px);
+  margin: 0 auto;
+  padding: 24px 0 40px;
+  box-sizing: border-box;
+  color: #172033;
+  font-family: Arial, sans-serif;
+}
+
+/* =========================
+   ENCABEZADO
+========================= */
+
+.nueva-inscripcion__encabezado {
+  margin-bottom: 24px;
+}
+
+.nueva-inscripcion__encabezado button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 0;
+  border: none;
+  background: transparent;
+
+  color: #087f3f;
+
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__encabezado button:hover {
+  color: #066b35;
+}
+
+.nueva-inscripcion__encabezado h1 {
+  margin: 12px 0 6px;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.nueva-inscripcion__encabezado p {
+  margin: 0;
+  font-size: 9px;
+  color: #69736e;
+}
+
+/* =========================
+   PASOS
+========================= */
+
+.nueva-inscripcion__pasos {
+  display: flex;
+  align-items: center;
+
+  margin-bottom: 24px;
+  padding: 14px 18px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e1e5e2;
+  border-radius: 7px;
+}
+
+.nueva-inscripcion__paso {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  white-space: nowrap;
+}
+
+.nueva-inscripcion__paso span {
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #eef1ef;
+  color: #69736e;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.nueva-inscripcion__paso strong {
+  font-size: 8px;
+  font-weight: 600;
+  color: #69736e;
+}
+
+.nueva-inscripcion__paso.activo span,
+.nueva-inscripcion__paso.completado span {
+  background-color: #087f3f;
+  color: #ffffff;
+}
+
+.nueva-inscripcion__paso.activo strong {
+  color: #087f3f;
+}
+
+.nueva-inscripcion__separador {
+  flex: 1;
+  height: 1px;
+
+  margin: 0 14px;
+
+  background-color: #e1e5e2;
+}
+
+/* =========================
+   CONTENIDO
+========================= */
+
+.nueva-inscripcion__contenido {
+  padding: 20px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e1e5e2;
+  border-radius: 7px;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.nueva-inscripcion__titulo {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__titulo h2 {
+  margin: 0 0 5px;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.nueva-inscripcion__titulo p {
+  margin: 0;
+
+  font-size: 8px;
+  color: #69736e;
+}
+
+/* =========================
+   FORMULARIO
+========================= */
+
+.nueva-inscripcion__formulario {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  column-gap: 24px;
+  row-gap: 16px;
+}
+
+.nueva-inscripcion__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nueva-inscripcion__campo label {
+  font-size: 8px;
+  font-weight: 600;
+  color: #46514b;
+}
+
+.nueva-inscripcion__campo label span {
+  color: #d92d20;
+}
+
+.nueva-inscripcion__campo label.nueva-inscripcion__checkbox span {
+  color: #46514b;
+}
+
+.nueva-inscripcion__campo input,
+.nueva-inscripcion__campo select {
+  width: 100%;
+  height: 32px;
+
+  padding: 0 9px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 4px;
+
+  background-color: #ffffff;
+
+  color: #172033;
+
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+
+  outline: none;
+}
+
+.nueva-inscripcion__campo input::placeholder {
+  color: #9aa29e;
+}
+
+.nueva-inscripcion__campo input:focus,
+.nueva-inscripcion__campo select:focus {
+  border-color: #087f3f;
+}
+
+/* =========================
+   APTO MÉDICO
+========================= */
+
+.nueva-inscripcion__checkbox {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 32px;
+}
+
+.nueva-inscripcion__checkbox input {
+  width: 17px;
+  height: 17px;
+
+  margin: 0;
+
+  accent-color: #087f3f;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__checkbox span {
+  font-size: 8px;
+  color: #46514b;
+}
+
+/* =========================
+   CONTACTO DE EMERGENCIA
+========================= */
+
+.nueva-inscripcion__emergencia {
+  margin-top: 24px;
+  padding-top: 18px;
+
+  border-top: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__emergencia-titulo {
+  margin-bottom: 14px;
+}
+
+.nueva-inscripcion__emergencia-titulo h3 {
+  margin: 0 0 6px;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+.nueva-inscripcion__emergencia-titulo h3 span {
+  color: #d92d20;
+}
+
+.nueva-inscripcion__emergencia-titulo p {
+  margin: 0;
+
+  font-size: 10px;
+  color: #69736e;
+}
+
+/* =========================
+   BUSCADOR
+========================= */
+
+.nueva-inscripcion__emergencia-buscador {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nueva-inscripcion__buscador {
+  position: relative;
+  flex: 1;
+}
+
+.nueva-inscripcion__buscador svg {
+  position: absolute;
+
+  left: 9px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 14px;
+  height: 14px;
+
+  color: #69736e;
+
+  pointer-events: none;
+}
+
+.nueva-inscripcion__buscador input {
+  width: 100%;
+  height: 32px;
+
+  box-sizing: border-box;
+
+  padding: 0 9px 0 29px;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 4px;
+
+  background-color: #ffffff;
+
+  color: #172033;
+
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+
+  outline: none;
+}
+
+.nueva-inscripcion__buscador input::placeholder {
+  color: #9aa29e;
+}
+
+.nueva-inscripcion__buscador input:focus {
+  border-color: #087f3f;
+}
+
+/* =========================
+   BOTONES BUSCADOR
+========================= */
+
+.nueva-inscripcion__emergencia-buscador > button {
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 0 10px;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 4px;
+
+  background-color: #ffffff;
+  color: #46514b;
+
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__emergencia-buscador > button:hover {
+  background-color: #f5f7f6;
+}
+
+.nueva-inscripcion__emergencia-buscador > button svg {
+  width: 13px;
+  height: 13px;
+}
+
+.nueva-inscripcion__emergencia-buscador
+  .nueva-inscripcion__crear-contacto {
+  border-color: #087f3f;
+  color: #087f3f;
+}
+
+.nueva-inscripcion__emergencia-buscador
+  .nueva-inscripcion__crear-contacto:hover {
+  background-color: #f0f9f4;
+}
+
+/* =========================
+   CONTACTO SELECCIONADO
+========================= */
+
+.nueva-inscripcion__contacto-encontrado {
+  display: grid;
+
+  grid-template-columns: 1.5fr 1fr 1.4fr;
+
+  align-items: center;
+
+  gap: 20px;
+
+  margin-top: 12px;
+  padding: 11px 14px;
+
+  border: 1px solid #b7dfc6;
+  border-radius: 5px;
+
+  background-color: #f3faf5;
+}
+
+.nueva-inscripcion__contacto-principal,
+.nueva-inscripcion__contacto-dato {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.nueva-inscripcion__contacto-encontrado span {
+  font-size: 7px;
+  color: #69736e;
+}
+
+.nueva-inscripcion__contacto-encontrado strong {
+  font-size: 9px;
+  font-weight: 600;
+
+  color: #172033;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   ACCIONES
+========================= */
+
+.nueva-inscripcion__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  
+  margin-top: 24px;
+  padding-top: 16px;
+
+  border-top: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__acciones button {
+  height: 32px;
+
+  padding: 0 18px;
+
+  border: none;
+  border-radius: 4px;
+
+  background-color: #087f3f;
+  color: #ffffff;
+
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__acciones button:hover {
+  background-color: #066b35;
+}
+
+.nueva-inscripcion__acciones button:disabled {
+  background-color: #b8c8bf;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.nueva-inscripcion__modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  background-color: rgba(15, 23, 42, 0.55);
+}
+
+.nueva-inscripcion__modal {
+  width: 325px;
+  max-width: calc(100vw - 40px);
+
+  box-sizing: border-box;
+
+  padding: 18px;
+
+  background-color: #ffffff;
+
+  border-radius: 8px;
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   CABECERA MODAL
+========================= */
+
+.nueva-inscripcion__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 12px;
+
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__modal-header h2 {
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+.nueva-inscripcion__modal-header button {
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 4px;
+
+  background-color: transparent;
+  color: #98a2b3;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__modal-header button:hover {
+  background-color: #f2f4f7;
+  color: #475467;
+}
+
+.nueva-inscripcion__modal-header button svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* =========================
+   FORMULARIO MODAL
+========================= */
+
+.nueva-inscripcion__modal-formulario {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  column-gap: 10px;
+  row-gap: 11px;
+
+  padding-top: 14px;
+}
+
+.nueva-inscripcion__modal-campo {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.nueva-inscripcion__modal-campo label {
+  font-size: 7px;
+  font-weight: 600;
+
+  color: #344054;
+}
+
+.nueva-inscripcion__modal-campo label span {
+  color: #d92d20;
+}
+
+.nueva-inscripcion__modal-campo input {
+  width: 100%;
+  height: 28px;
+
+  box-sizing: border-box;
+
+  padding: 0 8px;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 4px;
+
+  background-color: #ffffff;
+
+  color: #172033;
+
+  font-family: Arial, sans-serif;
+  font-size: 7px;
+
+  outline: none;
+}
+
+.nueva-inscripcion__modal-campo input::placeholder {
+  color: #98a2b3;
+}
+
+.nueva-inscripcion__modal-campo input:focus {
+  border-color: #087f3f;
+}
+
+/* =========================
+   ACCIONES MODAL
+========================= */
+
+.nueva-inscripcion__modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 15px;
+  padding-top: 12px;
+
+  border-top: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__modal-cancelar,
+.nueva-inscripcion__modal-guardar {
+  height: 28px;
+
+  padding: 0 12px;
+
+  border-radius: 4px;
+
+  font-family: Arial, sans-serif;
+  font-size: 7px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__modal-cancelar {
+  border: 1px solid #d9dfdc;
+
+  background-color: #ffffff;
+  color: #46514b;
+}
+
+.nueva-inscripcion__modal-cancelar:hover {
+  background-color: #f5f7f6;
+}
+
+.nueva-inscripcion__modal-guardar {
+  border: none;
+
+  background-color: #087f3f;
+  color: #ffffff;
+}
+
+.nueva-inscripcion__modal-guardar:hover {
+  background-color: #066b35;
+}
+
+/* =========================
+   PLACEHOLDER PASOS 2 Y 3
+========================= */
+
+.nueva-inscripcion__placeholder {
+  padding: 35px 20px;
+
+  text-align: center;
+
+  color: #69736e;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   PASO 2 - DATOS DE LA INSCRIPCIÓN
+========================================================= */
+
+.nueva-inscripcion__paso2-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 18px;
+
+  align-items: start;
+}
+
+
+/* =========================
+   FORMULARIO PASO 2
+========================= */
+
+.nueva-inscripcion__paso2-formulario {
+  min-width: 0;
+}
+
+.nueva-inscripcion__paso2-seccion {
+  margin-bottom: 18px;
+}
+
+.nueva-inscripcion__paso2-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  color: #46514b;
+}
+
+.nueva-inscripcion__paso2-label span {
+  color: #d92d20;
+}
+
+
+/* =========================
+   DISTANCIAS
+========================= */
+
+.nueva-inscripcion__distancias {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.nueva-inscripcion__distancia {
+  height: 62px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px;
+
+  border: 1px solid #d0d9d4;
+  border-radius: 5px;
+
+  background-color: #f8faf9;
+  color: #172033;
+
+  cursor: pointer;
+}
+
+.nueva-inscripcion__distancia:hover {
+  border-color: #087f3f;
+}
+
+.nueva-inscripcion__distancia strong {
+  font-size: 14px;
+  line-height: 1;
+
+  margin-bottom: 5px;
+}
+
+.nueva-inscripcion__distancia span {
+  font-size: 7px;
+  color: #69736e;
+}
+
+.nueva-inscripcion__distancia.seleccionada {
+  border-color: #087f3f;
+  background-color: #f0faf4;
+  box-shadow: inset 0 0 0 1px #087f3f;
+}
+
+.nueva-inscripcion__distancia.seleccionada strong {
+  color: #087f3f;
+}
+
+
+/* =========================
+   PRODUCTO DINÁMICO
+========================= */
+
+.nueva-inscripcion__producto-opciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.nueva-inscripcion__producto-opcion {
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 0 9px;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 4px;
+
+  background-color: #ffffff;
+  color: #46514b;
+
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+
+  cursor: pointer;
+
+  text-align: left;
+}
+
+.nueva-inscripcion__producto-opcion:hover {
+  border-color: #087f3f;
+}
+
+.nueva-inscripcion__producto-opcion.seleccionada {
+  border-color: #087f3f;
+  background-color: #f3faf5;
+  color: #087f3f;
+}
+
+.nueva-inscripcion__radio {
+  width: 13px;
+  height: 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  border: 1px solid #b8c2bd;
+  border-radius: 50%;
+}
+
+.nueva-inscripcion__producto-opcion.seleccionada
+.nueva-inscripcion__radio {
+  border-color: #087f3f;
+}
+
+.nueva-inscripcion__producto-opcion.seleccionada
+.nueva-inscripcion__radio span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background-color: #087f3f;
+}
+
+
+/* =========================
+   VARIANTE / CANTIDAD
+========================= */
+
+.nueva-inscripcion__producto-detalle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+
+/* =========================================================
+   RESUMEN
+========================================================= */
+
+.nueva-inscripcion__resumen {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 6px;
+
+  background-color: #ffffff;
+
+  overflow: hidden;
+}
+
+.nueva-inscripcion__resumen-titulo {
+  padding: 10px 12px;
+
+  background-color: #f0f3ff;
+
+  border-bottom: 1px solid #d9dfdc;
+}
+
+.nueva-inscripcion__resumen-titulo h3 {
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+.nueva-inscripcion__resumen-contenido {
+  padding: 12px;
+}
+
+.nueva-inscripcion__resumen-bloque {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__resumen-bloque:last-of-type {
+  border-bottom: none;
+}
+
+.nueva-inscripcion__resumen-bloque span {
+  font-size: 7px;
+  text-transform: uppercase;
+
+  color: #69736e;
+}
+
+.nueva-inscripcion__resumen-bloque strong {
+  font-size: 8px;
+  font-weight: 600;
+
+  color: #172033;
+}
+
+.nueva-inscripcion__resumen-bloque small {
+  font-size: 7px;
+
+  color: #69736e;
+}
+
+
+/* =========================
+   TOTAL
+========================= */
+
+.nueva-inscripcion__resumen-total {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding-top: 10px;
+
+  border-top: 1px solid #d9dfdc;
+}
+
+.nueva-inscripcion__resumen-total span {
+  font-size: 7px;
+  text-transform: uppercase;
+
+  color: #69736e;
+}
+
+.nueva-inscripcion__resumen-total strong {
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #087f3f;
+}
+
+
+/* =========================
+   BOTONES PASO 2
+========================= */
+
+.nueva-inscripcion__acciones {
+  gap: 8px;
+}
+
+.nueva-inscripcion__acciones button:disabled {
+  background-color: #b8c8bf;
+  color: #ffffff;
+
+  cursor: not-allowed;
+}
+
+.nueva-inscripcion__acciones button:first-child {
+  background-color: #ffffff;
+  color: #46514b;
+
+  border: 1px solid #d9dfdc;
+}
+
+.nueva-inscripcion__acciones button:first-child:hover {
+  background-color: #f5f7f6;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 750px) {
+
+  .nueva-inscripcion__paso2-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .nueva-inscripcion__resumen {
+    order: -1;
+  }
+
+}
+
+@media (max-width: 500px) {
+
+  .nueva-inscripcion__distancias {
+    grid-template-columns: 1fr;
+  }
+
+  .nueva-inscripcion__producto-detalle {
+    grid-template-columns: 1fr;
+  }
+
+}
+/* =========================================================
+   PASO 3 - CONFIRMACIÓN
+========================================================= */
+
+.nueva-inscripcion__confirmacion {
+  width: 100%;
+}
+
+
+/* =========================
+   ENCABEZADO
+========================= */
+
+.nueva-inscripcion__confirmacion-encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  padding: 6px 0 20px;
+}
+
+.nueva-inscripcion__confirmacion-icono {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 7px;
+
+  border-radius: 50%;
+
+  background-color: #22c55e;
+  color: #ffffff;
+}
+
+.nueva-inscripcion__confirmacion-encabezado h2 {
+  margin: 0 0 5px;
+
+  font-size: 19px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+.nueva-inscripcion__confirmacion-encabezado p {
+  margin: 0;
+
+  font-size: 9px;
+
+  color: #69736e;
+}
+
+
+/* =========================
+   GRID DE TARJETAS
+========================= */
+
+.nueva-inscripcion__confirmacion-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  max-width: 650px;
+
+  margin: 0 auto;
+}
+
+
+/* =========================
+   TARJETA
+========================= */
+
+.nueva-inscripcion__confirmacion-card {
+  min-width: 0;
+
+  border: 1px solid #d9dfdc;
+  border-radius: 6px;
+
+  background-color: #ffffff;
+
+  overflow: hidden;
+}
+
+.nueva-inscripcion__confirmacion-card--pago {
+  grid-column: 1 / -1;
+}
+
+
+/* =========================
+   HEADER TARJETA
+========================= */
+
+.nueva-inscripcion__confirmacion-card-header {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 9px 11px;
+
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.nueva-inscripcion__confirmacion-card-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #087f3f;
+}
+
+.nueva-inscripcion__confirmacion-card-header h3 {
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+
+/* =========================
+   DATOS
+========================= */
+
+.nueva-inscripcion__confirmacion-datos {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+
+  padding: 11px;
+}
+
+.nueva-inscripcion__confirmacion-datos > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.nueva-inscripcion__confirmacion-datos span,
+.nueva-inscripcion__confirmacion-pago span {
+  font-size: 7px;
+  text-transform: uppercase;
+
+  color: #69736e;
+}
+
+.nueva-inscripcion__confirmacion-datos strong {
+  font-size: 10px;
+  font-weight: 600;
+
+  color: #172033;
+}
+
+
+/* =========================
+   DISTANCIA + TIPO
+========================= */
+
+.nueva-inscripcion__confirmacion-datos-doble {
+  display: grid !important;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+}
+
+
+/* =========================
+   PAGO
+========================= */
+
+.nueva-inscripcion__confirmacion-pago {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr auto;
+
+  align-items: center;
+
+  gap: 15px;
+
+  padding: 11px;
+}
+
+.nueva-inscripcion__confirmacion-pago > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.nueva-inscripcion__confirmacion-pago strong {
+  font-size: 10px;
+  font-weight: 600;
+
+  color: #172033;
+}
+
+
+/* =========================
+   ESTADO PAGADO
+========================= */
+
+.nueva-inscripcion__estado-pagado {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+
+  gap: 4px;
+
+  width: fit-content;
+
+  padding: 3px 6px;
+
+  border-radius: 999px;
+
+  background-color: #ecfdf3;
+
+  color: #039855 !important;
+
+  font-size: 7px !important;
+  text-transform: none !important;
+}
+
+.nueva-inscripcion__estado-pagado span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background-color: #12b76a;
+}
+
+
+/* =========================
+   TOTAL
+========================= */
+
+.nueva-inscripcion__confirmacion-total {
+  align-items: flex-end;
+}
+
+.nueva-inscripcion__confirmacion-total strong {
+  padding: 7px 10px;
+
+  background-color: #f8fafc;
+
+  border-radius: 4px;
+
+  color: #087f3f !important;
+
+  font-size: 15px !important;
+}
+
+
+/* =========================
+   ACCIONES
+========================= */
+
+.nueva-inscripcion__confirmacion-acciones {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 16px;
+}
+
+.nueva-inscripcion__confirmacion-acciones button {
+  height: 28px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 0 12px;
+
+  border-radius: 4px;
+
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* VOLVER */
+
+.nueva-inscripcion__confirmacion-volver {
+  border: 1px solid #d0d5dd;
+
+  background-color: #ffffff;
+
+  color: #344054;
+}
+
+.nueva-inscripcion__confirmacion-volver:hover {
+  background-color: #f8fafc;
+}
+
+
+/* CONFIRMAR */
+
+.nueva-inscripcion__confirmacion-confirmar {
+  border: 1px solid #087f3f;
+
+  background-color: #087f3f;
+
+  color: #ffffff;
+}
+
+.nueva-inscripcion__confirmacion-confirmar:hover {
+  background-color: #066b35;
+}
+
+
+/* VER */
+
+.nueva-inscripcion__confirmacion-ver {
+  border: 1px solid #d0d5dd;
+
+  background-color: #ffffff;
+
+  color: #344054;
+}
+
+.nueva-inscripcion__confirmacion-ver:hover {
+  background-color: #f8fafc;
+}
+
+
+/* NUEVA */
+
+.nueva-inscripcion__confirmacion-nueva {
+  border: 1px solid #087f3f;
+
+  background-color: #087f3f;
+
+  color: #ffffff;
+}
+
+.nueva-inscripcion__confirmacion-nueva:hover {
+  background-color: #066b35;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 650px) {
+
+  .nueva-inscripcion__confirmacion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nueva-inscripcion__confirmacion-card--pago {
+    grid-column: auto;
+  }
+
+  .nueva-inscripcion__confirmacion-pago {
+    grid-template-columns: 1fr;
+  }
+
+  .nueva-inscripcion__confirmacion-total {
+    align-items: flex-start;
+  }
+
+  .nueva-inscripcion__confirmacion-acciones {
+    flex-wrap: wrap;
+  }
+
+}
+.nueva-inscripcion__confirmacion-card {
+  min-width: 0;
+
+  border: 1px solid #d9dfdc;
+  border-left: 2px solid #22c55e;
+
+  border-radius: 6px;
+
+  background-color: #ffffff;
+
+  overflow: hidden;
+}
+.nueva-inscripcion__confirmacion-card--pago {
+  grid-column: 1 / -1;
+  border-left-color: #94a3a0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+  .nueva-inscripcion {
+    max-width: calc(100% - 24px);
+  }
+
+  .nueva-inscripcion__formulario {
+    grid-template-columns: 1fr;
+  }
+
+  .nueva-inscripcion__pasos {
+    overflow-x: auto;
+  }
+
+  .nueva-inscripcion__separador {
+    min-width: 25px;
+  }
+
+  .nueva-inscripcion__emergencia-buscador {
+    flex-wrap: wrap;
+  }
+
+  .nueva-inscripcion__buscador {
+    flex-basis: 100%;
+  }
+
+  .nueva-inscripcion__contacto-encontrado {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .nueva-inscripcion__modal {
+    width: 325px;
+  }
+}
