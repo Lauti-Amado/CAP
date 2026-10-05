@@ -1,7 +1,7 @@
 .detalle-carrera {
   width: 100%;
   min-height: 100vh;
-  padding: 20px 40px 32px;
+  padding: 20px 42px 32px;
   box-sizing: border-box;
 }
 
@@ -35,9 +35,8 @@
 .detalle-carrera__header h1 {
   margin: 0;
   max-width: 500px;
-
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: 25px;
+  line-height: 1.15;
   font-weight: 700;
   color: #172033;
 }
@@ -74,20 +73,16 @@
 /* Modificar clasificación */
 
 .detalle-carrera__clasificacion {
-  min-width: 125px;
-  min-height: 38px;
-  padding: 6px 14px;
-
+  min-width: 115px;
+  min-height: 34px;
+  padding: 5px 12px;
   border: none;
   border-radius: 18px;
-
   background-color: #ff922e;
   color: #7c2d12;
-
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1.15;
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -99,13 +94,15 @@
 
 .detalle-carrera__contenido {
   display: grid;
- grid-template-columns: minmax(190px, 24%) minmax(0, 1fr);  gap: 14px;
+  grid-template-columns: 24% minmax(0, 1fr);
+  gap: 14px;
   align-items: start;
 }
-
 /* Detalles del evento */
 
 .detalle-carrera__evento {
+  width: 100%;
+  max-width: 360px;
   background-color: #ffffff;
   border: 1px solid #d8ddd9;
   border-radius: 8px;
@@ -126,7 +123,7 @@
 .detalle-carrera__imagen {
   position: relative;
   width: 100%;
-  height: 100px;
+  height: 125px;
   overflow: hidden;
 }
 
@@ -246,7 +243,7 @@
 }
 
 .detalle-carrera__estadisticas article {
-  min-height: 96px;
+  min-height: 105px;
   padding: 14px;
 
   box-sizing: border-box;
@@ -259,6 +256,21 @@
   flex-direction: column;
   justify-content: space-between;
 }
+.detalle-carrera__estadistica-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detalle-carrera__estadistica-header svg {
+  flex-shrink: 0;
+  padding: 5px;
+  box-sizing: content-box;
+  border-radius: 5px;
+  background-color: #eef2ff;
+  color: #5265a8;
+}
 
 .detalle-carrera__estadisticas span {
   font-size: 9px;
@@ -268,7 +280,7 @@
 }
 
 .detalle-carrera__estadisticas strong {
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1;
   font-weight: 700;
   color: #172033;
@@ -279,25 +291,22 @@
 .detalle-carrera__descripcion {
   margin-top: 14px;
   padding: 16px;
-
   background-color: #ffffff;
   border: 1px solid #d8ddd9;
   border-radius: 8px;
 }
 
 .detalle-carrera__descripcion h2 {
-  margin: 0 0 14px;
-
-  font-size: 14px;
+  margin: 0 0 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #172033;
 }
 
 .detalle-carrera__descripcion p {
   margin: 0;
-
-  font-size: 11px;
-  line-height: 1.6;
+  font-size: 10px;
+  line-height: 1.55;
   color: #374151;
 }
 

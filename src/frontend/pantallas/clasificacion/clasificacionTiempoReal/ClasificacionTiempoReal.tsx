@@ -44,18 +44,6 @@ const ClasificacionTiempoReal: React.FC = () => {
 
   return (
     <div className="rt-container">
-      {/* Topbar superior / Breadcrumb */}
-      <header className="rt-topbar">
-        <div className="breadcrumb">
-          CAP Gestión <span className="separator">&gt;</span> Dashboard clasificación <span className="separator">&gt;</span> <strong>Clasificación carrera en tiempo real</strong>
-        </div>
-        <div className="topbar-actions">
-          <button className="icon-btn" aria-label="Clima"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"></path><line x1="12" y1="12" x2="12" y2="22"></line><polyline points="8 18 12 22 16 18"></polyline></svg></button>
-          <button className="icon-btn" aria-label="Notificaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></button>
-          <button className="icon-btn" aria-label="Ayuda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
-          <button className="profile-btn" aria-label="Perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
-        </div>
-      </header>
 
       <div className="rt-content">
         

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import './Login.css';
+import './login.css';
+import { resetAdminPassword, verifyAdminPassword } from './adminCredentials';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../../assets/logoCAP.png'; // Asegúrate de que la ruta de importación coincida con la ubicación real de tu archivo
 
@@ -10,27 +11,46 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  // Usuario hardcodeado
-  const HARDCODED_USER = {
-    email: 'admin@gmail.com',
-    password: '123'
+  const [recovering, setRecovering] = useState(false);
+  const [confirmation, setConfirmation] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  const switchMode = (recovery: boolean) => {
+    setRecovering(recovery);
+    setPassword('');
+    setConfirmation('');
+    setShowPassword(false);
+    setError('');
+    setSuccess('');
   };
 
-  const handleSubmit = (e: { preventDefault: () => void; }) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    
-    // Validación del usuario hardcodeado
-    if (email === HARDCODED_USER.email && password === HARDCODED_USER.password) {
-      setError('');
-      alert('¡Inicio de sesión exitoso!');
-      // Aquí puedes colocar la lógica para redirigir en tu app de Electron
-      navigate('/seleccionar-carrera'); // Redirige a la pantalla de seleccionar carrera
-    
-    } else {
-      setError('Correo electrónico o contraseña incorrectos');
+    if (busy) return;
+    setError('');
+    setSuccess('');
+    setBusy(true);
+    try {
+      if (recovering) {
+        if (password !== confirmation) {
+          setError('Las contraseñas no coinciden.');
+          return;
+        }
+        await resetAdminPassword(email, password);
+        switchMode(false);
+        setSuccess('Contraseña guardada. Ya podés iniciar sesión con la nueva contraseña.');
+      } else if (await verifyAdminPassword(email, password)) {
+        navigate('/seleccionar-carrera');
+      } else {
+        setError('Correo electrónico o contraseña incorrectos.');
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo acceder a las credenciales guardadas.');
+    } finally {
+      setBusy(false);
     }
   };
-
   return (
     <div className="login-wrapper">
       <div className="login-container">
@@ -47,6 +67,13 @@ const Login = () => {
 
         {/* FORMULARIO */}
         <form onSubmit={handleSubmit} className="login-form">
+          {recovering && (
+            <p className="recovery-notice">
+              Restablecer contraseña del administrador en este dispositivo.
+              Por ahora, este proceso no envía ni verifica un correo de recuperación.
+            </p>
+          )}
+          <fieldset className="login-fields" disabled={busy}>
           {/* Input Correo */}
           <div className="form-group">
             <div className="label-row">
@@ -71,8 +98,8 @@ const Login = () => {
           {/* Input Contraseña */}
           <div className="form-group">
             <div className="label-row">
-              <label>Contraseña</label>
-              <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
+              <label>{recovering ? 'Nueva contraseña' : 'Contraseña'}</label>
+              <button type="button" className="forgot-link recovery-link" disabled={busy} onClick={() => switchMode(!recovering)}>{recovering ? 'Volver al inicio de sesión' : '¿Olvidaste tu contraseña?'}</button>
             </div>
             <div className="input-wrapper">
               <svg className="input-icon left-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -83,6 +110,8 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
+                minLength={recovering ? 6 : undefined}
+                autoComplete={recovering ? 'new-password' : 'current-password'}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
@@ -101,6 +130,24 @@ const Login = () => {
             </div>
           </div>
 
+          {recovering && (
+            <div className="form-group">
+              <label htmlFor="confirm-password">Confirmar nueva contraseña</label>
+              <div className="input-wrapper">
+                <input
+                  id="confirm-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmation}
+                  onChange={e => setConfirmation(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </div>
+            </div>
+          )}
+          </fieldset>
+
           {/* Checkbox Recordarme */}
           <div className="remember-container">
             <input type="checkbox" id="remember" />
@@ -108,11 +155,12 @@ const Login = () => {
           </div>
 
           {/* Mensaje de error */}
-          {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message" role="alert">{error}</p>}
+          {success && <p className="login-success" role="status">{success}</p>}
 
           {/* Botón de Submit */}
-          <button type="submit" className="submit-button">
-            Iniciar sesión
+          <button type="submit" className="submit-button" disabled={busy}>
+            {busy ? 'Procesando…' : recovering ? 'Guardar nueva contraseña' : 'Iniciar sesión'}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>

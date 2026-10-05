@@ -223,3 +223,38 @@ body {
 .register-link:hover {
   text-decoration: underline;
 }
+
+.login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.recovery-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.recovery-notice,
+.login-success {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 12px;
+  border-radius: 6px;
+  background: #eef7f0;
+  color: #24563a;
+}
+
+.login-form button:disabled {
+  cursor: wait;
+  opacity: .65;
+}

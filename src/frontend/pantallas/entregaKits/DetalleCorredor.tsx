@@ -1,41 +1,41 @@
 import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import './DetalleCorredor.css'
+import {
+  UserRound,
+  CircleDollarSign,
+  PackageCheck,
+  Info,
+  BadgeCheck,
+} from 'lucide-react'
+//Borrar lo siguiente para sacar MOCK
+import { corredoresMock } from './entregaKitsMock'
 
-type EstadoVerificacion = {
-  estado: 'pagado' | 'verificado' | 'pendiente'
-}
+function DetalleCorredor() {
+  const { dni } = useParams<{ dni: string }>()
+  const navigate = useNavigate()
 
-type CorredorDetalle = {
-  nombre: string
-  dni: string
-  categoria: string
-  distancia: string
-  talleRemera: string
-  clubTeam: string
-
-  inscripcion: EstadoVerificacion
-  aptoMedico?: EstadoVerificacion
-
-  habilitadoParaRetirarKit: boolean
-
-  chipRfid: string
-}
-
-type DetalleCorredorProps = {
-  corredor: CorredorDetalle | null
-  onVolver: () => void
-  onEntregarKit: (dorsal: string) => void
-}
-
-function DetalleCorredor({
-  corredor,
-  onVolver,
-  onEntregarKit,
-}: DetalleCorredorProps) {
   const [dorsal, setDorsal] = useState('')
-
+  // MOCK TEMPORAL
+  // TODO: Reemplazar la búsqueda en corredoresMock por el GET al backend.
+  // GET /api/corredores/{dni}
+  // const corredor = await obtenerCorredorPorDni(dni)
+  const corredor = corredoresMock.find(
+    (corredor) => corredor.dni === dni
+  )
+  //Hasta aca se borra xd
   if (!corredor) {
-    return null
+    return (
+      <main className="detalle-corredor">
+        <h1>Corredor no encontrado</h1>
+        <button
+          type="button"
+          onClick={() => navigate('/entrega-kits')}
+        >
+          Volver al buscador
+        </button>
+      </main>
+    )
   }
 
   const puedeEntregar =
@@ -47,7 +47,10 @@ function DetalleCorredor({
       return
     }
 
-    onEntregarKit(dorsal.trim())
+    console.log('Entregar kit', {
+      dni: corredor.dni,
+      dorsal: dorsal.trim(),
+    })
   }
 
   return (
@@ -70,7 +73,7 @@ function DetalleCorredor({
         <button
           type="button"
           className="detalle-corredor__volver"
-          onClick={onVolver}
+          onClick={() => navigate('/entrega-kits')}
         >
           ← Volver al buscador
         </button>
@@ -95,7 +98,7 @@ function DetalleCorredor({
           <article className="detalle-corredor__tarjeta corredor">
 
             <div className="detalle-corredor__avatar">
-              ♙
+              <UserRound size={32} />
             </div>
 
             <h2>{corredor.nombre}</h2>
@@ -140,7 +143,7 @@ function DetalleCorredor({
             <div className="detalle-corredor__titulo-pago">
 
               <span className="detalle-corredor__icono-pago">
-                $
+                <CircleDollarSign size={22} />
               </span>
 
               <strong>ESTADO DE PAGO</strong>
@@ -152,9 +155,14 @@ function DetalleCorredor({
               <span>Inscripción</span>
 
               <small>
-                {corredor.inscripcion.estado === 'pagado'
-                  ? '✓ PAGADO'
-                  : 'PENDIENTE'}
+                {corredor.inscripcion.estado === 'pagado' ? (
+                  <>
+                    <BadgeCheck size={16} />
+                    PAGADO
+                  </>
+                ) : (
+                  'PENDIENTE'
+                )}
               </small>
 
             </div>
@@ -165,9 +173,14 @@ function DetalleCorredor({
                 <span>Apto Médico</span>
 
                 <small>
-                  {corredor.aptoMedico.estado === 'verificado'
-                    ? '✓ VERIFICADO'
-                    : 'PENDIENTE'}
+                  {corredor.aptoMedico.estado === 'verificado' ? (
+                    <>
+                      <BadgeCheck size={16} />
+                      VERIFICADO
+                    </>
+                  ) : (
+                    'PENDIENTE'
+                  )}
                 </small>
 
               </div>
@@ -220,7 +233,12 @@ function DetalleCorredor({
                   inputMode="numeric"
                   value={dorsal}
                   onChange={(event) => setDorsal(event.target.value)}
-                  placeholder="Ej. 125"
+                  placeholder={
+                    corredor.habilitadoParaRetirarKit
+                      ? 'Ej. 125'
+                      : 'No habilitado'
+                  }
+                  disabled={!corredor.habilitadoParaRetirarKit}
                 />
 
               </div>
@@ -232,10 +250,16 @@ function DetalleCorredor({
 
                 <span>CHIP RFID</span>
 
-                <strong>
-                  {corredor.chipRfid}
-                </strong>
+                <strong>—</strong>
+                {/*
+                  TODO: Implementar cuando se conecte el backend.
 
+                  El CHIP RFID dependerá del dorsal asignado.
+                  Al ingresar/asignar el dorsal, se deberá obtener
+                  el CHIP RFID correspondiente.
+
+                  Por ahora no se muestra ningún chip.
+                */}
               </div>
 
             </div>
@@ -245,7 +269,9 @@ function DetalleCorredor({
 
             <div className="detalle-corredor__aviso">
 
-              <span>ⓘ</span>
+              <span>
+                <Info size={20} />
+              </span>
 
               <p>
                 Asegúrese de verificar que el número de dorsal
@@ -265,7 +291,8 @@ function DetalleCorredor({
               disabled={!puedeEntregar}
               onClick={entregarKit}
             >
-              ▣ Entregar kit
+              <PackageCheck size={20} />
+              Entregar kit
             </button>
 
           </div>

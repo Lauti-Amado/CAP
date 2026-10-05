@@ -6,9 +6,15 @@ import DashboardClasificacion from './frontend/pantallas/clasificacion/Dashboard
 import GrandPrix from './frontend/pantallas/grandPrix/GrandPrix';
 import Certificates from './frontend/pantallas/certificados/Certificates';
 import BuscarCorredor from './frontend/pantallas/entregaKits/BuscarCorredor';
-import Carreras from './frontend/pantallas/carreras/Carreras'; ''
+import Carreras from './frontend/pantallas/carreras/Carreras';
+import DetalleCarrera from './frontend/pantallas/carreras/DetalleCarrera';
 import Resultados from './frontend/pantallas/resultados/Resultados';
 import ClasificacionTiempoReal from './frontend/pantallas/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal';
+import DetalleCorredor from './frontend/pantallas/entregaKits/DetalleCorredor';
+import Inscripciones from './frontend/pantallas/inscripciones/Inscripciones';
+import ModClasifCorredor from './frontend/pantallas/clasificacion/modClasifCorredor/modClasifCorredor';
+import DetalleInscripcion from './frontend/pantallas/inscripciones/DetalleInscripcion';
+import NuevaInscripcion from './frontend/pantallas/inscripciones/NuevaInscripcion';
 //import { DashboardData, dashboardData } from './dashboardData';
 
 function App() {
@@ -24,12 +30,24 @@ function App() {
           <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
           <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
           <Route path="/carreras" element={<Carreras />} />
-          {/*Agregar pantalla de resultados */}
+          <Route path="/carreras/:id" element={<DetalleCarrera />} />
           <Route path="/resultados" element={<Resultados />} />
           <Route path="/entrega-kits" element={<BuscarCorredor />} />
+          <Route path="/entrega-kits/corredor/:dni" element={<DetalleCorredor />} />
           <Route path="/grand-prix" element={<GrandPrix />} />
           <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => {}} />} />
+          <Route path="/entrega-kits/inscripciones" element={<Inscripciones />} />
+          <Route path="/entrega-kits/inscripciones/nueva" element={<NuevaInscripcion />} />
+          <Route path="/entrega-kits/inscripciones/:id" element={<DetalleInscripcion />} />
+          {/* Dashboard de clasificación de una carrera específica */}
+          {/* 
+          <Route
+            path="/dashboard-clasificacion-modificar/:id"
+            element={<DashboardClasificacionModificar />}
+          />
+          */}
+          <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
         </Route>
       </Routes>
     </HashRouter>

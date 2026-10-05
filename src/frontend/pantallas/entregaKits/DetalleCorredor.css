@@ -385,6 +385,18 @@
   outline: none;
 }
 
+.detalle-corredor__kit-dato input:disabled {
+  cursor: not-allowed;
+
+  color: #9aa39e;
+
+  opacity: 0.7;
+}
+
+.detalle-corredor__kit-dato input:disabled::placeholder {
+  color: #9aa39e;
+}
+
 .detalle-corredor__kit-dato:nth-child(2) strong {
   font-size: 22px;
   font-weight: 700;
