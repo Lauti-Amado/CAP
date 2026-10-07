@@ -44,6 +44,7 @@ type DatosCorredor = {
   telefono: string
   discapacidad: string
   aptoMedico: boolean
+  vencimientoAptoMedico: string
 }
 
 
@@ -77,6 +78,7 @@ function NuevaInscripcion() {
       telefono: '',
       discapacidad: '',
       aptoMedico: false,
+      vencimientoAptoMedico: '',
     })
 
 
@@ -227,6 +229,31 @@ function NuevaInscripcion() {
      VALIDACIÓN PASO 1
   ===================================================== */
 
+  // El apto médico debe tener una fecha de vencimiento futura.
+  // Si está marcado como aprobado pero la fecha falta o ya venció,
+  // se muestra una advertencia y no se permite continuar.
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+
+  const fechaVencimientoApto = datosCorredor.vencimientoAptoMedico
+    ? new Date(`${datosCorredor.vencimientoAptoMedico}T00:00:00`)
+    : null
+
+  const fechaAptoVencida =
+    fechaVencimientoApto !== null &&
+    fechaVencimientoApto <= hoy
+
+  const faltaFechaVencimiento =
+    datosCorredor.aptoMedico &&
+    datosCorredor.vencimientoAptoMedico === ''
+
+  const aptoMedicoValido =
+    !datosCorredor.aptoMedico ||
+    (
+      datosCorredor.vencimientoAptoMedico !== '' &&
+      !fechaAptoVencida
+    )
+
   const puedeContinuarPaso1 =
     datosCorredor.nombre.trim() !== '' &&
     datosCorredor.apellido.trim() !== '' &&
@@ -234,7 +261,8 @@ function NuevaInscripcion() {
     datosCorredor.fechaNacimiento !== '' &&
     datosCorredor.dni.trim() !== '' &&
     datosCorredor.telefono.trim() !== '' &&
-    contactoEmergencia !== null
+    contactoEmergencia !== null &&
+    aptoMedicoValido
 
 
   const continuarPaso1 = () => {
@@ -713,8 +741,47 @@ function NuevaInscripcion() {
 
                 </label>
 
-              </div>
+                </div>
+                {datosCorredor.aptoMedico && (
+                <div className="nueva-inscripcion__campo">
+                  <label htmlFor="vencimientoAptoMedico">
+                    Fecha de vencimiento del apto médico
+                  </label>
 
+                  <input
+                    id="vencimientoAptoMedico"
+                    type="date"
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 10)}
+                    value={datosCorredor.vencimientoAptoMedico}
+                    onChange={(e) =>
+                      actualizarDato('vencimientoAptoMedico', e.target.value)
+                    }
+                    required
+                    aria-invalid={
+                      faltaFechaVencimiento || fechaAptoVencida
+                    }
+                    aria-describedby="advertenciaAptoMedico"
+                  />
+                  {(faltaFechaVencimiento || fechaAptoVencida) && (
+                    <p
+                      id="advertenciaAptoMedico"
+                      className="nueva-inscripcion__error-apto"
+                      role="alert"
+                      style={{
+                        color: '#b42318',
+                        fontSize: '0.875rem',
+                        marginTop: '0.375rem',
+                      }}
+                    >
+                      {faltaFechaVencimiento
+                        ? 'Ingrese la fecha de vencimiento del apto médico para continuar.'
+                        : 'El apto médico está vencido. Cambie la fecha por una fecha futura para continuar con la inscripción.'}
+                    </p>
+                  )}
+                </div>
+              )}
 
             </div>
 
