@@ -4,8 +4,8 @@ export type Distancia = {
 }
 
 export type DistanciaCarrera = {
-  id: number
-  precioDistancia: number
+  id?: number
+  precioDistancia?: number
   distancia: Distancia
 }
 

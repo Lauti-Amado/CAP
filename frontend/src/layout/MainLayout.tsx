@@ -1,19 +1,8 @@
 
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import {
-  Archive,
-  BarChart3,
-  BadgeCheck,
-  Footprints,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  Timer,
-  Trophy,
-} from 'lucide-react';
-import capLogo from '../../assets/logoCAP.png';
-import '../../App.css';
-import Navbar from '../componentes/navegacion/Navbar';
+import { Archive, BarChart3, BadgeCheck, Footprints, LayoutDashboard, LogOut, Settings, Timer, Trophy } from 'lucide-react';
+import '../App.css';
+import Navbar from './Navbar';
 
 const navigation = [
   {
@@ -47,7 +36,7 @@ export default function MainLayout() {
     <div className="app-layout">
       <aside className="sidebar" aria-label="Navegación principal">
         <div className="brand">
-          <img className="brand-logo" src={capLogo} alt="Logo de CAP" />
+          <img className="brand-logo" src={'./images/logo-cap.png'} alt="Logo de CAP" />
           <div className="brand-copy">
             <div className="brand-title">CAP Gestión</div>
             <div className="brand-subtitle">Sistema de administración de carreras</div>
