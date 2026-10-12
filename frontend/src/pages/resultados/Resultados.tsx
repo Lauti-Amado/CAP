@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Resultados.css';
-import { Tabla, type Columna } from '../../componentes/tabla/Tabla';
+import { Tabla, type Columna } from '../../components/tabla/Tabla';
 
 interface ResultadoAtleta {
   id: number;
