@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import './Inscripciones.css'
 import { useState } from 'react'
 import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
-import { Tabla, type Columna } from '../../componentes/tabla/Tabla'
+import { Tabla, type Columna } from '../../components/tabla/Tabla'
 import type { Inscripcion, FiltrosInscripciones } from '../../types/inscripcion'
 // MOCK TEMPORAL
 import { inscripcionesMock } from './inscripcionesMock'

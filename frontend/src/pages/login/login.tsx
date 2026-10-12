@@ -2,7 +2,6 @@ import { useState } from 'react';
 import './login.css';
 import { resetAdminPassword, verifyAdminPassword } from './adminCredentials';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../../assets/logoCAP.png'; // Asegúrate de que la ruta de importación coincida con la ubicación real de tu archivo
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -56,7 +55,7 @@ const Login = () => {
       <div className="login-container">
         {/* LOGO */}
         <div className="logo-container">
-          <img src={logo} alt="Logo CAP Gestión" className="logo-image" />
+          <img src={'./images/logo-cap.png'} alt="Logo CAP Gestión" className="logo-image" />
         </div>
 
         {/* ENCABEZADOS */}
