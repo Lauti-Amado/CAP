@@ -1,10 +1,19 @@
 import { useState } from 'react';
-
-import './DashboardClasificacion.css'
+import './DashboardClasificacion.css';
 import { useNavigate } from 'react-router-dom';
+import { Tabla, type Columna } from '../../componentes/tabla/Tabla'; 
+
+interface ParticipanteClasificacion {
+  id: number;
+  dorsal: string;
+  atleta: string;
+  dni: string;
+  categoria: string;
+  estado: string;
+  tiempo?: string;
+}
 
 const DashboardClasificacion = () => {
- 
   const navigate = useNavigate();
 
   // Estados para los filtros y búsqueda
@@ -13,12 +22,12 @@ const DashboardClasificacion = () => {
 
   // Funciones preparadas para la navegación futura
   const handleIniciarCarrera = () => console.log("Lógica para iniciar el cronómetro");
-  const handleVerClasificacionTiempoReal = () => {navigate('/clasificacion-tiempo-real')}; ;
-  const handleVerParticipantes = () =>  console.log("Lógica para ver participantes");
-  const handleVerClasificacionCompleta = () =>  console.log("Lógica para ver clasificacion completa");
+  const handleVerClasificacionTiempoReal = () => { navigate('/clasificacion-tiempo-real'); };
+  const handleVerParticipantes = () => console.log("Lógica para ver participantes");
+  const handleVerClasificacionCompleta = () => console.log("Lógica para ver clasificacion completa");
 
   // Participantes hardcodeados para la demostración
-  const participantesMock = [
+  const participantesMock: ParticipanteClasificacion[] = [
     { id: 1, dorsal: '#1042', atleta: 'Juan Pérez', dni: '38.456.789', categoria: 'M 30-34', estado: 'PENDIENTE' },
     { id: 2, dorsal: '#1043', atleta: 'María Gómez', dni: '39.123.456', categoria: 'F 25-29', estado: 'EN CURSO' },
     { id: 3, dorsal: '#1044', atleta: 'Carlos Ruiz', dni: '35.987.654', categoria: 'M 35-39', estado: 'LLEGADO', tiempo: '00:45:12' },
@@ -32,13 +41,43 @@ const DashboardClasificacion = () => {
     return coincideBusqueda && coincideEstado;
   });
 
+  // Configuración de las columnas para el componente Tabla reutilizable
+  const columnasParticipantes: Columna<ParticipanteClasificacion>[] = [
+    { 
+      titulo: 'DORSAL', 
+      key: 'dorsal',
+      render: (p) => <strong className="dorsal-cell">{p.dorsal}</strong>
+    },
+    { 
+      titulo: 'ATLETA', 
+      key: 'atleta',
+      render: (p) => (
+        <div className="athlete-info">
+          <span className="athlete-name">{p.atleta}</span>
+          <span className="athlete-dni">DNI {p.dni}</span>
+        </div>
+      )
+    },
+    { 
+      titulo: 'CATEGORÍA', 
+      key: 'categoria' 
+    },
+    { 
+      titulo: 'ESTADO/TIEMPO', 
+      key: 'estado',
+      render: (p) => (
+        <>
+          {p.estado === 'PENDIENTE' && <span className="badge badge-gray-solid">PENDIENTE</span>}
+          {p.estado === 'EN CURSO' && <span className="badge badge-light-green">EN CURSO</span>}
+          {p.estado === 'LLEGADO' && <strong>{p.tiempo}</strong>}
+        </>
+      )
+    },
+  ];
+
   return (
     <div className="layout-container">
-      {/* Asumimos que tu Sidebar ya maneja el estado activo de la pestaña "Clasificación" */}
-      
       <main className="main-content">
-
-        {/* Contenido principal del Dashboard */}
         <div className="page-content dashboard-content">
           
           {/* Cabecera del Dashboard */}
@@ -95,7 +134,7 @@ const DashboardClasificacion = () => {
           {/* Layout de 2 Columnas (Tabla y Acciones) */}
           <div className="dashboard-columns">
             
-            {/* Columna Izquierda: Tabla de Participantes */}
+            {/* Columna Izquierda: Tabla Reutilizable de Participantes */}
             <div className="participants-panel">
               <div className="panel-header">
                 <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Participantes</h2>
@@ -122,43 +161,17 @@ const DashboardClasificacion = () => {
                 </div>
               </div>
 
-              <div className="table-container">
-                <table className="participants-table">
-                  <thead>
-                    <tr>
-                      <th>DORSAL</th>
-                      <th>ATLETA</th>
-                      <th>CATEGORÍA</th>
-                      <th>ESTADO/TIEMPO</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {participantesFiltrados.length > 0 ? (
-                      participantesFiltrados.map((p) => (
-                        <tr key={p.id} onClick={() => navigate(`/modificar-clasificacion/${p.id}`)} style={{ cursor: 'pointer' }}>
-                          <td className="dorsal-cell"><strong>{p.dorsal}</strong></td>
-                          <td>
-                            <div className="athlete-info">
-                              <span className="athlete-name">{p.atleta}</span>
-                              <span className="athlete-dni">DNI {p.dni}</span>
-                            </div>
-                          </td>
-                          <td>{p.categoria}</td>
-                          <td>
-                            {p.estado === 'PENDIENTE' && <span className="badge badge-gray-solid">PENDIENTE</span>}
-                            {p.estado === 'EN CURSO' && <span className="badge badge-light-green">EN CURSO</span>}
-                            {p.estado === 'LLEGADO' && <strong>{p.tiempo}</strong>}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="empty-state">No se encontraron participantes.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              {/* Implementación del componente Tabla reutilizable con evento de clic en filas */}
+              <Tabla 
+                columnas={columnasParticipantes}
+                datos={participantesFiltrados}
+                mensajeVacio="No se encontraron participantes."
+                paginaActual={1}
+                totalPaginas={1}
+                onCambiarPagina={() => {}}
+                textoPaginacion={`Mostrando ${participantesFiltrados.length} resultados`}
+                onRowClick={(participante) => navigate(`/modificar-clasificacion/${participante.id}`)}
+              />
             </div>
 
             {/* Columna Derecha: Acciones Rápidas */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './ClasificacionTiempoReal.css';
 import { useNavigate } from 'react-router-dom';
+import { Tabla, type Columna } from '../../../componentes/tabla/Tabla';
 
 interface LlegadaAtleta {
   id: number;
@@ -42,9 +43,59 @@ const ClasificacionTiempoReal: React.FC = () => {
     );
   });
 
+  // Configuración de las columnas con los formatos visuales (puestos de podio, badges, etc.)
+  const columnasLlegadas: Columna<LlegadaAtleta>[] = [
+    { 
+      titulo: 'PUESTO', 
+      key: 'puesto',
+      render: (atleta) => {
+        const esPodio = atleta.puesto <= 3;
+        return (
+          <span className={`rt-puesto ${esPodio ? `puesto-${atleta.puesto}` : ''}`}>
+            <strong>{atleta.puesto}</strong>
+          </span>
+        );
+      }
+    },
+    { 
+      titulo: 'DORSAL', 
+      key: 'dorsal',
+      render: (atleta) => <strong>{atleta.dorsal}</strong>
+    },
+    { 
+      titulo: 'CORREDOR', 
+      key: 'apellidosNombres',
+      render: (atleta) => <span className="rt-runner-name">{atleta.apellidosNombres}</span>
+    },
+    { 
+      titulo: 'DNI', 
+      key: 'dni',
+      render: (atleta) => <span className="rt-dni">{atleta.dni}</span>
+    },
+    { 
+      titulo: 'CATEGORÍA', 
+      key: 'categoria' 
+    },
+    { 
+      titulo: 'TIEMPO', 
+      key: 'tiempo',
+      render: (atleta) => <span className="rt-time"><strong>{atleta.tiempo}</strong></span>
+    },
+    { 
+      titulo: 'ESTADO', 
+      key: 'estado',
+      render: (atleta) => (
+        atleta.estado === 'OFICIAL' ? (
+          <span className="rt-badge-status status-oficial">OFICIAL</span>
+        ) : (
+          <span className="rt-badge-status status-revision">EN REVISIÓN</span>
+        )
+      )
+    },
+  ];
+
   return (
     <div className="rt-container">
-
       <div className="rt-content">
         
         {/* Cabecera de la Carrera y Cronómetro */}
@@ -54,7 +105,9 @@ const ClasificacionTiempoReal: React.FC = () => {
             <button 
               className="rt-btn-action" 
               onClick={() => navigate('/dashboard-clasificacion')}
-            >Volver a Dashboard de Clasificación</button>
+            >
+              Volver a Dashboard de Clasificación
+            </button>
           </div>
           <div className="rt-timer-status-row">
             <span className="badge badge-light-green"><span className="pulse-dot"></span> EN CURSO</span>
@@ -78,7 +131,7 @@ const ClasificacionTiempoReal: React.FC = () => {
           </div>
         </div>
 
-        {/* Sección de Llegadas Recientes */}
+        {/* Sección de Llegadas Recientes con la Tabla Reutilizable */}
         <div className="rt-table-card">
           <div className="rt-table-header-row">
             <h2>Llegadas Recientes</h2>
@@ -93,51 +146,16 @@ const ClasificacionTiempoReal: React.FC = () => {
             </div>
           </div>
 
-          <div className="table-container">
-            <table className="rt-table">
-              <thead>
-                <tr>
-                  <th>PUESTO</th>
-                  <th>DORSAL</th>
-                  <th>CORREDOR</th>
-                  <th>DNI</th>
-                  <th>CATEGORÍA</th>
-                  <th>TIEMPO</th>
-                  <th>ESTADO</th>
-                </tr>
-              </thead>
-              <tbody>
-                {llegadasFiltradas.length > 0 ? (
-                  llegadasFiltradas.map((atleta) => {
-                    const esPodio = atleta.puesto <= 3;
-                    return (
-                      <tr key={atleta.id} className={esPodio ? 'rt-podium-row' : ''}>
-                        <td className={`rt-puesto ${esPodio ? `puesto-${atleta.puesto}` : ''}`}>
-                          <strong>{atleta.puesto}</strong>
-                        </td>
-                        <td><strong>{atleta.dorsal}</strong></td>
-                        <td className="rt-runner-name">{atleta.apellidosNombres}</td>
-                        <td className="rt-dni">{atleta.dni}</td>
-                        <td>{atleta.categoria}</td>
-                        <td className="rt-time"><strong>{atleta.tiempo}</strong></td>
-                        <td>
-                          {atleta.estado === 'OFICIAL' ? (
-                            <span className="rt-badge-status status-oficial">OFICIAL</span>
-                          ) : (
-                            <span className="rt-badge-status status-revision">EN REVISIÓN</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="rt-empty">No se encontraron registros recientes.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Tabla 
+            columnas={columnasLlegadas}
+            datos={llegadasFiltradas}
+            mensajeVacio="No se encontraron registros recientes."
+            paginaActual={1}
+            totalPaginas={1}
+            onCambiarPagina={() => {}}
+            textoPaginacion={`Mostrando ${llegadasFiltradas.length} resultados`}
+            onRowClick={(atleta) => navigate(`/modificar-clasificacion/${atleta.id}`)}
+          />
         </div>
 
         {/* Sección de Paneles Inferiores (Participantes y Estado del Sistema) */}

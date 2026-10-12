@@ -17,6 +17,7 @@ interface TablaProps<T> {
   totalPaginas: number;
   onCambiarPagina: (nuevaPagina: number) => void;
   textoPaginacion: string; // Ej: "Mostrando 1 - 50 de 1245 resultados"
+  onRowClick?: (fila: T) => void;
 }
 
 export function Tabla<T extends { id: string | number }>({ 
@@ -26,7 +27,8 @@ export function Tabla<T extends { id: string | number }>({
   paginaActual,
   totalPaginas,
   onCambiarPagina,
-  textoPaginacion
+  textoPaginacion,
+  onRowClick
 }: TablaProps<T>) {
 
   // Generador de botones de páginas
@@ -61,7 +63,10 @@ export function Tabla<T extends { id: string | number }>({
           <tbody>
             {datos.length > 0 ? (
               datos.map((fila) => (
-                <tr key={fila.id}>
+                <tr key={fila.id}
+                  onClick={() => onRowClick && onRowClick(fila)}
+                  style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                >
                   {columnas.map((col, colIndex) => {
                     const valor = col.render 
                       ? col.render(fila) 
