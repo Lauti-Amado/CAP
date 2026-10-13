@@ -1,11 +1,9 @@
-import { PrismaClient } from "../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
-const adapter = new PrismaPg({ 
-    connectionString: process.env.DATABASE_URL 
-});
+const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL || "file:./dev.db" });
 
-export const prisma = new PrismaClient({ 
+export const prisma = new PrismaClient({
     adapter,
-    omit: { usuario: { passwordHash: true } },
- });
+    omit: { usuario: { passwordHash: true } }
+});

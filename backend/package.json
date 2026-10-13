@@ -12,14 +12,13 @@
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.0",
-    "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.9.1",
     "bcrypt": "^6.0.0",
+    "better-sqlite3": "^13.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

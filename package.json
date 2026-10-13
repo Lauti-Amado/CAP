@@ -1,0 +1,44 @@
+{
+  "name": "sistema-clasificacion-cap",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:electron": "tsc && electron .",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:electron\"",
+    "build:backend": "cd backend && npx tsc",
+    "build:frontend": "cd frontend && npm run build",
+    "build:electron": "tsc",
+    "build": "npm run build:backend && npm run build:frontend && npm run build:electron",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "electron": "^44.0.0",
+    "electron-builder": "^24.13.3",
+    "wait-on": "^9.5.1"
+  },
+  "build": {
+    "appId": "com.cap.clasificacion",
+    "productName": "CAP",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "electron/**/*.html",
+      "frontend/dist/**/*",
+      "backend/dist/**/*",
+      "backend/node_modules/**/*",
+      "backend/prisma/**/*"
+    ],
+    "asarUnpack": [
+      "backend/node_modules/@prisma/client",
+      "backend/node_modules/@prisma/engines",
+      "backend/node_modules/.prisma"
+    ]
+  }
+}
