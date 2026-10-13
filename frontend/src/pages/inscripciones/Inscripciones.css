@@ -164,8 +164,8 @@
 
   background-color: #ffffff;
 
-  border: 1px solid #d6dbe1;
-  border-radius: 6px;
+  border: 1px solid #e1e5ea;
+  border-radius: 8px;
 
   overflow: hidden;
 }
@@ -197,6 +197,7 @@
 
 .inscripciones__tabla .participants-table {
   width: 100%;
+  table-layout: fixed;
 
   border-collapse: collapse;
   border-spacing: 0;
@@ -211,17 +212,17 @@
 .inscripciones__tabla .participants-table th {
   position: static;
 
-  height: 32px;
+  height: 44px;
   box-sizing: border-box;
 
   padding: 0 10px;
 
-  background-color: #f5f7fa;
+  background-color: #f0f3ff;
 
   color: #344054;
 
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 600;
 
   border-bottom: 1px solid #d9dee5;
 
@@ -235,7 +236,7 @@
 ========================= */
 
 .inscripciones__tabla .participants-table td {
-  height: 48px;
+  height: 80px;
   box-sizing: border-box;
 
   padding: 0 10px;
@@ -259,17 +260,38 @@
   background-color: #f8fafc;
 }
 
+/* Corredor (columna 2) */
+.inscripciones__tabla .participants-table td:nth-child(2) {
+  font-weight: 700;
+}
+
+/* Carrera (columna 3) */
+.inscripciones__tabla .participants-table td:nth-child(3) {
+  font-size: 10px;
+  color: #4b5563;
+}
+
+/* Anchos de columnas (suman 100%) */
+.inscripciones__tabla .participants-table th:nth-child(1) { width: 11%; }  /* DNI */
+.inscripciones__tabla .participants-table th:nth-child(2) { width: 12%; }  /* Corredor */
+.inscripciones__tabla .participants-table th:nth-child(3) { width: 15%; }  /* Carrera */
+.inscripciones__tabla .participants-table th:nth-child(4) { width: 10%; }  /* Distancia */
+.inscripciones__tabla .participants-table th:nth-child(5) { width: 11%; }  /* Fecha */
+.inscripciones__tabla .participants-table th:nth-child(6) { width: 10%; }  /* Tipo */
+.inscripciones__tabla .participants-table th:nth-child(7) { width: 10%; }  /* Pago */
+.inscripciones__tabla .participants-table th:nth-child(8) { width: 11%; }  /* Estado */
+
 /* =========================
    COLUMNA ACCIONES
 ========================= */
 
 .inscripciones__tabla .participants-table th:last-child {
-  width: 85px;
+  width: 10%;
   text-align: center;
 }
 
 .inscripciones__tabla .participants-table td:last-child {
-  width: 85px;
+  width: 10%;
 
   text-align: center;
   white-space: nowrap;
@@ -290,10 +312,11 @@
 
 .inscripciones__acciones-superiores {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 5px;
+  gap: 4px;
 }
 
 .inscripciones__acciones-superiores button {
@@ -301,16 +324,16 @@
   align-items: center;
   justify-content: center;
 
-  width: 25px;
-  height: 25px;
+  width: 16px;
+  height: 16px;
 
   margin: 0;
   padding: 0;
 
-  border: 1px solid #d0d5dd;
+  border: none;
   border-radius: 4px;
 
-  background-color: #ffffff;
+  background-color: transparent;
   color: #344054;
 
   cursor: pointer;
@@ -432,6 +455,7 @@
 }
 
 /* =========================
+   TIPO
    PAGINACIÓN
 ========================= */
 
@@ -440,10 +464,10 @@
   align-items: center;
   justify-content: space-between;
 
-  min-height: 52px;
+  min-height: 44px;
   box-sizing: border-box;
 
-  padding: 0 26px;
+  padding: 0 14px;
 
   border-top: 1px solid #e1e5ea;
 
@@ -451,7 +475,7 @@
 }
 
 .inscripciones__tabla .pagination-info {
-  font-size: 13px;
+  font-size: 10px;
   color: #667085;
 }
 
@@ -467,8 +491,8 @@
   align-items: center;
   justify-content: center;
 
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
 
   padding: 0;
 

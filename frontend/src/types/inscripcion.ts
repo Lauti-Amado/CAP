@@ -5,6 +5,7 @@ export type Inscripcion = {
   carrera: string
   distancia: string
   fecha: string
+  tipo: 'Socio' | 'No socio'
   pago: string
   estado: string
 }

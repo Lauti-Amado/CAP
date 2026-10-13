@@ -1,3 +1,4 @@
+//frontend/src/pages/inscripciones/Inscripciones.tsx
 import { useNavigate } from 'react-router-dom'
 import './Inscripciones.css'
 import { useState } from 'react'
@@ -78,6 +79,19 @@ function Inscripciones() {
   {
     titulo: 'Fecha',
     key: 'fecha',
+  },
+  {
+    titulo: 'Tipo',
+    key: 'tipo',
+    render: (inscripcion) => (
+      <span
+        className={`inscripciones__badge inscripciones__badge--tipo-${inscripcion.tipo
+          .toLowerCase()
+          .replace(/\s+/g, '-')}`}
+      >
+        {inscripcion.tipo}
+      </span>
+    ),
   },
   {
     titulo: 'Pago',
@@ -272,8 +286,9 @@ function Inscripciones() {
           paginaActual={paginaActual}
           //UNA VEZ QUE SE HAGA EL BACK ESTO CAMBIA A
           //totalPaginas={resultado.totalPaginas}
-          totalPaginas={1}
+          totalPaginas={2}
           onCambiarPagina={setPaginaActual}
+          mostrarNumeros={false} 
           textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripciones.length} inscripciones`}
         />
       </section>

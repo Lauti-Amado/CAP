@@ -1,3 +1,4 @@
+//frontend/src/components/tabla.Tabla.tsx
 import React from 'react';
 import './Tabla.css';
 
@@ -18,6 +19,7 @@ interface TablaProps<T> {
   onCambiarPagina: (nuevaPagina: number) => void;
   textoPaginacion: string; // Ej: "Mostrando 1 - 50 de 1245 resultados"
   onRowClick?: (fila: T) => void;
+  mostrarNumeros?: boolean;
 }
 
 export function Tabla<T extends { id: string | number }>({ 
@@ -28,6 +30,8 @@ export function Tabla<T extends { id: string | number }>({
   totalPaginas,
   onCambiarPagina,
   textoPaginacion,
+  onRowClick,
+  mostrarNumeros = true
   onRowClick
 }: TablaProps<T>) {
 
@@ -104,7 +108,7 @@ export function Tabla<T extends { id: string | number }>({
                 </svg>
               </button>
 
-              {generarBotonesPaginas()}
+              {mostrarNumeros && generarBotonesPaginas()}
 
               <button 
                 className="page-nav-btn" 
