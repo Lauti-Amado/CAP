@@ -1,0 +1,377 @@
+/* Contenedor general */
+.rt-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #F8FAFC;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Topbar */
+.rt-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: white;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.rt-content {
+  padding: 28px 32px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Cabecera principal de la pantalla */
+.rt-header-main {
+  margin-bottom: 24px;
+}
+
+.rt-title-row h1 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.rt-timer-status-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.rt-timer-clock {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  font-family: monospace;
+}
+
+/* Botones de acción rápida superior */
+.rt-action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.rt-btn-action {
+  background-color: white;
+  border: 1px solid #D1D5DB;
+  color: #374151;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rt-btn-action:hover {
+  background-color: #F3F4F6;
+  border-color: #9CA3AF;
+}
+
+.rt-btn-action svg {
+  width: 16px;
+  height: 16px;
+  color: #4B5563;
+}
+
+.rt-btn-danger {
+  color: #DC2626;
+  border-color: #FCA5A5;
+}
+
+.rt-btn-danger:hover {
+  background-color: #FEF2F2;
+  border-color: #EF4444;
+}
+
+.rt-btn-danger svg {
+  color: #DC2626;
+}
+
+/* Tarjeta de Tabla de Llegadas Recientes */
+.rt-table-card {
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.rt-table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.rt-table-header-row h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.rt-search-input {
+  position: relative;
+  width: 280px;
+}
+
+.rt-search-input svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #9CA3AF;
+}
+
+.rt-search-input input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.rt-search-input input:focus {
+  border-color: #16A34A;
+}
+
+/* Tabla interna */
+.rt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rt-table th {
+  background-color: #F8FAFC;
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  border-bottom: 2px solid #E2E8F0;
+}
+
+.rt-table td {
+  padding: 14px;
+  font-size: 13px;
+  color: #1E293B;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+.rt-podium-row {
+  background-color: #F0FDF4;
+}
+
+.rt-puesto {
+  font-size: 15px;
+}
+
+.puesto-1 { color: #16A34A; }
+.puesto-2 { color: #0D9488; }
+.puesto-3 { color: #CA8A04; }
+
+.rt-runner-name {
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.rt-dni {
+  color: #475569;
+}
+
+.rt-time {
+  font-family: monospace;
+  font-size: 14px;
+  color: #0F172A;
+}
+
+/* Badges de Estado en Tabla */
+.rt-badge-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.status-oficial {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.status-revision {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.rt-empty {
+  text-align: center;
+  color: #64748B;
+  padding: 24px !important;
+}
+
+/* Grid Inferior (2 Columnas) */
+.rt-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.rt-card-box {
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.rt-card-box h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+/* Estadísticas de Participantes */
+.rt-stats-row {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+
+.rt-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rt-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.rt-stat-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.rt-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-prog-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #4B5563;
+}
+
+.rt-progress-track {
+  width: 100%;
+  height: 6px;
+  background-color: #E5E7EB;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rt-progress-fill {
+  height: 100%;
+  background-color: #16A34A;
+  border-radius: 4px;
+}
+
+/* Estado del Sistema (RFID) */
+.rt-system-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rt-rfid-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #16A34A;
+}
+
+.rt-rfid-status svg {
+  width: 16px;
+  height: 16px;
+}
+
+.rt-last-read-box {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.rt-read-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1E40AF;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.rt-read-detail {
+  font-size: 15px;
+  color: #1E3A8A;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rt-time-ago {
+  font-size: 12px;
+  color: #60A5FA;
+  font-weight: 600;
+}
+
+.rt-antennas-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #F3F4F6;
+  padding-top: 12px;
+}
+
+.rt-antenna-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #4B5563;
+}
+
+.rt-ant-ok {
+  font-weight: 600;
+  color: #16A34A;
+}

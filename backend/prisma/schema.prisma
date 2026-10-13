@@ -1,0 +1,495 @@
+/*
+El siguiente esquema de prisma es muy similar al del sistema web.
+Las tablas que se presentan a continuación coinciden en datos con
+este mismo, salvo por algunas tablas ausentes (innecesarias para
+los fines de este sistema) y atributos (también innecesarios).
+Sea este el caso, las tablas tendrán un 'DIFIERE: atr1, atr2...'
+*/
+
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "sqlite"
+}
+
+            //###USUARIOS###
+model Corredor {
+    id                   String @id @default(uuid())
+
+    fechaNacimiento      DateTime
+    sexo                 Sexo
+    discapacidad         Discapacidad?
+    contactoEmergenciaId String
+    contactoEmergencia   Persona @relation("ContactoEmergencia", fields: [contactoEmergenciaId], references: [id])
+
+    aptosMedicos         AptoMedico[]
+
+    personaId            String @unique //La persona a la que pertenece
+    persona              Persona @relation("PersonaCorredor", fields: [personaId], references: [id])
+
+    afiliacion           Afiliacion? //Utilizado para el Grand Prix (sólo participan afiliados)
+    inscripciones        Inscripcion[]
+}
+
+//DIFIERE: archivoUrl
+model AptoMedico {
+    id                  String @id @default(uuid())
+
+    aprobado            Boolean @default(false)
+    fechaVencimiento    DateTime
+
+    corredorId          String
+    corredor            Corredor @relation(fields: [corredorId], references: [id])
+
+    fechaCreacion       DateTime @default(now())
+}
+
+model Persona {
+    id                              String @id @default(uuid())
+
+    dni                             String @unique
+    nombre                          String
+    apellido                        String
+    telefono                        String
+
+    usuario                         Usuario? //Es posible crear el registro de una persona presencialmente para una carrera. En este caso, si desea tener una cuenta debe vincularla con su persona luego.
+    corredor                        Corredor? @relation("PersonaCorredor") //Una persona puede ser simplemente un contacto de emergencia y no necesariamente un corredor
+    corredoresContactoEmergencia    Corredor[] @relation("ContactoEmergencia") //En qué corredores sale como contacto de emergencia
+
+    fechaHoraCreacion               DateTime @default(now())
+    fechaHoraModificacion           DateTime @updatedAt
+}
+
+//DIFIERE: compras
+model Usuario {
+    id                    String @id @default(uuid())
+
+    email                 String @unique
+    passwordHash          String
+    estado                EstadoUsuario @default(Activo)
+
+    personaId             String @unique //La persona a la que pertenece
+    persona               Persona @relation(fields: [personaId], references: [id])
+    roles                 UsuarioRol[] //Los roles administrativos que tiene (si tiene alguno)
+
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+}
+
+model RolAdministrativo {
+    id                  String @id @default(uuid())
+
+    rol                 Rol
+
+    usuariosAsignados   UsuarioRol[]
+}
+
+model UsuarioRol { //Se crea una tabla explícita para no hacer conflicto con PowerSync
+    id                  String @id @default(uuid())
+    
+    usuarioId           String
+    usuario             Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+    
+    rolAdministrativoId String
+    rolAdministrativo   RolAdministrativo @relation(fields: [rolAdministrativoId], references: [id], onDelete: Cascade)
+
+    @@unique([usuarioId, rolAdministrativoId]) //Un usuario puede tener un rol específico una sola vez
+}
+
+
+            //###COMPRA###
+
+//DIFIERE: afiliacion, usuario, metodoPago (default con pago presencial)
+model Compra {
+    id                    String @id @default(uuid())
+
+    montoTotal            Float
+    isPagado              Boolean @default(false)
+    metodoPago            MetodoPago @default(Pago_presencial) //A fines de este sistema, cualquier compra creada es siempre presencial por defecto.
+
+    //A quién pertenece la compra
+    usuarioId             String
+
+    //Contenidos de la compra
+    detallesProductos     DetalleProducto[] //Como el array puede estar vacio, no necesariamente la compra tiene productos
+    inscripcion           Inscripcion?
+
+    comprobante           Comprobante?
+
+    fechaHoraCreacion     DateTime              @default(now())
+    fechaHoraModificacion DateTime              @updatedAt
+    //usuarioModificacion
+}
+
+//DIFIERE: codigoComprobante, entidadEmisora, entidadEmisoraId
+model Comprobante {
+    id                          String @id @default(uuid())
+    montoTotalPago              Float
+    fechaHoraPago               DateTime
+
+    //El titular del pago no es necesariamente el mismo corredor que viene a inscribirse presencialmente!
+    documentoTitularPago        String
+    nombreApellidoTitularPago   String
+
+    compraId                    String @unique
+    compra                      Compra @relation(fields: [compraId], references: [id], onDelete: Cascade)
+}
+
+
+
+            //###PRODUCTOS###
+
+//DIFIERE: imagenUrl, fechaHoraCreacion, fechaHoraModificacion
+model Producto {
+    id                      String @id @default(uuid())
+    nombreProducto          String             @unique
+
+    variantes               ProductoVariante[]
+}
+
+//DIFIERE: fechaHoraCreacion, fechaHoraModificacion
+model ProductoVariante {
+    id              String @id @default(uuid())
+    nombreVariante  String
+    precio          Float
+    stock           Int      @default(0)
+
+    idProducto      String
+    producto        Producto @relation(fields: [idProducto], references: [id], onDelete: Cascade)
+
+    detallesCompra  DetalleProducto[]
+}
+
+model DetalleProducto {
+    id                  String @id @default(uuid())
+    cantidad            Int
+    fechaHoraCreacion   DateTime @default(now())
+
+    productoId          String
+    producto            ProductoVariante @relation(fields: [productoId], references: [id])
+
+    compraId            String
+    compra              Compra @relation(fields: [compraId], references: [id], onDelete: Cascade)
+}
+
+
+
+            //###AFILIACION###
+
+//DIFIERE: imagenUrl, compraId, compra
+model Afiliacion {
+    id                  String @id @default(uuid())
+    numeroSocio         Int @unique
+    afiliadoId          String @unique
+    afiliado            Corredor @relation(fields: [afiliadoId], references: [id])
+
+    fechaHoraAlta       DateTime @default(now())
+}
+
+
+
+            //###CARRERAS###
+model Carrera {
+    id                    String @id @default(uuid())
+
+    nombre                String
+    fechaHoraCarrera      DateTime @unique //No se pueden realizar dos carreras en simultaneo
+    fechaHoraEntregaKits  DateTime @unique
+    imagenUrl             String
+    descripcion           String
+    participantesMax      Int
+    lugarId               String
+    lugar                 Lugar @relation(fields: [lugarId], references: [id])
+
+    estado                EstadoCarrera @default(Creada)
+    
+    distanciaCarrera      DistanciaCarrera[]
+
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+    //usuarioModificacion
+}
+
+model Distancia {
+    id               String @id @default(uuid())
+    kilometraje      Float
+    tipoDistancia    TipoDistancia
+
+    distanciaCarrera DistanciaCarrera[]
+
+    @@unique([kilometraje, tipoDistancia])
+}
+
+model DistanciaCarrera { //Tabla intermedia explicita entre Carrera y Distancia
+    id              String @id @default(uuid())
+    precioDistancia Float
+
+    idCarrera       String
+    carrera         Carrera   @relation(fields: [idCarrera], references: [id], onDelete: Cascade) //Se borran las DistanciaCarrera pero no las distancias. Esas pueden quedar creadas (ya que pueden ser reutilizadas)
+    idDistancia     String
+    distancia       Distancia @relation(fields: [idDistancia], references: [id])
+
+    inscripciones   Inscripcion[]
+}
+
+model Localidad {
+    id              String  @id @default(uuid())
+    nombre          String  @unique
+    codigoPostal    String
+
+    lugares         Lugar[]
+}
+
+model Lugar {
+    id           String @id @default(uuid())
+    nombre       String    @unique
+
+    localidadId  String
+    localidad    Localidad @relation(fields: [localidadId], references: [id])
+
+    carreras     Carrera[]
+}
+
+
+
+            //###INSCRIPCIONES###
+model Inscripcion {
+    id                    String @id @default(uuid())
+
+    estado                EstadoInscripcion @default(En_proceso)
+
+    idCompra              String @unique
+    compra                Compra @relation(fields: [idCompra], references: [id])
+
+    idCorredor            String
+    corredor              Corredor @relation(fields: [idCorredor], references: [id])
+
+    idDistanciaCarrera    String //La carrera y la distancia a la que se anotó el corredor
+    distanciaCarrera      DistanciaCarrera @relation(fields: [idDistanciaCarrera], references: [id])
+
+    equipoId              String?
+    equipo                Equipo? @relation(fields: [equipoId], references: [id])
+
+    certificadoCarrera    CertificadoCarrera?
+
+    entregaKit            EntregaKit?
+    clasificacion         Clasificacion?
+
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+}
+
+model CertificadoCarrera {
+    id                  String @id @default(uuid())
+
+    enviado             Boolean
+    url                 String
+
+    inscripcionId       String @unique
+    inscripcion         Inscripcion @relation(fields: [inscripcionId], references: [id], onDelete: Cascade)
+
+    fechaHoraCreacion   DateTime @default(now())
+}
+
+model Equipo {
+    id              String @id @default(uuid())
+
+    nombre          String
+    codigoEquipo    String?
+
+    inscripciones   Inscripcion[]
+
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+}
+
+
+        //###CLASIFICACIONES Y CHIPS###
+model EntregaKit {
+    id                    String @id @default(uuid())
+
+    inscripcionId         String @unique
+    inscripcion           Inscripcion @relation(fields: [inscripcionId], references: [id], onDelete: Cascade)
+
+    dorsalId              String
+    dorsal                Dorsal @relation(fields: [dorsalId], references: [id])
+
+    fechaHoraEntrega      DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+    //usuarioModificacion
+}
+
+model Dorsal {
+    id              String @id @default(uuid())
+
+    numero          String
+
+    entregas        EntregaKit[] //Las entregas de kit donde este dorsal fue entregado
+    chip            Chip?
+}
+
+model Chip {
+    id              String @id @default(uuid())
+
+    numero          Int
+
+    dorsalId        String @unique
+    dorsal          Dorsal @relation(fields: [dorsalId], references: [id], onDelete: Cascade)
+
+    lecturas        LecturaRFID[]
+}
+
+model LecturaRFID {
+    id               String @id @default(uuid())
+
+    fechaHoraLectura DateTime
+    intensidad       Int
+
+    chipId           String
+    chip             Chip @relation(fields: [chipId], references: [id], onDelete: Cascade)
+
+    lectorRFIDId    String
+    lectorRFID      LectorRFID @relation(fields: [lectorRFIDId], references: [id], onDelete: Cascade)
+}
+
+model LectorRFID {
+    id              String @id @default(uuid())
+
+    codigo          Int
+    fechaHora       DateTime
+
+    lecturas        LecturaRFID[]
+}
+
+model Clasificacion {
+    id                    String @id @default(uuid())
+
+    estado                EstadoClasificacion @default(Pendiente)
+
+    inscripcionId         String @unique
+    inscripcion           Inscripcion @relation(fields: [inscripcionId], references: [id], onDelete: Cascade)
+
+    resultado             Resultado?
+
+    fechaHoraCreacion     DateTime           @default(now())
+    fechaHoraModificacion DateTime           @updatedAt
+    //usuarioModificacion
+}
+
+model Resultado {
+    id                    String @id @default(uuid())
+
+    tiempoLlegada         Int //Se almacena en milisegundos
+    puestoGeneral         Int
+    estado                EstadoResultado
+
+    clasificacionId       String @unique
+    clasificacion         Clasificacion @relation(fields: [clasificacionId], references: [id], onDelete: Cascade)
+
+    resultadosCategoria   ResultadoCategoria[]
+
+    fechaHoraCreacion     DateTime           @default(now())
+    fechaHoraModificacion DateTime           @updatedAt
+    //usuarioModificacion
+}
+
+model ResultadoCategoria {
+    id              String @id @default(uuid())
+
+    puesto          Int
+
+    resultadoId     String
+    resultado       Resultado @relation(fields: [resultadoId], references: [id], onDelete: Cascade)
+
+    categoriaId     String
+    categoria       Categoria @relation(fields: [categoriaId], references: [id])
+
+
+}
+
+model Categoria {
+    id              String @id @default(uuid())
+
+    nombre          String
+    descripcion     String
+
+    resultados      ResultadoCategoria[]
+    criterios       CriterioCategoria[]
+}
+
+model CriterioCategoria {
+    id              String @id @default(uuid())
+
+    nombre          String
+    valor           String
+
+    categoriaId     String
+    categoria       Categoria @relation(fields: [categoriaId], references: [id])
+}
+
+
+
+            //###ENUMS
+enum Rol {
+    Administrador
+    Tesorero
+    Clasificador
+}
+
+enum Sexo {
+    Masculino
+    Femenino
+}
+
+enum Discapacidad {
+    Discapacidad_general
+    Discapacidad_silla
+    Discapacidad_visual
+}
+
+enum EstadoCarrera {
+    Creada //Se crea en el dashboard de admins
+    Publicada //Se publica desde el dashboard (sin inscripciones)
+    Activa //Se habilitan las inscripciones web
+    Entrega_kits //Llega el día de la entrega de kits y se desabilitan las inscripciones
+    En_curso //Comienza la carrera con el accionar del administrador
+    Finalizada //Finaliza la carrera con el accionar del administrador
+    Cancelada
+}
+
+enum EstadoUsuario {
+    Activo
+    Inactivo //Se hizo un borrado lógico del usuario
+}
+
+enum EstadoInscripcion {
+    En_proceso //El usuario crea una inscripción en la web pero no la paga
+    Pagada //El usuario paga la inscripción en la web
+    Confirmada //El corredor retira su kit y se le instancia una EntregaKit a su Inscripcion
+    Anulada
+}
+
+enum EstadoClasificacion {
+    Pendiente //El corredor se encuentra corriendo la carrera
+    Finalizo //El corredor comienza y termina la carrera legalmente
+    No_finalizo //El corredor comienza la carrera pero no se registra su llegada
+    Descalificado //Un clasificador marca al corredor como descalificado
+}
+
+enum EstadoResultado {
+    Oficial
+    En_revision
+}
+
+enum TipoDistancia {
+    Participativa
+    Competitiva
+}
+
+enum MetodoPago {
+    Pago_virtual
+    Pago_presencial
+}

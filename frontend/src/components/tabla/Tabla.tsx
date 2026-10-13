@@ -32,6 +32,7 @@ export function Tabla<T extends { id: string | number }>({
   textoPaginacion,
   onRowClick,
   mostrarNumeros = true
+  onRowClick
 }: TablaProps<T>) {
 
   // Generador de botones de páginas

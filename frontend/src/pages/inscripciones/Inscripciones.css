@@ -456,22 +456,6 @@
 
 /* =========================
    TIPO
-========================= */
-
-.inscripciones__badge--tipo-socio {
-  background-color: #bbf7d0;
-  color: #15803d;
-  border: 1px solid #86efac;
-}
-
-.inscripciones__badge--tipo-no-socio {
-  background-color: #e0e7ff;
-  color: #475467;
-  border: 1px solid #c7d2fe;
-  padding: 6px 10px;
-}
-
-/* =========================
    PAGINACIÓN
 ========================= */
 

@@ -1,0 +1,241 @@
+/* Contenedor Principal */
+.mod-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #F8FAFC;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Topbar */
+.mod-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: white;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.mod-content {
+  padding: 28px 32px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Cabecera de la página */
+.mod-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.mod-title-group h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.mod-id-registro {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0;
+}
+
+.mod-actions-top {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-secondary-mod {
+  background-color: white;
+  border: 1px solid #D1D5DB;
+  color: #374151;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary-mod:hover {
+  background-color: #F3F4F6;
+}
+
+.btn-primary-mod {
+  background-color: #10B981;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary-mod:hover {
+  background-color: #059669;
+}
+
+.btn-primary-mod svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Tarjetas de Secciones */
+.mod-section-card {
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.mod-section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mod-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mod-title-with-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #4B5563;
+}
+
+.mod-icon-green svg {
+  color: #10B981;
+}
+
+.mod-title-with-icon h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.mod-badge-locked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #F3F4F6;
+  color: #4B5563;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mod-badge-locked svg {
+  width: 14px;
+  height: 14px;
+}
+
+.mod-section-subtitle {
+  font-size: 13px;
+  color: #6B7280;
+  margin: -12px 0 16px 0;
+}
+
+/* Grids de Inputs */
+.mod-grid-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.mod-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mod-input-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.mod-input-group input, .mod-input-group select {
+  padding: 10px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background-color: #F9FAFB;
+  font-size: 14px;
+  color: #1F2937;
+  outline: none;
+}
+
+.mod-input-group input:disabled {
+  color: #374151;
+  background-color: #F9FAFB;
+}
+
+/* Sección Editable con Borde Verde */
+.mod-editable-card {
+  border-left: 4px solid #10B981;
+}
+
+.mod-inner-box {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.mod-grid-editable {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.mod-editable-card input, .mod-editable-card select {
+  background-color: white !important;
+  border-color: #D1D5DB !important;
+}
+
+.mod-editable-card input:focus, .mod-editable-card select:focus {
+  border-color: #10B981 !important;
+}
+
+.mod-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mod-input-with-icon input {
+  width: 100%;
+  padding-right: 36px;
+}
+
+.mod-input-with-icon svg {
+  position: absolute;
+  right: 12px;
+  width: 18px;
+  height: 18px;
+  color: #9CA3AF;
+  pointer-events: none;
+}

@@ -1,0 +1,63 @@
+/* Contenedor principal con altura fija y scroll vertical */
+.table-container {
+  width: 100%;
+  max-height: 400px; /* Puedes ajustar este alto según tus necesidades */
+  overflow-y: auto;  /* Habilita el scroll vertical cuando hay muchos corredores */
+  overflow-x: auto;  /* Habilita el scroll horizontal si la pantalla es muy pequeña */
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background-color: white;
+}
+
+/* Ocultar / estilizar barra de scroll (estilo moderno para Electron) */
+.table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 4px;
+}
+
+/* Estructura general de la tabla */
+.participants-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* Encabezado fijo (Sticky Header) para que no desaparezca al hacer scroll */
+.participants-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #F8FAFC;
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 14px 16px;
+  border-bottom: 2px solid #E2E8F0;
+  letter-spacing: 0.5px;
+}
+
+/* Filas y celdas del cuerpo */
+.participants-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #1E293B;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+/* Efecto hover al pasar el cursor sobre las filas */
+.participants-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+
+/* Estado vacío (cuando no hay datos o la búsqueda no arroja resultados) */
+.empty-state {
+  text-align: center;
+  color: #64748B;
+  padding: 32px !important;
+  font-size: 14px;
+}
