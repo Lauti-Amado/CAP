@@ -30,6 +30,7 @@ const Login = () => {
     setError('');
     setSuccess('');
     setBusy(true);
+    
     try {
       if (recovering) {
         if (password !== confirmation) {
@@ -40,6 +41,8 @@ const Login = () => {
         switchMode(false);
         setSuccess('Contraseña guardada. Ya podés iniciar sesión con la nueva contraseña.');
       } else if (await verifyAdminPassword(email, password)) {
+        // Guardamos un token simulado para que el botón de cerrar sesión de MainLayout funcione
+        localStorage.setItem('token', 'token-simulado');
         navigate('/seleccionar-carrera');
       } else {
         setError('Correo electrónico o contraseña incorrectos.');
@@ -50,6 +53,7 @@ const Login = () => {
       setBusy(false);
     }
   };
+
   return (
     <div className="login-wrapper">
       <div className="login-container">
@@ -169,10 +173,6 @@ const Login = () => {
 
         <hr className="divider" />
 
-        {/* Footer */}
-        <div className="footer-text">
-          ¿No tienes una cuenta? <a href="#" className="register-link">Crear cuenta de organizador</a>
-        </div>
       </div>
     </div>
   );

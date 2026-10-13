@@ -1,4 +1,3 @@
-
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Archive, BarChart3, BadgeCheck, Footprints, LayoutDashboard, LogOut, Settings, Timer, Trophy } from 'lucide-react';
 import '../App.css';
@@ -31,6 +30,20 @@ const navigation = [
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleLogout = async () => {
+    localStorage.removeItem('usuario'); 
+    
+    try {
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Error al notificar el cierre de sesión al servidor:', error);
+    }
+
+    navigate('/', { replace: true });
+  };
 
   return (
     <div className="app-layout">
@@ -66,9 +79,9 @@ export default function MainLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-button" type="button" onClick={() => navigate('/login')}>
+          <button className="logout-button" type="button" onClick={handleLogout}>
             <LogOut size={17} strokeWidth={2} aria-hidden="true" />
-            <span>Cerrar Sesión (arreglar)</span>
+            <span>Cerrar Sesión</span>
           </button>
         </div>
       </aside>
