@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './DashboardClasificacion.css';
 import { useNavigate } from 'react-router-dom';
-import { Tabla, type Columna } from '../../componentes/tabla/Tabla'; 
+import { Tabla, type Columna } from '../../components/tabla/Tabla'; 
 
 interface ParticipanteClasificacion {
   id: number;

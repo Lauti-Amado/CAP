@@ -7,7 +7,7 @@ Sea este el caso, las tablas tendrán un 'DIFIERE: atr1, atr2...'
 */
 
 generator client {
-    provider = "prisma-client"
+    provider = "prisma-client-js"
     output   = "../src/generated/prisma"
 }
 
