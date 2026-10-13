@@ -15,15 +15,15 @@ const estadosSincronizacion: Record<
 
 export default function Navbar() {
   // Por ahora está fijo en rojo, hasta conectar PowerSync.
-  const estadoSync: EstadoSincronizacion = 'sin-conexion';
+  const estadoSync: EstadoSincronizacion = 'sincronizando'; // Los otros valores son conectado  y sin-conexion (rojo)
   const { color, texto } = estadosSincronizacion[estadoSync];
 
   return (
     <header className="cap-navbar">
       <Breadcrumbs />
       <div className="cap-navbar-actions">
-        <button type="button" aria-label={texto} title={texto}>
-          <Cloud size={20} color={color} />
+        <button type="button" className="cap-navbar-sync" aria-label={texto} title={texto}>
+          <Cloud size={20}/> <span className="cap-navbar-sync-dot" style={{ backgroundColor: color}}/>
         </button>
         <button type="button" aria-label="Notificaciones"><Bell size={20} /></button>
         <button type="button" aria-label="Ayuda"><CircleHelp size={20} /></button>
