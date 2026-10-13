@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './ClasificacionTiempoReal.css';
 import { useNavigate } from 'react-router-dom';
-import { Tabla, type Columna } from '../../../componentes/tabla/Tabla';
+import { Tabla, type Columna } from '../../../components/tabla/Tabla';
 
 interface LlegadaAtleta {
   id: number;
