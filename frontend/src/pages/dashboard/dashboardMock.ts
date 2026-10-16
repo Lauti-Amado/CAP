@@ -1,32 +1,11 @@
-export type DashboardActivity = {
-  id: string
-  kind: 'reading' | 'kit' | 'registration'
-  description: string
-  occurredAt: string
-}
-
-export type DashboardData = {
-  nextRace: {
-    name: string
-    startsAt: string
-    location: string
-  } | null
-  registrations: {
-    confirmed: number
-    capacity: number
-  }
-  rfid: {
-    connected: boolean
-    antennas: { name: string; working: boolean }[]
-  }
-  activities: DashboardActivity[]
-  unreadNotifications: number
-}
+//frontend/src/pages/dashboard/dashboardMock.ts
+import type { DashboardData } from '../../types/dashboard'
 
 const aWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-// Datos de muestra. La vista consume este contrato para poder conectar una fuente real después.
-export const dashboardData: DashboardData = {
+// MOCK TEMPORAL
+// TODO BACKEND: reemplazar por la consulta real al backend.
+export const dashboardMock: DashboardData = {
   nextRace: {
     name: 'CAP 10K 2026',
     startsAt: '2026-10-15T08:00:00-03:00',
@@ -50,4 +29,9 @@ export const dashboardData: DashboardData = {
     { id: 'activity-4', kind: 'kit', description: 'Kit entregado a Esteban Quito', occurredAt: aWeekAgo },
   ],
   unreadNotifications: 1,
+
+  sincronizacion: {
+    estado: 'sincronizando',  //Para probar los otros estados: 'conectado' o 'sin-conexion'
+    ultimaVez: 'Hoy, 14:30 hs',
+  },
 }
