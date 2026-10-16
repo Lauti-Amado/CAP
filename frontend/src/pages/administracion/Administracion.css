@@ -1,0 +1,116 @@
+/* Accesos */
+.admin-atajo {
+  border-color: #e6e9f3;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.admin-atajo:hover {
+  border-color: #22c55e;
+  box-shadow: 0 4px 12px rgba(24, 38, 65, 0.08);
+}
+
+.admin-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #e8ecff;
+  color: #4f5fd6;
+}
+
+/* Botón verde principal */
+.admin-btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #22c55e;
+  --bs-btn-border-color: #22c55e;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #16a34a;
+  --bs-btn-hover-border-color: #16a34a;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #15803d;
+  --bs-btn-active-border-color: #15803d;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #86efac;
+  --bs-btn-disabled-border-color: #86efac;
+  font-weight: 600;
+}
+
+/* Claves de respaldo */
+.admin-respaldo {
+  --bs-btn-color: #991b1b;
+  --bs-btn-bg: #fee2e2;
+  --bs-btn-border-color: #fecaca;
+  --bs-btn-hover-color: #7f1d1d;
+  --bs-btn-hover-bg: #fecaca;
+  --bs-btn-hover-border-color: #fca5a5;
+  font-weight: 600;
+}
+
+/* Tabla */
+.admin-tabla {
+  --bs-table-hover-bg: #f0faf4;
+}
+
+.admin-tabla thead th {
+  background: #eef1ff;
+  color: #344054;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Badges */
+.admin-badge--administrador { background: #006b35; color: #fff; }
+.admin-badge--clasificador  { background: #dbe4f5; color: #344054; }
+.admin-badge--activo        { background: #dcfce7; color: #15803d; }
+.admin-badge--inactivo      { background: #dbe4f5; color: #475467; }
+
+/* Roles y permisos */
+.admin-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.admin-rol {
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e1e6ef;
+  border-radius: 8px;
+}
+
+.admin-rol:hover {
+  border-color: #22c55e;
+}
+
+.admin-rol--seleccionado {
+  border-color: #087f3f;
+  background: #f0faf4;
+}
+
+.admin-rol--seleccionado .admin-rol__titulo {
+  color: #087f3f;
+}
+
+.admin-rol__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #087f3f;
+  color: #fff;
+}
