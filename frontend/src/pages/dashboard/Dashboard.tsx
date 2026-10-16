@@ -4,14 +4,19 @@ import {
   Archive,
   BarChart3,
   CalendarDays,
+  CloudCheck,
   Footprints,
   MapPin,
   MoreHorizontal,
+  RefreshCw,
   Timer,
   Trophy,
   UsersRound,
+  WifiOff,
+  type LucideIcon,
 } from 'lucide-react'
 import type { DashboardActivity, DashboardData } from '../../types/dashboard'
+import type { EstadoSincronizacion } from '../../types/sincronizacion'
 // MOCK TEMPORAL
 import { dashboardMock } from './dashboardMock'
 
@@ -27,21 +32,36 @@ const activityIcons = {
   registration: UsersRound,
 }
 
+const estadosSincronizacion: Record<
+  EstadoSincronizacion,
+  { texto: string; icon: LucideIcon }
+> = {
+  conectado: { texto: 'Actualizado', icon: CloudCheck },
+  sincronizando: { texto: 'Sincronizando...', icon: RefreshCw },
+  'sin-conexion': { texto: 'Guardando localmente', icon: WifiOff },
+}
+
 function formatRaceDate(value: string) {
   const date = new Date(value)
-  const day = new Intl.DateTimeFormat('es-AR', {
+  const zone = 'America/Argentina/Buenos_Aires'
+
+  const partes = new Intl.DateTimeFormat('es-AR', {
     day: 'numeric',
     month: 'long',
-    timeZone: 'America/Argentina/Buenos_Aires',
-  }).format(date)
+    timeZone: zone,
+  }).formatToParts(date)
+  const dia = partes.find((p) => p.type === 'day')?.value ?? ''
+  const mes = partes.find((p) => p.type === 'month')?.value ?? ''
+
   const time = new Intl.DateTimeFormat('es-AR', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-    timeZone: 'America/Argentina/Buenos_Aires',
+    timeZone: zone,
   }).format(date)
   const hour = Number(time.slice(0, 2))
-  return `${day.charAt(0).toUpperCase()}${day.slice(1)}, ${String(hour % 12 || 12).padStart(2, '0')}${time.slice(2)} ${hour < 12 ? 'AM' : 'PM'}`
+
+  return `${dia} ${mes.charAt(0).toUpperCase()}${mes.slice(1)}, ${String(hour % 12 || 12).padStart(2, '0')}${time.slice(2)} ${hour < 12 ? 'AM' : 'PM'}`
 }
 
 function formatActivityTime(value: string) {
@@ -75,7 +95,10 @@ function Dashboard() {
   // TODO BACKEND: reemplazar por la consulta real al backend.
   const data: DashboardData = dashboardMock
 
-  const { nextRace, registrations, rfid, activities } = data
+  const { nextRace, registrations, rfid, activities, sincronizacion } = data
+
+  const estadoSync = estadosSincronizacion[sincronizacion.estado]
+  const SyncIcon = estadoSync.icon 
 
   const fillPercent =
     registrations.capacity > 0
@@ -144,6 +167,7 @@ function Dashboard() {
             RFID Y ACTIVIDAD
         ========================= */}
         <section className="details-grid" aria-label="Estado y actividad">
+          <div className="details-main">
           <article className="panel rfid-panel">
             <div className="panel-heading rfid-heading">
               <h2>
@@ -167,6 +191,20 @@ function Dashboard() {
               </button>
             </div>
           </article>
+
+          <article className="panel sync-panel">
+            <div className="sync-body">
+              <div className="sync-info">
+                <h2>Estado de Sincronización</h2>
+                <p>Última vez: {sincronizacion.ultimaVez}</p>
+              </div>
+              <span className={`sync-pill sync-pill--${sincronizacion.estado}`}>
+                <SyncIcon size={16} aria-hidden="true" />
+                {estadoSync.texto}
+              </span>
+            </div>
+          </article>
+        </div>    
 
           <article className="panel activity-panel">
             <div className="panel-heading activity-heading">

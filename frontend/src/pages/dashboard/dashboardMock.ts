@@ -29,4 +29,9 @@ export const dashboardMock: DashboardData = {
     { id: 'activity-4', kind: 'kit', description: 'Kit entregado a Esteban Quito', occurredAt: aWeekAgo },
   ],
   unreadNotifications: 1,
+
+  sincronizacion: {
+    estado: 'sincronizando',  //Para probar los otros estados: 'conectado' o 'sin-conexion'
+    ultimaVez: 'Hoy, 14:30 hs',
+  },
 }

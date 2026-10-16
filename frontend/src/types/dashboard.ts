@@ -1,4 +1,6 @@
 //frontend/src/types/dashboard.ts
+import type { EstadoSincronizacion } from './sincronizacion'
+
 export type DashboardActivity = {
   id: string
   kind: 'reading' | 'kit' | 'registration'
@@ -22,4 +24,9 @@ export type DashboardData = {
   }
   activities: DashboardActivity[]
   unreadNotifications: number
+
+  sincronizacion: {                       // NUEVO
+    estado: EstadoSincronizacion
+    ultimaVez: string
+  }
 }
