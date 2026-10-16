@@ -16,7 +16,7 @@ import Inscripciones from './pages/inscripciones/Inscripciones';
 import ModClasifCorredor from './pages/clasificacion/modClasifCorredor/modClasifCorredor';
 import DetalleInscripcion from './pages/inscripciones/DetalleInscripcion';
 import NuevaInscripcion from './pages/inscripciones/NuevaInscripcion';
-//import { DashboardData, dashboardData } from './dashboardData';
+import Dashboard from './pages/dashboard/Dashboard';
 
 function App() {
   return (
@@ -40,13 +40,7 @@ function App() {
           <Route path="/entrega-kits/inscripciones" element={<Inscripciones />} />
           <Route path="/entrega-kits/inscripciones/nueva" element={<NuevaInscripcion />} />
           <Route path="/entrega-kits/inscripciones/:id" element={<DetalleInscripcion />} />
-          {/* Dashboard de clasificación de una carrera específica */}
-          {/* 
-          <Route
-            path="/dashboard-clasificacion-modificar/:id"
-            element={<DashboardClasificacionModificar />}
-          />
-          */}
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
         </Route>
       </Routes>

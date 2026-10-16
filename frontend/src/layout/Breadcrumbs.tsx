@@ -16,6 +16,7 @@ const breadcrumbsPorRuta: Record<string, BreadcrumbItem[]> = {
   '/entrega-kits': [inicio, { label: 'Entrega de kits' }],
   '/grand-prix': [inicio, { label: 'Grand Prix' }],
   '/certificados': [inicio, { label: 'Certificados' }],
+  '/dashboard': [inicio, { label: 'Dashboard' }],
 };
 
 export default function Breadcrumbs() {

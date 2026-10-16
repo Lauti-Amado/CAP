@@ -6,7 +6,7 @@ import Navbar from './Navbar';
 const navigation = [
   {
     label: 'HOME',
-    items: [{ label: 'Dashboard (arreglar)', icon: LayoutDashboard, path: '/' }],
+    items: [{ label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' }],
   },
   {
     label: 'CLASIFICADOR',
