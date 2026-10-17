@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, Search } from 'lucide-react';
+import { Award, FileSpreadsheet, FileText, Search, Send, Table } from 'lucide-react';
 import './Resultados.css';
 import { Tabla, type Columna } from '../../components/tabla/Tabla';
 import { enviarCertificados } from '../../services/certificadosService';
@@ -177,9 +177,30 @@ const Resultados: React.FC = () => {
       </div>
 
       <div className="d-flex gap-2">
-        <button type="button" className="btn btn-outline-secondary btn-sm fw-semibold" onClick={handleExportPDF}>PDF</button>
-        <button type="button" className="btn btn-outline-secondary btn-sm fw-semibold" onClick={handleExportExcel}>Excel</button>
-        <button type="button" className="btn btn-outline-secondary btn-sm fw-semibold" onClick={handleExportCSV}>CSV</button>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm fw-semibold d-inline-flex align-items-center gap-2"
+          onClick={handleExportPDF}
+        >
+          <FileText size={14} className="text-success" aria-hidden="true" />
+          PDF
+        </button>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm fw-semibold d-inline-flex align-items-center gap-2"
+          onClick={handleExportExcel}
+        >
+          <FileSpreadsheet size={14} className="text-success" aria-hidden="true" />
+          Excel
+        </button>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm fw-semibold d-inline-flex align-items-center gap-2"
+          onClick={handleExportCSV}
+        >
+          <Table size={14} className="text-success" aria-hidden="true" />
+          CSV
+        </button>
       </div>
     </header>
 
@@ -188,14 +209,14 @@ const Resultados: React.FC = () => {
     ========================= */}
     <section className="card mb-4">
       <div className="card-body">
-        <h2 className="h6 fw-bold mb-3">Filtros de Resultados</h2>
+        <h2 className="h6 fw-bold pb-2 mb-3 border-bottom">Filtros de Resultados</h2>
 
         <div className="row g-3 mb-3">
           <div className="col-12 col-md-4">
             <label htmlFor="filtroDistancia" className="form-label small fw-semibold">Distancia</label>
             <select
               id="filtroDistancia"
-              className="form-select form-select-sm"
+              className="form-select"
               value={distancia}
               onChange={(e) => { setDistancia(e.target.value); setPaginaActual(1); }}
             >
@@ -209,7 +230,7 @@ const Resultados: React.FC = () => {
             <label htmlFor="filtroSexo" className="form-label small fw-semibold">Sexo</label>
             <select
               id="filtroSexo"
-              className="form-select form-select-sm"
+              className="form-select"
               value={sexo}
               onChange={(e) => { setSexo(e.target.value); setPaginaActual(1); }}
             >
@@ -223,7 +244,7 @@ const Resultados: React.FC = () => {
             <label htmlFor="filtroCategoria" className="form-label small fw-semibold">Categoría</label>
             <select
               id="filtroCategoria"
-              className="form-select form-select-sm"
+              className="form-select"
               value={categoria}
               onChange={(e) => { setCategoria(e.target.value); setPaginaActual(1); }}
             >
@@ -236,18 +257,18 @@ const Resultados: React.FC = () => {
           </div>
         </div>
 
-        <div className="input-group input-group-sm">
-          <span className="input-group-text bg-white">
-            <Search size={16} aria-hidden="true" />
+        <div className="input-group">
+          <span className="input-group-text bg-light border-end-0">
+            <Search size={16} className="text-secondary" aria-hidden="true" />
           </span>
           <input
             type="text"
-            className="form-control"
+            className="form-control bg-light border-start-0"
             placeholder="Buscar corredor o dorsal..."
             value={busqueda}
             onChange={(e) => {
               setBusqueda(e.target.value);
-              setPaginaActual(1); // volver a la página 1 al buscar
+              setPaginaActual(1);
             }}
           />
         </div>
@@ -257,7 +278,7 @@ const Resultados: React.FC = () => {
     {/* =========================
         TABLA
     ========================= */}
-    <div className="card overflow-hidden mb-4">
+    <div className="card overflow-hidden mb-4 res-tabla">
       <Tabla
         columnas={columnasResultados}
         datos={datosTabla}
@@ -306,7 +327,11 @@ const Resultados: React.FC = () => {
         disabled={enviando || certificadosEnviados}
         onClick={() => setMostrarConfirmacion(true)}
       >
-        {enviando && <span className="spinner-border spinner-border-sm" aria-hidden="true" />}
+        {enviando ? (
+          <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+        ) : (
+          <Send size={14} aria-hidden="true" />
+        )}
         {enviando ? 'Enviando...' : certificadosEnviados ? 'Certificados enviados' : 'Enviar Certificados'}
       </button>
     </section>
