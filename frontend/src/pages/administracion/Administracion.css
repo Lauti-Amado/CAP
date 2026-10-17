@@ -62,11 +62,39 @@
   font-weight: 600;
 }
 
-/* Badges */
-.admin-badge--administrador { background: #006b35; color: #fff; }
-.admin-badge--clasificador  { background: #dbe4f5; color: #344054; }
-.admin-badge--activo        { background: #dcfce7; color: #15803d; }
-.admin-badge--inactivo      { background: #dbe4f5; color: #475467; }
+/* Píldoras de rol y estado (clase propia, sin depender de .badge) */
+.admin-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4em 0.85em;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.admin-pill.admin-badge--administrador {
+  background-color: #006b35;
+  color: #fff;
+}
+
+.admin-pill.admin-badge--clasificador {
+  background-color: #d4def5;
+  color: #344054;
+}
+
+.admin-pill.admin-badge--activo {
+  background-color: #bbf7d0;
+  color: #166534;
+}
+
+.admin-pill.admin-badge--inactivo {
+  background-color: #d9dee8;
+  color: #475467;
+}
 
 /* Roles y permisos */
 .admin-avatar {
