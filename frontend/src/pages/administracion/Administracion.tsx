@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Award,
-  Contact,
   Cpu,
   KeyRound,
   Pencil,
@@ -25,8 +24,6 @@ type Atajo = {
 }
 
 const atajos: Atajo[] = [
-  // TODO: navegar a la pantalla de roles cuando exista
-  { titulo: 'Roles', descripcion: 'Gestión de permisos de sistema.', icon: Contact },
   { titulo: 'Categorías', descripcion: 'Clasificaciones de corredores.', icon: Shapes, path: '/administracion/categorias' },
   // TODO: navegar a la configuración RFID cuando exista
   { titulo: 'Configuración RFID', descripcion: 'Parámetros de cronometraje.', icon: Cpu },
@@ -69,7 +66,7 @@ function Administracion() {
       ========================= */}
       <section className="row g-3 mb-3" aria-label="Accesos de administración">
         {atajos.map(({ titulo, descripcion, icon: Icon, path }) => (
-          <div className="col-12 col-sm-6 col-xl-3" key={titulo}>
+          <div className="col-12 col-sm-6 col-xl-4" key={titulo}>
             <button
               type="button"
               className="card admin-atajo h-100 w-100 text-start"
