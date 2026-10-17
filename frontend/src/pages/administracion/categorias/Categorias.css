@@ -1,0 +1,67 @@
+/* Botón verde oscuro (Nueva categoría) */
+.cat-btn-oscuro {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #087f3f;
+  --bs-btn-border-color: #087f3f;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #066b35;
+  --bs-btn-hover-border-color: #066b35;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #055a2d;
+  --bs-btn-active-border-color: #055a2d;
+  font-weight: 600;
+}
+
+/* Tarjetas de clasificación */
+.cat-card {
+  border-color: #e6e9f3;
+  border-top: 3px solid #087f3f;
+  border-radius: 10px;
+}
+
+.cat-card--gris {
+  border-top-color: #6b7280;
+}
+
+/* Datos de la carrera */
+@media (min-width: 768px) {
+  .cat-dato + .cat-dato {
+    border-left: 1px solid #e6e9f3;
+  }
+}
+
+/* Formulario: foco verde en lugar del azul de Bootstrap */
+.cat-form .form-control:focus,
+.cat-form .form-select:focus {
+  border-color: #087f3f;
+  box-shadow: 0 0 0 0.2rem rgba(8, 127, 63, 0.15);
+}
+
+.cat-opcion {
+  padding: 10px 12px;
+  border: 1px solid #d9dfdc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.cat-opcion--activa {
+  border-color: #087f3f;
+  background: #f0faf4;
+}
+
+.cat-opcion .form-check-input:checked {
+  background-color: #087f3f;
+  border-color: #087f3f;
+}
+
+.cat-opcion .form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(8, 127, 63, 0.15);
+}
+
+/* Vista previa */
+.cat-vista-header {
+  background: #eef1ff;
+  border-bottom: 1px solid #e6e9f3;
+  border-radius: 6px 6px 0 0;
+}

@@ -19,6 +19,8 @@ import NuevaInscripcion from './pages/inscripciones/NuevaInscripcion';
 import Dashboard from './pages/dashboard/Dashboard';
 import Administracion from './pages/administracion/Administracion';
 import RolesPermisos from './pages/administracion/RolesPermisos';
+import ConfiguracionClasificaciones from './pages/administracion/categorias/ConfiguracionClasificaciones';
+import NuevaCategoria from './pages/administracion/categorias/NuevaCategoria';
 
 function App() {
   return (
@@ -46,6 +48,9 @@ function App() {
           <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
           <Route path="/administracion" element={<Administracion />} />
           <Route path="/administracion/usuarios/:id/rol" element={<RolesPermisos />} />
+          <Route path="/administracion/categorias" element={<ConfiguracionClasificaciones />} />
+          <Route path="/administracion/categorias/nueva" element={<NuevaCategoria />} />
+          <Route path="/administracion/categorias/:id/editar" element={<NuevaCategoria />} />
         </Route>
       </Routes>
   );

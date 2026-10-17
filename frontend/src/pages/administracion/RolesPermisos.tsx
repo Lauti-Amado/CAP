@@ -60,7 +60,7 @@ function RolesPermisos() {
                 <span className="admin-avatar">{iniciales}</span>
                 <div>
                   <div className="fw-bold">{usuario.nombre}</div>
-                  <span className={`badge rounded-pill ${usuario.estado === 'Activo' ? 'admin-badge--activo' : 'admin-badge--inactivo'}`}>
+                  <span className={`admin-pill ${usuario.estado === 'Activo' ? 'admin-badge--activo' : 'admin-badge--inactivo'}`}>
                     {usuario.estado}
                   </span>
                 </div>

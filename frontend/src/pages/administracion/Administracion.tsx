@@ -27,8 +27,7 @@ type Atajo = {
 const atajos: Atajo[] = [
   // TODO: navegar a la pantalla de roles cuando exista
   { titulo: 'Roles', descripcion: 'Gestión de permisos de sistema.', icon: Contact },
-  // TODO: navegar a la pantalla de categorías cuando exista
-  { titulo: 'Categorías', descripcion: 'Clasificaciones de corredores.', icon: Shapes },
+  { titulo: 'Categorías', descripcion: 'Clasificaciones de corredores.', icon: Shapes, path: '/administracion/categorias' },
   // TODO: navegar a la configuración RFID cuando exista
   { titulo: 'Configuración RFID', descripcion: 'Parámetros de cronometraje.', icon: Cpu },
   { titulo: 'Certificados', descripcion: 'Plantillas de premiación.', icon: Award, path: '/certificados' },
@@ -92,16 +91,18 @@ function Administracion() {
           CLAVES DE RESPALDO
           TODO (compañero): implementar la acción de este botón.
       ========================= */}
-      <button
-        type="button"
-        className="btn btn-sm admin-respaldo d-inline-flex align-items-center gap-2 mb-4"
-        onClick={() => {
-          // TODO: pendiente de implementación
-        }}
-      >
-        <KeyRound size={14} aria-hidden="true" />
-        Claves de respaldo
-      </button>
+      <div className="mb-4">
+        <button
+          type="button"
+          className="btn btn-sm admin-respaldo d-inline-flex align-items-center gap-2"
+          onClick={() => {
+            // TODO: pendiente de implementación
+          }}
+        >
+          <KeyRound size={14} aria-hidden="true" />
+          Claves de respaldo
+        </button>
+      </div> 
 
       {/* =========================
           GESTIÓN DE USUARIOS
@@ -147,24 +148,26 @@ function Administracion() {
                   <td>{usuario.dni}</td>
                   <td>{usuario.correo}</td>
                   <td>
-                    <span className={`badge rounded-pill ${claseRol[usuario.rol]}`}>
+                    <span className={`admin-pill ${claseRol[usuario.rol]}`}>
                       {usuario.rol}
                     </span>
                   </td>
                   <td>
-                    <span className={`badge rounded-pill ${claseEstado[usuario.estado]}`}>
+                    <span className={`admin-pill ${claseEstado[usuario.estado]}`}>
                       {usuario.estado}
                     </span>
                   </td>
-                  <td className="text-end">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-link text-secondary p-0"
-                      aria-label={`Editar rol de ${usuario.nombre}`}
-                      onClick={() => navigate(`/administracion/usuarios/${usuario.id}/rol`)}
-                    >
-                      <Pencil size={13} aria-hidden="true" />
-                    </button>
+                  <td>
+                    <div className="d-flex justify-content-end">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
+                        aria-label={`Editar rol de ${usuario.nombre}`}
+                        onClick={() => navigate(`/administracion/usuarios/${usuario.id}/rol`)}
+                      >
+                        <Pencil size={13} aria-hidden="true" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

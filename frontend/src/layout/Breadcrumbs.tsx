@@ -18,13 +18,18 @@ const breadcrumbsPorRuta: Record<string, BreadcrumbItem[]> = {
   '/certificados': [inicio, { label: 'Certificados' }],
   '/dashboard': [{ label: 'CAP Gestión' }, { label: 'Dashboard' }],
   '/administracion': [{ label: 'CAP Gestión' }, { label: 'Administración' }, { label: 'Panel Principal' },],
-  '/administracion/usuarios/rol': [{ label: 'CAP Gestión' }, { label: 'Administración', to: '/administracion' }, { label: 'Roles y Permisos' },],  
+  '/administracion/usuarios/rol': [{ label: 'CAP Gestión' }, { label: 'Administración', to: '/administracion' }, { label: 'Roles y Permisos' },],
+  '/administracion/categorias': [{ label: 'CAP Gestión' }, { label: 'Panel de administración', to: '/administracion' }, { label: 'Clasificación carrera' },],
+  '/administracion/categorias/nueva': [{ label: 'CAP Gestión' }, { label: 'Clasificación', to: '/administracion/categorias' }, { label: 'Crear Clasificación' },],                                                                  // NUEVO
+  '/administracion/categorias/editar': [{ label: 'CAP Gestión' }, { label: 'Clasificación', to: '/administracion/categorias' }, { label: 'Editar Clasificación' },], 
 };
 
 export default function Breadcrumbs() {
   const { pathname } = useLocation();
 
-  const ruta = (pathname.replace(/\/+$/, '') || '/').replace( /\/usuarios\/[^/]+\/rol$/, '/usuarios/rol');
+  const ruta = (pathname.replace(/\/+$/, '') || '/')
+  .replace(/\/usuarios\/[^/]+\/rol$/, '/usuarios/rol')
+  .replace(/\/categorias\/[^/]+\/editar$/, '/categorias/editar');
   
   const items = breadcrumbsPorRuta[ruta] ?? [];
 
