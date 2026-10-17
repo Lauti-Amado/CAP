@@ -6,7 +6,7 @@ import Navbar from './Navbar';
 const navigation = [
   {
     label: 'HOME',
-    items: [{ label: 'Dashboard (arreglar)', icon: LayoutDashboard, path: '/' }],
+    items: [{ label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' }],
   },
   {
     label: 'CLASIFICADOR',
@@ -22,7 +22,7 @@ const navigation = [
     items: [
       { label: 'Carreras', icon: Footprints, path: '/carreras' },
       { label: 'Certificados', icon: BadgeCheck, path: '/certificados' },
-      { label: 'Administración (no hecha)', icon: Settings, path: '/admin' },
+      { label: 'Administración', icon: Settings, path: '/administracion' },
     ],
   },
 ];
@@ -61,7 +61,7 @@ export default function MainLayout() {
             <div className="nav-section" key={section.label}>
               <div className="section-label">{section.label}</div>
               {section.items.map(({ label, icon: Icon, path }) => {
-                const isActive = location.pathname === path;
+                const isActive = location.pathname === path || location.pathname.startsWith(`${path}/`);
                 return (
                   <button
                     className={`nav-item${isActive ? ' is-active' : ''}`}
