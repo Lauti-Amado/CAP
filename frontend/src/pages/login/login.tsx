@@ -43,7 +43,7 @@ const Login = () => {
       } else if (await verifyAdminPassword(email, password)) {
         // Guardamos un token simulado para que el botón de cerrar sesión de MainLayout funcione
         localStorage.setItem('token', 'token-simulado');
-        navigate('/seleccionar-carrera');
+        navigate('/dashboard', { replace: true });
       } else {
         setError('Correo electrónico o contraseña incorrectos.');
       }
