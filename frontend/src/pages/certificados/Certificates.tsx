@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Award, Eye, FilePenLine, Plus, Save, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { certificatePreview, certificateTemplates, dynamicFields, type CertificateTemplate } from './certificateData'
+import './Certificates.css'
 
 type Props = { onEditorChange: (editing: boolean) => void }
 

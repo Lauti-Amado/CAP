@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Archive, BarChart3, BadgeCheck, Footprints, LayoutDashboard, LogOut, Settings, Timer, Trophy } from 'lucide-react';
-import '../App.css';
+import './MainLayout.css';
 import Navbar from './Navbar';
 
 const navigation = [

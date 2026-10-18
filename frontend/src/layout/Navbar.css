@@ -1,4 +1,4 @@
-.app-layout > .app-content {
+.app-content {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -6,7 +6,7 @@
 }
 
 /* Las pantallas ahora ocupan el espacio disponible junto a la sidebar. */
-.app-content > .layout-container {
+.layout-container {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -14,8 +14,8 @@
   overflow: visible;
 }
 
-.app-content > .rt-container,
-.app-content > .resultados-container {
+.rt-container,
+.resultados-container {
   min-height: 0;
   flex: 1;
 }

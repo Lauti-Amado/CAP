@@ -1,0 +1,70 @@
+/* Grand Prix */
+.grand-prix-page { position:relative; padding:18px 22px 36px; color:#293246; }
+.gp-titlebar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px; }
+.gp-titlebar h1 { margin:0; font-size:23px; }
+.gp-titlebar p { margin:7px 0 0; color:#68736d; font-size:11px; }
+.gp-title-actions { display:flex; gap:9px; flex-wrap:wrap; }
+.gp-title-actions button, .gp-table-card footer button, .gp-row-actions button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px; padding:0 13px; border:1px solid #c9d5cd; border-radius:4px; background:#fff; color:#067139; font-size:10px; font-weight:600; cursor:pointer; }
+.gp-title-actions .gp-primary, .gp-form .gp-primary { border-color:#057238; background:#057238; color:#fff; }
+.gp-title-actions .gp-secondary { color:#354239; }
+.gp-filter-card, .gp-table-card { border:1px solid #ccd8d0; border-radius:8px; background:#fff; box-shadow:0 4px 11px rgba(27,43,65,.04); }
+.gp-filter-card { padding:0 15px 15px; }
+.gp-filter-card h2 { display:flex; align-items:center; gap:6px; margin:0 0 14px; padding:14px 0; border-bottom:1px solid #e3e8e5; font-size:13px; }
+.gp-filter-card h2 svg { color:#087840; }
+.gp-filters { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:15px; }
+.gp-filters > label { display:flex; flex-direction:column; gap:7px; color:#4f5a53; font-size:8px; font-weight:700; }
+.gp-filters select, .gp-search { height:36px; border:1px solid #ced7d2; border-radius:4px; background:#fff; color:#39443d; font-size:10px; }
+.gp-filters select { padding:0 10px; }
+.gp-search { flex-direction:row !important; align-items:center; gap:7px !important; padding:0 9px; }
+.gp-search input { min-width:0; width:100%; border:0; outline:0; font-size:10px; }
+.gp-table-card { margin-top:20px; overflow:hidden; }
+.gp-table-wrap { overflow-x:auto; }
+.gp-table-card table { width:100%; border-collapse:collapse; font-size:10px; }
+.gp-table-card th { height:34px; padding:0 15px; background:#f2f4ff; color:#526058; text-align:left; font-size:8px; letter-spacing:.3px; }
+.gp-table-card td { height:44px; padding:0 15px; border-bottom:1px solid #e6ebe7; white-space:nowrap; }
+.gp-table-card th:last-child, .gp-table-card td:last-child { text-align:right; }
+.gp-table-card td:last-child strong { color:#06763d; font-size:13px; }
+.gp-winner { background:#fffbed; }
+.gp-position { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; font-weight:700; }
+.gp-position--1 { border:1px solid #eab300; color:#b88600; background:#fff7d9; }
+.gp-position--2 { border:1px solid #9ba7b3; background:#f3f6fa; }
+.gp-position--3 { border:1px solid #e18b4c; color:#b65c1e; background:#fff3eb; }
+.runner-cell { display:flex; align-items:center; gap:9px; }
+.runner-cell i { width:23px; height:23px; display:grid; place-items:center; border-radius:50%; background:#dfe7f1; color:#526173; font-size:8px; font-style:normal; }
+.races-pill { padding:4px 9px; border-radius:10px; background:#d8f3e2; color:#08723c; font-size:8px; }
+.gp-table-card footer { height:38px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; color:#626e66; font-size:8px; }
+.gp-table-card footer div { display:flex; gap:5px; }
+.gp-table-card footer button { min-width:23px; min-height:23px; padding:0; color:#5c6961; }
+.gp-management-grid { display:grid; gap:12px; }
+.gp-circuit-card { display:flex; align-items:center; gap:13px; padding:15px; border:1px solid #d6dfd9; border-radius:8px; background:#fff; box-shadow:0 3px 10px rgba(30,45,66,.04); }
+.gp-circuit-icon { width:40px; height:40px; display:grid; place-items:center; flex:0 0 40px; border-radius:8px; background:#e7f7ed; color:#05743b; }
+.gp-circuit-info { flex:1; min-width:0; }
+.gp-circuit-info > div { display:flex; align-items:center; gap:8px; }
+.gp-circuit-info h2 { margin:0; font-size:14px; }
+.gp-circuit-info p { margin:6px 0 3px; color:#647068; font-size:10px; }
+.gp-circuit-info small { color:#8a938d; font-size:8px; }
+.gp-status { padding:3px 7px; border-radius:9px; font-size:7px; background:#eef1f3; }
+.gp-status--activo { color:#08743d; background:#d9f4e3; }
+.gp-status--finalizado { color:#59655e; }
+.gp-status--borrador { color:#976b10; background:#fff1ca; }
+.gp-row-actions { display:flex; gap:6px; }
+.gp-row-actions button { width:30px; min-height:30px; padding:0; color:#526058; }
+.gp-row-actions button:last-child { color:#c5454c; }
+.gp-form-overlay { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:20px; background:rgba(24,34,46,.35); }
+.gp-form { width:min(100%, 410px); display:grid; gap:12px; padding:20px; border-radius:9px; background:#fff; box-shadow:0 18px 50px rgba(16,30,44,.24); }
+.gp-form h2 { margin:0 0 4px; font-size:17px; }
+.gp-form label { display:grid; gap:6px; color:#4d5951; font-size:9px; font-weight:700; }
+.gp-form input, .gp-form select { height:36px; padding:0 10px; border:1px solid #ccd6d0; border-radius:4px; background:#fff; font-size:10px; }
+.gp-form > div { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+.gp-form > div button { min-height:31px; padding:0 13px; border:1px solid #ccd6d0; border-radius:4px; background:#fff; font-size:9px; cursor:pointer; }
+
+@media (max-width: 800px) {
+  .gp-titlebar { align-items:flex-start; flex-direction:column; }
+  .gp-filters { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .grand-prix-page { padding:15px; }
+  .gp-filters { grid-template-columns:1fr; }
+  .gp-circuit-card { align-items:flex-start; flex-wrap:wrap; }
+  .gp-row-actions { margin-left:auto; }
+}

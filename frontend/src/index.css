@@ -8,9 +8,8 @@
 }
 
 :root {
-  color: #193b2b;
-  color-scheme: light;
   background: #f7f9f7;
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

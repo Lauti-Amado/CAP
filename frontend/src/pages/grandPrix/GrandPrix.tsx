@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Calculator, ChevronLeft, ChevronRight, Download, Filter, Pencil, Plus, Search, Settings, Trash2, Trophy } from 'lucide-react'
 import { grandPrixStandings, initialGrandPrixCircuits, type GrandPrixCircuit } from './grandPrixData'
+import './GrandPrix.css'
 
 type View = 'standings' | 'manage'
 
