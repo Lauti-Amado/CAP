@@ -19,15 +19,15 @@ export default function Navbar() {
   const { color, texto } = estadosSincronizacion[estadoSync];
 
   return (
-    <header className="cap-navbar">
+    <header className="cap-navbar navbar bg-white border-bottom px-3 px-md-4 py-3 gap-3 flex-wrap">
       <Breadcrumbs />
-      <div className="cap-navbar-actions">
-        <button type="button" className="cap-navbar-sync" aria-label={texto} title={texto}>
+      <div className="cap-navbar-actions d-flex gap-2 ms-auto">
+        <button type="button" className="cap-navbar-sync btn btn-light position-relative" aria-label={texto} title={texto}>
           <Cloud size={20}/> <span className="cap-navbar-sync-dot" style={{ backgroundColor: color}}/>
         </button>
-        <button type="button" aria-label="Notificaciones"><Bell size={20} /></button>
-        <button type="button" aria-label="Ayuda"><CircleHelp size={20} /></button>
-        <button type="button" aria-label="Perfil"><UserRound size={20} /></button>
+        <button type="button" className="btn btn-light" aria-label="Notificaciones"><Bell size={20} /></button>
+        <button type="button" className="btn btn-light" aria-label="Ayuda"><CircleHelp size={20} /></button>
+        <button type="button" className="btn btn-light" aria-label="Perfil"><UserRound size={20} /></button>
       </div>
     </header>
   );

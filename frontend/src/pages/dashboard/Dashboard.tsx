@@ -76,7 +76,7 @@ function formatActivityTime(value: string) {
 function ActivityRow({ activity }: { activity: DashboardActivity }) {
   const Icon = activityIcons[activity.kind]
   return (
-    <li className="activity-row">
+    <li className="activity-row list-group-item">
       <span className={`activity-icon activity-icon--${activity.kind}`}>
         <Icon size={13} aria-hidden="true" />
       </span>
@@ -108,12 +108,12 @@ function Dashboard() {
 
   return (
     <main className="main-content" aria-label="Dashboard de inicio">
-      <div className="dashboard-content">
+      <div className="dashboard-content container-fluid">
         {/* =========================
             RESUMEN
         ========================= */}
-        <section className="summary-grid" aria-label="Resumen">
-          <article className="summary-card race-card">
+        <section className="row g-3 mb-3" aria-label="Resumen">
+          <div className="col-12 col-md-6"><article className="summary-card race-card card h-100">
             <div className="card-topline">
               <span className="summary-icon">
                 <CalendarDays size={18} aria-hidden="true" />
@@ -136,9 +136,9 @@ function Dashboard() {
             ) : (
               <p className="empty-note">No hay carreras programadas</p>
             )}
-          </article>
+          </article></div>
 
-          <article className="summary-card registrations-card">
+          <div className="col-12 col-md-6"><article className="summary-card registrations-card card h-100">
             <div className="card-topline">
               <span className="summary-icon">
                 <UsersRound size={18} aria-hidden="true" />
@@ -151,24 +151,24 @@ function Dashboard() {
               <span>/ {registrations.capacity.toLocaleString('es-AR')}</span>
             </div>
             <div
-              className="progress-track"
+              className="progress"
               role="progressbar"
               aria-label="Cupo ocupado"
-              aria-valuenow={registrations.confirmed}
+              aria-valuenow={occupancy}
               aria-valuemin={0}
-              aria-valuemax={Math.max(1, registrations.capacity)}
+              aria-valuemax={100}
             >
-              <span style={{ width: `${fillPercent}%` }} />
+              <div className="progress-bar bg-success" style={{ width: `${fillPercent}%` }} />
             </div>
-          </article>
+          </article></div>
         </section>
 
         {/* =========================
             RFID Y ACTIVIDAD
         ========================= */}
-        <section className="details-grid" aria-label="Estado y actividad">
-          <div className="details-main">
-          <article className="panel rfid-panel">
+        <section className="row g-3" aria-label="Estado y actividad">
+          <div className="col-12 col-lg-7 d-flex flex-column gap-3">
+          <article className="panel rfid-panel card">
             <div className="panel-heading rfid-heading">
               <h2>
                 Estado RFID:{' '}
@@ -186,13 +186,13 @@ function Dashboard() {
                 ))}
               </div>
               {/* TODO: navegar a la configuración de chips cuando exista la ruta */}
-              <button className="primary-button" type="button">
+              <button className="btn btn-success btn-sm" type="button">
                 Ir a Configuración de chips
               </button>
             </div>
           </article>
 
-          <article className="panel sync-panel">
+          <article className="panel sync-panel card">
             <div className="sync-body">
               <div className="sync-info">
                 <h2>Estado de Sincronización</h2>
@@ -206,24 +206,24 @@ function Dashboard() {
           </article>
         </div>    
 
-          <article className="panel activity-panel">
+          <div className="col-12 col-lg-5"><article className="panel activity-panel card h-100">
             <div className="panel-heading activity-heading">
               <h2>Actividad Reciente</h2>
-              <button className="more-button" type="button" aria-label="Más opciones de actividad">
+              <button className="btn btn-light btn-sm" type="button" aria-label="Más opciones de actividad">
                 <MoreHorizontal size={17} aria-hidden="true" />
               </button>
             </div>
-            <ul className="activity-list">
+            <ul className="activity-list list-group list-group-flush">
               {activities.map((activity) => (
                 <ActivityRow key={activity.id} activity={activity} />
               ))}
               {activities.length === 0 && <li className="empty-note">Todavía no hay actividad.</li>}
             </ul>
             {/* TODO: navegar al historial completo cuando exista la ruta */}
-            <button className="view-all-button" type="button">
+            <button className="btn btn-outline-success btn-sm m-3" type="button">
               VER TODO
             </button>
-          </article>
+          </article></div>
         </section>
 
         {/* =========================
@@ -231,17 +231,16 @@ function Dashboard() {
         ========================= */}
         <section className="quick-actions" aria-label="Acciones rápidas">
           <h2>Acciones Rápidas</h2>
-          <div className="quick-action-grid">
+          <div className="row g-3">
             {quickActions.map(({ label, icon: Icon, path }) => (
-              <button
-                className="quick-action"
+              <div className="col-12 col-md-4" key={label}><button
+                className="btn btn-outline-success d-flex align-items-center justify-content-center gap-2 w-100 py-3"
                 type="button"
-                key={label}
                 onClick={() => navigate(path)}
               >
                 <Icon size={17} aria-hidden="true" />
                 <span>{label}</span>
-              </button>
+              </button></div>
             ))}
           </div>
         </section>

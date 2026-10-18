@@ -1,4 +1,3 @@
-import { ChevronRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 type BreadcrumbItem = { label: string; to?: string };
@@ -35,14 +34,13 @@ export default function Breadcrumbs() {
 
   return (
     <nav className="cap-breadcrumbs" aria-label="Ruta de navegación">
-      <ol>
+      <ol className="breadcrumb mb-0">
         {items.map((item, index) => (
-          <li key={item.label}>
-            {index > 0 && <ChevronRight size={16} aria-hidden="true" />}
+          <li className={`breadcrumb-item${index === items.length - 1 ? ' active' : ''}`} key={item.label}>
             {item.to ? (
               <Link to={item.to}>{item.label}</Link>
             ) : (
-              <span aria-current="page">{item.label}</span>
+              <span aria-current={index === items.length - 1 ? 'page' : undefined}>{item.label}</span>
             )}
           </li>
         ))}
