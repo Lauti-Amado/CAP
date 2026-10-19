@@ -1,10 +1,13 @@
+
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Button, Form } from 'react-bootstrap'
 import CarreraCard from '../../components/carreras/CarreraCard'
 import { Tabla } from '../../components/tabla/Tabla'
 import type { Carrera } from '../../types/carrera'
 import './Carreras.css'
-//borrar con el mock
+
+// Borrar cuando se conecte con el backend
 import { carrerasMock } from './carrerasMock'
 
 function Carreras() {
@@ -19,7 +22,6 @@ function Carreras() {
   const [filtroEstado, setFiltroEstado] = useState('todos')
 
   const [vista, setVista] = useState<'cards' | 'tabla'>('cards')
-
   const [paginaActual, setPaginaActual] = useState(1)
 
   const carrerasPorPagina = 3
@@ -29,20 +31,19 @@ function Carreras() {
       try {
         setCargando(true)
 
-        //borrar despues del mock 
+        // MOCK: borrar cuando se conecte con el backend
         setCarreras(carrerasMock)
         setError(null)
-        
-        // Endpoint a confirmar con backend, descomentar todo
-        //const respuesta = await fetch('/api/carreras')
 
-        //if (!respuesta.ok) {
-          //throw new Error('No se pudieron obtener las carreras')
-        //}
-
-        //const datos: Carrera[] = await respuesta.json()
-        //setCarreras(datos)
-        //setError(null)
+        // Cuando se defina el endpoint:
+        // const respuesta = await fetch('/api/carreras')
+        //
+        // if (!respuesta.ok) {
+        //   throw new Error('No se pudieron obtener las carreras')
+        // }
+        //
+        // const datos: Carrera[] = await respuesta.json()
+        // setCarreras(datos)
       } catch (error) {
         console.error(error)
         setError('No se pudieron cargar las carreras')
@@ -75,7 +76,7 @@ function Carreras() {
         carrera.nombre.toLowerCase().includes(texto) ||
         carrera.lugar.nombre.toLowerCase().includes(texto) ||
         carrera.lugar.localidad.nombre.toLowerCase().includes(texto)
-      
+
       const anioCarrera = new Date(carrera.fechaHora).getFullYear()
 
       const coincideAnio =
@@ -122,7 +123,6 @@ function Carreras() {
 
   return (
     <main className="carreras">
-
       <header className="carreras-header">
         <div>
           <h1>Listado de Carreras</h1>
@@ -131,47 +131,44 @@ function Carreras() {
             Consulta las carreras disponibles y configura sus clasificaciones.
           </p>
         </div>
-
       </header>
 
       <section className="carreras-filtros">
-
-        <input
+        <Form.Control
           type="search"
+          aria-label="Buscar carrera"
           placeholder="Buscar carrera..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
 
-        <select
+        <Form.Select
+          aria-label="Filtrar por año"
           value={filtroAnio}
           onChange={(e) => setFiltroAnio(e.target.value)}
         >
-          <option value="todos">
-            Todos los años
-          </option>
+          <option value="todos">Todos los años</option>
 
           {aniosDisponibles.map((anio) => (
             <option key={anio} value={anio}>
               {anio}
             </option>
           ))}
-        </select>
+        </Form.Select>
 
-        <select
+        <Form.Select
+          aria-label="Filtrar por estado"
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
-          <option value="todos">
-            Todos los estados
-          </option>
+          <option value="todos">Todos los estados</option>
 
           {estadosDisponibles.map((estado) => (
             <option key={estado} value={estado}>
               {estado}
             </option>
           ))}
-        </select>
+        </Form.Select>
 
         <div className="carreras-vistas">
           <button
@@ -179,6 +176,7 @@ function Carreras() {
             className={vista === 'cards' ? 'activo' : ''}
             onClick={() => setVista('cards')}
             aria-label="Vista de tarjetas"
+            aria-pressed={vista === 'cards'}
           >
             ▦
           </button>
@@ -188,26 +186,23 @@ function Carreras() {
             className={vista === 'tabla' ? 'activo' : ''}
             onClick={() => setVista('tabla')}
             aria-label="Vista de tabla"
+            aria-pressed={vista === 'tabla'}
           >
             ▤
           </button>
         </div>
-
       </section>
 
       <section className="carreras-contenido">
+        {cargando && <p>Cargando carreras...</p>}
 
-        {cargando && (
-          <p>Cargando carreras...</p>
-        )}
+        {error && <p>{error}</p>}
 
-        {error && (
-          <p>{error}</p>
-        )}
-
-        {!cargando && !error && carrerasFiltradas.length === 0 && (
-          <p>No se encontraron carreras.</p>
-        )}
+        {!cargando &&
+          !error &&
+          carrerasFiltradas.length === 0 && (
+            <p>No se encontraron carreras.</p>
+          )}
 
         {!cargando && !error && carrerasFiltradas.length > 0 && (
           <>
@@ -227,7 +222,8 @@ function Carreras() {
                     type="button"
                     className="carreras-paginacion__flecha"
                     disabled={paginaActual === 1}
-                    onClick={() => setPaginaActual(paginaActual - 1)}
+                    onClick={() => setPaginaActual((pagina) => pagina - 1)}
+                    aria-label="Página anterior"
                   >
                     ‹
                   </button>
@@ -245,6 +241,9 @@ function Carreras() {
                             : 'carreras-paginacion__pagina'
                         }
                         onClick={() => setPaginaActual(pagina)}
+                        aria-current={
+                          paginaActual === pagina ? 'page' : undefined
+                        }
                       >
                         {pagina}
                       </button>
@@ -255,7 +254,8 @@ function Carreras() {
                     type="button"
                     className="carreras-paginacion__flecha"
                     disabled={paginaActual === totalPaginas}
-                    onClick={() => setPaginaActual(paginaActual + 1)}
+                    onClick={() => setPaginaActual((pagina) => pagina + 1)}
+                    aria-label="Página siguiente"
                   >
                     ›
                   </button>
@@ -280,7 +280,7 @@ function Carreras() {
                     titulo: 'Lugar',
                     key: 'lugar',
                     render: (carrera) =>
-                      `${carrera.lugar.nombre} - ${carrera.lugar.localidad.nombre}`
+                      `${carrera.lugar.nombre} - ${carrera.lugar.localidad.nombre}`,
                   },
                   {
                     titulo: 'Estado',
@@ -291,38 +291,38 @@ function Carreras() {
                     key: 'acciones',
                     render: (carrera) => (
                       <div className="acciones-carrera">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          verCarrera(carrera.id)
-                        }
-                        title="Ver detalle"
-                      >
-                      👁
-                      </button>
-                      {carrera.estado === 'Finalizada' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                verRanking(carrera.id)
-                              }
-                              title="Ver ranking"
-                            >
-                              🏆
-                            </button>
-                            ) : (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                modificarCarrera(carrera.id)
-                              }
-                              title="Modificar clasificación"
-                            >
-                              ✏️
-                            </button>
-                          )}
+                        <Button
+                          type="button"
+                          variant="light"
+                          onClick={() => verCarrera(carrera.id)}
+                          title="Ver detalle"
+                          aria-label={`Ver detalle de ${carrera.nombre}`}
+                        >
+                          👁
+                        </Button>
 
-                        </div>
+                        {carrera.estado === 'Finalizada' ? (
+                          <Button
+                            type="button"
+                            variant="light"
+                            onClick={() => verRanking(carrera.id)}
+                            title="Ver ranking"
+                            aria-label={`Ver ranking de ${carrera.nombre}`}
+                          >
+                            🏆
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="light"
+                            onClick={() => modificarCarrera(carrera.id)}
+                            title="Modificar clasificación"
+                            aria-label={`Modificar clasificación de ${carrera.nombre}`}
+                          >
+                            ✏️
+                          </Button>
+                        )}
+                      </div>
                     ),
                   },
                 ]}
@@ -334,12 +334,9 @@ function Carreras() {
                 textoPaginacion={`${carrerasFiltradas.length} carreras`}
               />
             )}
-
           </>
         )}
-
       </section>
-
     </main>
   )
 }
