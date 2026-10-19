@@ -1,307 +1,297 @@
+
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import './DetalleCorredor.css'
 import {
   UserRound,
-  CircleDollarSign,
+  Banknote,
   PackageCheck,
   Info,
   BadgeCheck,
+  CircleCheck,
 } from 'lucide-react'
-//Borrar lo siguiente para sacar MOCK
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Badge,
+} from 'react-bootstrap'
+import './DetalleCorredor.css'
+
+// MOCK TEMPORAL
+// Reemplazar por GET /api/corredores/{dni} al conectar el backend.
 import { corredoresMock } from './entregaKitsMock'
 
 function DetalleCorredor() {
   const { dni } = useParams<{ dni: string }>()
   const navigate = useNavigate()
-
   const [dorsal, setDorsal] = useState('')
-  // MOCK TEMPORAL
-  // TODO: Reemplazar la búsqueda en corredoresMock por el GET al backend.
-  // GET /api/corredores/{dni}
-  // const corredor = await obtenerCorredorPorDni(dni)
+  const [entregaConfirmada, setEntregaConfirmada] = useState(false)
+
   const corredor = corredoresMock.find(
     (corredor) => corredor.dni === dni
   )
-  //Hasta aca se borra xd
+
   if (!corredor) {
     return (
-      <main className="detalle-corredor">
-        <h1>Corredor no encontrado</h1>
-        <button
-          type="button"
-          onClick={() => navigate('/entrega-kits')}
-        >
-          Volver al buscador
-        </button>
-      </main>
+      <Container fluid as="main" className="detalle-corredor">
+        <div className="detalle-corredor__no-encontrado">
+          <h1>Corredor no encontrado</h1>
+          <Button
+            type="button"
+            variant="link"
+            className="detalle-corredor__volver"
+            onClick={() => navigate('/entrega-kits')}
+          >
+            ← Volver al buscador
+          </Button>
+        </div>
+      </Container>
     )
   }
 
   const puedeEntregar =
     corredor.habilitadoParaRetirarKit &&
-    dorsal.trim() !== ''
+    /^\d+$/.test(dorsal.trim()) &&
+    Number(dorsal) > 0 &&
+    !entregaConfirmada
 
   const entregarKit = () => {
-    if (!puedeEntregar) {
-      return
-    }
+    if (!puedeEntregar) return
 
+    // MOCK TEMPORAL:
+    // Simula la confirmación visual de la entrega.
+    // TODO BACKEND: registrar la entrega y su fecha/hora.
     console.log('Entregar kit', {
       dni: corredor.dni,
       dorsal: dorsal.trim(),
     })
+
+    setEntregaConfirmada(true)
   }
 
   return (
-    <main className="detalle-corredor">
-
-      {/* =========================
-          ENCABEZADO
-          ========================= */}
-
+    <Container fluid as="main" className="detalle-corredor">
+      {/* ENCABEZADO */}
       <header className="detalle-corredor__encabezado">
-
         <div>
           <h1>Detalle de Corredor</h1>
-
-          <p>
-            Verificando datos para entrega de material.
-          </p>
+          <p>Verificando datos para entrega de material.</p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="link"
           className="detalle-corredor__volver"
           onClick={() => navigate('/entrega-kits')}
         >
           ← Volver al buscador
-        </button>
-
+        </Button>
       </header>
 
+      {/* CONTENIDO */}
+      <Row className="detalle-corredor__contenido g-3">
+        {/* COLUMNA IZQUIERDA */}
+        <Col xs={12} md={5} lg={4} xl={3}>
+          <div className="detalle-corredor__columna-izquierda">
+            {/* DATOS DEL CORREDOR */}
+            <Card className="detalle-corredor__tarjeta corredor">
+              <Card.Body>
+                <div className="detalle-corredor__avatar">
+                  <UserRound size={30} strokeWidth={2} />
+                </div>
 
-      {/* =========================
-          CONTENIDO
-          ========================= */}
+                <h2>{corredor.nombre}</h2>
 
-      <section className="detalle-corredor__contenido">
+                <p className="detalle-corredor__dni">
+                  DNI: {corredor.dni}
+                </p>
 
-        {/* =========================
-            COLUMNA IZQUIERDA
-            ========================= */}
+                <div className="detalle-corredor__separador" />
 
-        <div className="detalle-corredor__columna-izquierda">
+                <div className="detalle-corredor__datos">
+                  <div>
+                    <span>CATEGORÍA</span>
+                    <strong>{corredor.categoria}</strong>
+                  </div>
 
-          {/* Datos del corredor */}
+                  <div>
+                    <span>DISTANCIA</span>
+                    <strong>{corredor.distancia}</strong>
+                  </div>
 
-          <article className="detalle-corredor__tarjeta corredor">
+                  <div>
+                    <span>TALLE REMERA</span>
+                    <strong>{corredor.talleRemera || '—'}</strong>
+                  </div>
 
-            <div className="detalle-corredor__avatar">
-              <UserRound size={32} />
-            </div>
+                  <div>
+                    <span>CLUB/TEAM</span>
+                    <strong>{corredor.clubTeam || '—'}</strong>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
 
-            <h2>{corredor.nombre}</h2>
+            {/* ESTADO DE PAGO */}
+            <Card className="detalle-corredor__tarjeta pago">
+              <Card.Body>
+                <div className="detalle-corredor__titulo-pago">
+                  <span className="detalle-corredor__icono-pago">
+                    <Banknote size={19} strokeWidth={2.2} />
+                  </span>
 
-            <p className="detalle-corredor__dni">
-              DNI: {corredor.dni}
-            </p>
+                  <strong>ESTADO DE PAGO</strong>
+                </div>
 
-            <div className="detalle-corredor__separador" />
+                <div className="detalle-corredor__estado">
+                  <span>Inscripción</span>
 
-            <div className="detalle-corredor__datos">
-
-              <div>
-                <span>CATEGORÍA</span>
-                <strong>{corredor.categoria}</strong>
-              </div>
-
-              <div>
-                <span>DISTANCIA</span>
-                <strong>{corredor.distancia}</strong>
-              </div>
-
-              <div>
-                <span>TALLE REMERA</span>
-                <strong>{corredor.talleRemera}</strong>
-              </div>
-
-              <div>
-                <span>CLUB/TEAM</span>
-                <strong>{corredor.clubTeam}</strong>
-              </div>
-
-            </div>
-
-          </article>
-
-
-          {/* Estado de pago */}
-
-          <article className="detalle-corredor__tarjeta pago">
-
-            <div className="detalle-corredor__titulo-pago">
-
-              <span className="detalle-corredor__icono-pago">
-                <CircleDollarSign size={22} />
-              </span>
-
-              <strong>ESTADO DE PAGO</strong>
-
-            </div>
-
-            <div className="detalle-corredor__estado">
-
-              <span>Inscripción</span>
-
-              <small>
-                {corredor.inscripcion.estado === 'pagado' ? (
-                  <>
-                    <BadgeCheck size={16} />
-                    PAGADO
-                  </>
-                ) : (
-                  'PENDIENTE'
-                )}
-              </small>
-
-            </div>
-
-            {corredor.aptoMedico && (
-              <div className="detalle-corredor__estado">
-
-                <span>Apto Médico</span>
-
-                <small>
-                  {corredor.aptoMedico.estado === 'verificado' ? (
-                    <>
-                      <BadgeCheck size={16} />
-                      VERIFICADO
-                    </>
+                  {corredor.inscripcion.estado === 'pagado' ? (
+                    <Badge bg="success">
+                      <BadgeCheck size={12} />
+                      PAGADO
+                    </Badge>
                   ) : (
-                    'PENDIENTE'
+                    <Badge bg="warning" text="dark">
+                      PENDIENTE
+                    </Badge>
                   )}
-                </small>
+                </div>
 
-              </div>
-            )}
+                {corredor.aptoMedico && (
+                  <div className="detalle-corredor__estado">
+                    <span>Apto Médico</span>
 
-          </article>
-
-        </div>
-
-
-        {/* =========================
-            COLUMNA DERECHA
-            ========================= */}
-
-        <article className="detalle-corredor__kit">
-
-          <div
-            className={
-              corredor.habilitadoParaRetirarKit
-                ? 'detalle-corredor__kit-header habilitado'
-                : 'detalle-corredor__kit-header no-habilitado'
-            }
-          >
-            {corredor.habilitadoParaRetirarKit
-              ? '● HABILITADO PARA RETIRAR KIT'
-              : '● NO HABILITADO PARA RETIRAR KIT'}
+                    {corredor.aptoMedico.estado === 'verificado' ? (
+                      <Badge bg="success">
+                        <BadgeCheck size={12} />
+                        VERIFICADO
+                      </Badge>
+                    ) : (
+                      <Badge bg="warning" text="dark">
+                        PENDIENTE
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
           </div>
+        </Col>
 
-
-          <div className="detalle-corredor__kit-contenido">
-
-            <span className="detalle-corredor__kit-titulo">
-              DATOS DEL KIT ASIGNADO
-            </span>
-
-
-            <div className="detalle-corredor__kit-datos">
-
-              {/* Dorsal ingresado manualmente */}
-
-              <div className="detalle-corredor__kit-dato">
-
-                <label htmlFor="dorsal">
-                  DORSAL A ASIGNAR
-                </label>
-
-                <input
-                  id="dorsal"
-                  type="text"
-                  inputMode="numeric"
-                  value={dorsal}
-                  onChange={(event) => setDorsal(event.target.value)}
-                  placeholder={
-                    corredor.habilitadoParaRetirarKit
-                      ? 'Ej. 125'
-                      : 'No habilitado'
-                  }
-                  disabled={!corredor.habilitadoParaRetirarKit}
-                />
-
-              </div>
-
-
-              {/* Chip RFID */}
-
-              <div className="detalle-corredor__kit-dato">
-
-                <span>CHIP RFID</span>
-
-                <strong>—</strong>
-                {/*
-                  TODO: Implementar cuando se conecte el backend.
-
-                  El CHIP RFID dependerá del dorsal asignado.
-                  Al ingresar/asignar el dorsal, se deberá obtener
-                  el CHIP RFID correspondiente.
-
-                  Por ahora no se muestra ningún chip.
-                */}
-              </div>
-
+        {/* COLUMNA DERECHA */}
+        <Col xs={12} md={7} lg={8} xl={9}>
+          <Card className="detalle-corredor__kit">
+            <div
+              className={`detalle-corredor__kit-header ${
+                corredor.habilitadoParaRetirarKit
+                  ? 'habilitado'
+                  : 'no-habilitado'
+              }`}
+            >
+              {corredor.habilitadoParaRetirarKit ? (
+                <>
+                  <CircleCheck size={15} />
+                  HABILITADO PARA RETIRAR KIT
+                </>
+              ) : (
+                <>NO HABILITADO PARA RETIRAR KIT</>
+              )}
             </div>
 
-
-            {/* Aviso */}
-
-            <div className="detalle-corredor__aviso">
-
-              <span>
-                <Info size={20} />
+            <Card.Body className="detalle-corredor__kit-contenido">
+              <span className="detalle-corredor__kit-titulo">
+                DATOS DEL KIT ASIGNADO
               </span>
 
-              <p>
-                Asegúrese de verificar que el número de dorsal
-                físico coincida con el número mostrado en pantalla
-                antes de confirmar la entrega. El sistema registrará
-                la fecha y hora exacta de esta acción.
-              </p>
+              <div className="detalle-corredor__kit-datos">
+                {/* DORSAL */}
+                <div className="detalle-corredor__kit-dato">
+                  <Form.Label htmlFor="dorsal">
+                    DORSAL A ASIGNAR
+                  </Form.Label>
 
-            </div>
+                  <div className="detalle-corredor__dorsal">
+                    <span aria-hidden="true">#</span>
 
+                    <Form.Control
+                      id="dorsal"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      value={dorsal}
+                      onChange={(event) => {
+                        setDorsal(
+                          event.target.value.replace(/\D/g, '')
+                        )
+                        setEntregaConfirmada(false)
+                      }}
+                      placeholder="125"
+                      disabled={
+                        !corredor.habilitadoParaRetirarKit ||
+                        entregaConfirmada
+                      }
+                      aria-label="Número de dorsal a asignar"
+                      className="detalle-corredor__dorsal-input"
+                    />
+                  </div>
+                </div>
 
-            {/* Entregar kit */}
+                {/* CHIP RFID */}
+                <div className="detalle-corredor__kit-dato">
+                  <Form.Label>CHIP RFID</Form.Label>
+                  <strong className="detalle-corredor__chip">
+                    —
+                  </strong>
+                  {/*
+                    TODO: obtener el chip RFID correspondiente
+                    al dorsal desde el backend.
+                  */}
+                </div>
+              </div>
 
-            <button
-              type="button"
-              className="detalle-corredor__entregar"
-              disabled={!puedeEntregar}
-              onClick={entregarKit}
-            >
-              <PackageCheck size={20} />
-              Entregar kit
-            </button>
+              {/* AVISO */}
+              <div className="detalle-corredor__aviso">
+                <Info size={19} />
 
-          </div>
+                <p>
+                  Asegúrese de verificar que el número de dorsal
+                  físico coincida con el número mostrado en pantalla
+                  antes de confirmar la entrega. El sistema registrará
+                  la fecha y hora exacta de esta acción.
+                </p>
+              </div>
 
-        </article>
+              {entregaConfirmada && (
+                <div
+                  className="detalle-corredor__confirmacion"
+                  role="status"
+                >
+                  <CircleCheck size={17} />
+                  Entrega simulada correctamente para el dorsal #
+                  {dorsal}.
+                </div>
+              )}
 
-      </section>
-
-    </main>
+              {/* ENTREGAR KIT */}
+              <Button
+                type="button"
+                variant="success"
+                className="detalle-corredor__entregar"
+                disabled={!puedeEntregar}
+                onClick={entregarKit}
+              >
+                <PackageCheck size={17} />
+                {entregaConfirmada ? 'Kit entregado' : 'Entregar kit'}
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   )
 }
 
