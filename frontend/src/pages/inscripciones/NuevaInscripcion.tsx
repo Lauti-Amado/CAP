@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button, Form } from 'react-bootstrap'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -382,7 +383,7 @@ function NuevaInscripcion() {
 
       <div className="nueva-inscripcion__encabezado">
 
-        <button
+        <Button
           type="button"
           onClick={volverAInscripciones}
         >
@@ -391,7 +392,7 @@ function NuevaInscripcion() {
           <span>
             Volver a inscripciones
           </span>
-        </button>
+        </Button>
 
         <h1>
           Nueva inscripción
@@ -517,7 +518,7 @@ function NuevaInscripcion() {
                   Nombre <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="nombre"
                   type="text"
                   value={datosCorredor.nombre}
@@ -541,7 +542,7 @@ function NuevaInscripcion() {
                   Apellido <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="apellido"
                   type="text"
                   value={datosCorredor.apellido}
@@ -565,7 +566,7 @@ function NuevaInscripcion() {
                   Género <span>*</span>
                 </label>
 
-                <select
+                <Form.Select
                   id="genero"
                   value={datosCorredor.genero}
                   onChange={(e) =>
@@ -592,7 +593,7 @@ function NuevaInscripcion() {
                     Otro
                   </option>
 
-                </select>
+                </Form.Select>
 
               </div>
 
@@ -605,7 +606,7 @@ function NuevaInscripcion() {
                   Fecha de nacimiento <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="fechaNacimiento"
                   type="date"
                   value={datosCorredor.fechaNacimiento}
@@ -628,7 +629,7 @@ function NuevaInscripcion() {
                   DNI <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="dni"
                   type="text"
                   inputMode="numeric"
@@ -653,7 +654,7 @@ function NuevaInscripcion() {
                   Número de teléfono <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="telefono"
                   type="text"
                   inputMode="tel"
@@ -678,7 +679,7 @@ function NuevaInscripcion() {
                   Discapacidad
                 </label>
 
-                <select
+                <Form.Select
                   id="discapacidad"
                   value={datosCorredor.discapacidad}
                   onChange={(e) =>
@@ -709,7 +710,7 @@ function NuevaInscripcion() {
                     Otra
                   </option>
 
-                </select>
+                </Form.Select>
 
               </div>
 
@@ -724,13 +725,13 @@ function NuevaInscripcion() {
 
                 <label className="nueva-inscripcion__checkbox">
 
-                  <input
+                  <Form.Check
                     type="checkbox"
                     checked={datosCorredor.aptoMedico}
                     onChange={(e) =>
                       actualizarDato(
                         'aptoMedico',
-                        e.target.checked
+                        e.currentTarget.checked
                       )
                     }
                   />
@@ -748,7 +749,7 @@ function NuevaInscripcion() {
                     Fecha de vencimiento del apto médico
                   </label>
 
-                  <input
+                  <Form.Control
                     id="vencimientoAptoMedico"
                     type="date"
                     min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
@@ -809,7 +810,7 @@ function NuevaInscripcion() {
 
                   <Search size={15} />
 
-                  <input
+                  <Form.Control
                     type="text"
                     inputMode="numeric"
                     value={dniContacto}
@@ -824,23 +825,23 @@ function NuevaInscripcion() {
                 </div>
 
 
-                <button
+                <Button
                   type="button"
                   onClick={buscarContactoEmergencia}
                 >
                   <Search size={14} />
                   Buscar
-                </button>
+                </Button>
 
 
-                <button
+                <Button
                   type="button"
                   className="nueva-inscripcion__crear-contacto"
                   onClick={abrirModalNuevoContacto}
                 >
                   <UserRoundPlus size={14} />
                   Nuevo contacto
-                </button>
+                </Button>
 
               </div>
 
@@ -897,13 +898,13 @@ function NuevaInscripcion() {
 
             <div className="nueva-inscripcion__acciones">
 
-              <button
+              <Button
                 type="button"
                 onClick={continuarPaso1}
                 disabled={!puedeContinuarPaso1}
               >
                 Continuar
-              </button>
+              </Button>
 
             </div>
 
@@ -951,7 +952,7 @@ function NuevaInscripcion() {
                     {distanciasInscripcionMock.map(
                       (distancia) => (
 
-                        <button
+                        <Button
                           key={distancia.id}
                           type="button"
                           className={`nueva-inscripcion__distancia ${
@@ -974,7 +975,7 @@ function NuevaInscripcion() {
                             {distancia.descripcion}
                           </span>
 
-                        </button>
+                        </Button>
 
                       )
                     )}
@@ -995,7 +996,7 @@ function NuevaInscripcion() {
 
                   <div className="nueva-inscripcion__producto-opciones">
 
-                    <button
+                    <Button
                       type="button"
                       className={`nueva-inscripcion__producto-opcion ${
                         productoDinamico === 'si'
@@ -1017,10 +1018,10 @@ function NuevaInscripcion() {
 
                       Sí
 
-                    </button>
+                    </Button>
 
 
-                    <button
+                    <Button
                       type="button"
                       className={`nueva-inscripcion__producto-opcion ${
                         productoDinamico === 'no'
@@ -1044,7 +1045,7 @@ function NuevaInscripcion() {
 
                       No
 
-                    </button>
+                    </Button>
 
                   </div>
 
@@ -1063,7 +1064,7 @@ function NuevaInscripcion() {
                         Variante del producto
                       </label>
 
-                      <select
+                      <Form.Select
                         id="varianteProducto"
                         value={varianteProducto}
                         onChange={(e) =>
@@ -1090,7 +1091,7 @@ function NuevaInscripcion() {
                           )
                         )}
 
-                      </select>
+                      </Form.Select>
 
                     </div>
 
@@ -1101,7 +1102,7 @@ function NuevaInscripcion() {
                         Cantidad
                       </label>
 
-                      <select
+                      <Form.Select
                         id="cantidadProducto"
                         value={cantidadProducto}
                         onChange={(e) =>
@@ -1124,7 +1125,7 @@ function NuevaInscripcion() {
                           )
                         )}
 
-                      </select>
+                      </Form.Select>
 
                     </div>
 
@@ -1236,20 +1237,20 @@ function NuevaInscripcion() {
 
             <div className="nueva-inscripcion__acciones">
 
-              <button
+              <Button
                 type="button"
                 onClick={() => setPaso(1)}
               >
                 Volver
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
                 onClick={continuarPaso2}
                 disabled={!puedeContinuarPaso2}
               >
                 Continuar
-              </button>
+              </Button>
 
             </div>
 
@@ -1493,16 +1494,16 @@ function NuevaInscripcion() {
 
               <div className="nueva-inscripcion__confirmacion-acciones">
 
-                <button
+                <Button
                   type="button"
                   className="nueva-inscripcion__confirmacion-volver"
                   onClick={() => setPaso(2)}
                 >
                   Volver
-                </button>
+                </Button>
 
 
-                <button
+                <Button
                   type="button"
                   className="nueva-inscripcion__confirmacion-confirmar"
                   onClick={confirmarInscripcion}
@@ -1512,7 +1513,7 @@ function NuevaInscripcion() {
 
                   Confirmar inscripción
 
-                </button>
+                </Button>
 
               </div>
 
@@ -1520,7 +1521,7 @@ function NuevaInscripcion() {
 
               <div className="nueva-inscripcion__confirmacion-acciones">
 
-                <button
+                <Button
                   type="button"
                   className="nueva-inscripcion__confirmacion-ver"
                   onClick={verInscripcion}
@@ -1530,10 +1531,10 @@ function NuevaInscripcion() {
 
                   Ver inscripción
 
-                </button>
+                </Button>
 
 
-                <button
+                <Button
                   type="button"
                   className="nueva-inscripcion__confirmacion-nueva"
                   onClick={nuevaInscripcion}
@@ -1543,7 +1544,7 @@ function NuevaInscripcion() {
 
                   Nueva inscripción
 
-                </button>
+                </Button>
 
               </div>
 
@@ -1582,7 +1583,7 @@ function NuevaInscripcion() {
                 Nuevo contacto de emergencia
               </h2>
 
-              <button
+              <Button
                 type="button"
                 onClick={() =>
                   setMostrarModalContacto(false)
@@ -1590,7 +1591,7 @@ function NuevaInscripcion() {
                 aria-label="Cerrar"
               >
                 <X size={15} />
-              </button>
+              </Button>
 
             </div>
 
@@ -1603,7 +1604,7 @@ function NuevaInscripcion() {
                   Nombre <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="contactoNombre"
                   type="text"
                   value={nuevoContacto.nombre}
@@ -1627,7 +1628,7 @@ function NuevaInscripcion() {
                   Apellido <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="contactoApellido"
                   type="text"
                   value={nuevoContacto.apellido}
@@ -1651,7 +1652,7 @@ function NuevaInscripcion() {
                   DNI <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="contactoDni"
                   type="text"
                   inputMode="numeric"
@@ -1676,7 +1677,7 @@ function NuevaInscripcion() {
                   Número de teléfono <span>*</span>
                 </label>
 
-                <input
+                <Form.Control
                   id="contactoTelefono"
                   type="text"
                   inputMode="tel"
@@ -1699,7 +1700,7 @@ function NuevaInscripcion() {
 
             <div className="nueva-inscripcion__modal-acciones">
 
-              <button
+              <Button
                 type="button"
                 className="nueva-inscripcion__modal-cancelar"
                 onClick={() =>
@@ -1707,16 +1708,16 @@ function NuevaInscripcion() {
                 }
               >
                 Cancelar
-              </button>
+              </Button>
 
 
-              <button
+              <Button
                 type="button"
                 className="nueva-inscripcion__modal-guardar"
                 onClick={guardarNuevoContacto}
               >
                 Guardar
-              </button>
+              </Button>
 
             </div>
 
