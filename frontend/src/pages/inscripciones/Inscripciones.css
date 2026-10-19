@@ -1,477 +1,166 @@
+
+/* ==========================================
+   AJUSTES VISUALES — LISTA DE INSCRIPCIONES
+   ========================================== */
+
+/* Reducir espacios generales */
 .inscripciones {
-  width: 100%;
-  min-height: 100%;
-  box-sizing: border-box;
-  padding: 26px 30px 40px;
-}
-
-/* =========================
-   ENCABEZADO
-========================= */
-
-.inscripciones__encabezado {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28px;
-}
-
-.inscripciones__encabezado > div {
-  display: flex;
-  flex-direction: column;
-}
-
-.inscripciones__encabezado h1 {
-  margin: 0 0 5px;
-  padding: 0;
-
-  font-size: 30px;
-  line-height: 1.2;
-  font-weight: 700;
-
+  padding: 24px 28px 32px;
+  background-color: #f8f9fc;
   color: #172033;
 }
 
-.inscripciones__encabezado p {
-  margin: 0;
-  padding: 0;
-
-  font-size: 13px;
-  line-height: 1.4;
-
-  color: #374151;
-}
-
-/* =========================
-   BOTÓN NUEVA INSCRIPCIÓN
-========================= */
-
-.inscripciones__nueva {
-  display: inline-flex;
+/* Encabezado */
+.inscripciones__encabezado {
+  margin-bottom: 22px;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
+}
 
-  height: 32px;
-  padding: 0 13px;
+.inscripciones__encabezado h1 {
+  font-size: 28px;
+  letter-spacing: -0.4px;
+}
 
-  border: none;
-  border-radius: 6px;
-
-  background-color: #07883f;
-  color: #ffffff;
-
-  font-family: inherit;
+.inscripciones__encabezado p {
   font-size: 12px;
-  font-weight: 600;
-
-  white-space: nowrap;
-  cursor: pointer;
+  color: #475467;
 }
 
-.inscripciones__nueva svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-
-.inscripciones__nueva:hover {
-  background-color: #067537;
-}
-
-/* =========================
-   FILTROS
-========================= */
-
+/* Filtros compactos */
 .inscripciones__filtros {
-  width: 100%;
-
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: 32px 32px;
-
-  column-gap: 6px;
-  row-gap: 6px;
-
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
-.inscripciones__filtros input,
-.inscripciones__filtros select {
-  width: 100%;
-  min-width: 0;
-  height: 32px;
-
-  box-sizing: border-box;
-
-  padding: 0 10px;
-
-  border: 1px solid #d1d5db;
-  border-radius: 5px;
-
-  background-color: #ffffff;
-  color: #374151;
-
-  font-family: inherit;
+.inscripciones .inscripciones__filtros .form-control,
+.inscripciones .inscripciones__filtros .form-select {
+  height: 36px;
   font-size: 11px;
-
-  outline: none;
+  border-color: #d0d5dd;
+  border-radius: 5px;
 }
 
-.inscripciones__filtros input::placeholder {
-  color: #6b7280;
-}
-
-.inscripciones__filtros input:focus,
-.inscripciones__filtros select:focus {
-  border-color: #9ca3af;
-}
-
-/* =========================
-   BUSCADOR DNI
-========================= */
-
-.inscripciones__buscador {
-  position: relative;
-  width: 100%;
-}
-
-.inscripciones__buscador svg {
-  position: absolute;
-
-  left: 10px;
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  color: #667085;
-
-  pointer-events: none;
-}
-
-.inscripciones__buscador input {
-  padding-left: 30px;
-}
-
-/* =========================
-   CONTENEDOR TABLA
-========================= */
-
+/* Contenedor y bordes de la tabla */
 .inscripciones__tabla {
-  width: 100%;
-  box-sizing: border-box;
-
-  background-color: #ffffff;
-
-  border: 1px solid #e1e5ea;
+  border-color: #dfe3eb;
   border-radius: 8px;
-
-  overflow: hidden;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 3%);
 }
-
-.inscripciones__tabla .table-wrapper-component {
-  width: 100%;
-}
-
-/* =========================
-   CONTENEDOR INTERNO TABLA
-========================= */
-
-.inscripciones__tabla .table-container {
-  width: 100%;
-  max-height: none;
-
-  overflow-x: auto;
-  overflow-y: visible;
-
-  border: none;
-  border-radius: 0;
-
-  background-color: #ffffff;
-}
-
-/* =========================
-   TABLA
-========================= */
 
 .inscripciones__tabla .participants-table {
-  width: 100%;
   table-layout: fixed;
-
-  border-collapse: collapse;
-  border-spacing: 0;
-
-  text-align: left;
 }
 
-/* =========================
-   CABECERA
-========================= */
-
+/* Encabezados de columna */
 .inscripciones__tabla .participants-table th {
-  position: static;
-
-  height: 44px;
-  box-sizing: border-box;
-
-  padding: 0 10px;
-
+  height: 40px;
+  padding: 0 9px;
   background-color: #f0f3ff;
-
   color: #344054;
-
   font-size: 10px;
   font-weight: 600;
-
-  border-bottom: 1px solid #d9dee5;
-
-  letter-spacing: 0.2px;
-
-  white-space: nowrap;
+  border-bottom: 1px solid #dfe3eb;
 }
 
-/* =========================
-   CELDAS
-========================= */
-
+/* Filas más compactas */
 .inscripciones__tabla .participants-table td {
-  height: 80px;
-  box-sizing: border-box;
-
-  padding: 0 10px;
-
-  background-color: #ffffff;
-
-  color: #263238;
-
-  font-size: 11px;
-
-  border-bottom: 1px solid #e5e7eb;
-
+  height: 64px;
+  padding: 7px 9px;
+  font-size: 10px;
+  line-height: 1.35;
+  border-bottom: 1px solid #e4e7ec;
   vertical-align: middle;
-}
-
-.inscripciones__tabla .participants-table tbody tr:last-child td {
-  border-bottom: none;
 }
 
 .inscripciones__tabla .participants-table tbody tr:hover td {
   background-color: #f8fafc;
 }
 
-/* Corredor (columna 2) */
+/* Nombre del corredor */
 .inscripciones__tabla .participants-table td:nth-child(2) {
-  font-weight: 700;
-}
-
-/* Carrera (columna 3) */
-.inscripciones__tabla .participants-table td:nth-child(3) {
+  color: #172033;
   font-size: 10px;
-  color: #4b5563;
+  font-weight: 600;
 }
 
-/* Anchos de columnas (suman 100%) */
-.inscripciones__tabla .participants-table th:nth-child(1) { width: 11%; }  /* DNI */
-.inscripciones__tabla .participants-table th:nth-child(2) { width: 12%; }  /* Corredor */
-.inscripciones__tabla .participants-table th:nth-child(3) { width: 15%; }  /* Carrera */
-.inscripciones__tabla .participants-table th:nth-child(4) { width: 10%; }  /* Distancia */
-.inscripciones__tabla .participants-table th:nth-child(5) { width: 11%; }  /* Fecha */
-.inscripciones__tabla .participants-table th:nth-child(6) { width: 10%; }  /* Tipo */
-.inscripciones__tabla .participants-table th:nth-child(7) { width: 10%; }  /* Pago */
-.inscripciones__tabla .participants-table th:nth-child(8) { width: 11%; }  /* Estado */
-
-/* =========================
-   COLUMNA ACCIONES
-========================= */
-
-.inscripciones__tabla .participants-table th:last-child {
-  width: 10%;
-  text-align: center;
+/* Nombre de carrera */
+.inscripciones__tabla .participants-table td:nth-child(3) {
+  color: #344054;
+  font-size: 10px;
+  overflow-wrap: anywhere;
 }
 
-.inscripciones__tabla .participants-table td:last-child {
-  width: 10%;
-
-  text-align: center;
-  white-space: nowrap;
+/* Badges de estado y pago */
+.inscripciones__badge {
+  min-height: 19px;
+  padding: 3px 8px;
+  font-size: 9px;
+  line-height: 1.2;
+  border-radius: 999px;
 }
 
-/* =========================
-   ACCIONES
-========================= */
-
+/* Acciones: alinear los iconos y Dar Kit */
 .inscripciones__acciones {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
-  gap: 4px;
+  gap: 2px;
 }
 
 .inscripciones__acciones-superiores {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-
-  gap: 4px;
+  gap: 3px;
 }
 
-.inscripciones__acciones-superiores button {
+/* En el TSX actual son botones HTML comunes, no .btn */
+.inscripciones .inscripciones__acciones-superiores button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  width: 16px;
-  height: 16px;
-
+  width: 23px;
+  height: 22px;
   margin: 0;
   padding: 0;
-
   border: none;
   border-radius: 4px;
-
-  background-color: transparent;
-  color: #344054;
-
-  cursor: pointer;
+  background: transparent;
+  color: #475467;
+  box-shadow: none;
 }
 
-.inscripciones__acciones-superiores button:hover {
+.inscripciones .inscripciones__acciones-superiores button:hover {
   background-color: #f2f4f7;
   color: #07883f;
 }
 
-.inscripciones__acciones-superiores button svg {
+.inscripciones .inscripciones__acciones-superiores button svg {
   width: 13px;
   height: 13px;
 }
 
-/* =========================
-   BOTÓN DAR KIT
-========================= */
-
-.inscripciones__acciones .inscripciones__dar-kit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: auto;
-  height: 18px;
-
-  margin: 0;
+/* Botón Dar Kit */
+.inscripciones .inscripciones__acciones .inscripciones__dar-kit {
+  min-height: 22px;
   padding: 0 8px;
-
-  border: none;
   border-radius: 999px;
-
   background-color: #07883f;
-  color: #ffffff;
-
-  font-family: inherit;
-  font-size: 8px;
+  color: #fff;
+  font-size: 9px;
   font-weight: 600;
-
-  line-height: 1;
-
-  white-space: nowrap;
-  cursor: pointer;
 }
 
-.inscripciones__acciones .inscripciones__dar-kit:hover {
+.inscripciones .inscripciones__acciones .inscripciones__dar-kit:hover {
   background-color: #067537;
 }
 
-/* =========================
-   ESTADO VACÍO
-========================= */
-
-.inscripciones__tabla .empty-state {
-  text-align: center;
-
-  padding: 32px !important;
-
-  color: #64748b;
-  font-size: 13px;
-}
-
-/* =========================
-   BADGES
-========================= */
-
-.inscripciones__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 3px 8px;
-
-  border-radius: 999px;
-
-  font-size: 9px;
-  font-weight: 500;
-
-  white-space: nowrap;
-}
-
-/* =========================
-   PAGO
-========================= */
-
-.inscripciones__badge--pago-pagado {
-  background-color: #ecfdf3;
-  color: #039855;
-  border: 1px solid #abefc6;
-}
-
-.inscripciones__badge--pago-pendiente {
-  background-color: #fef3f2;
-  color: #d92d20;
-  border: 1px solid #fecdca;
-}
-
-/* =========================
-   ESTADO
-========================= */
-
-.inscripciones__badge--estado-confirmada {
-  background-color: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.inscripciones__badge--estado-en-proceso {
-  background-color: #eef2f6;
-  color: #475467;
-  border: 1px solid #d0d5dd;
-}
-
-.inscripciones__badge--estado-anulada {
-  background-color: #fee4e2;
-  color: #d92d20;
-  border: 1px solid #fecdca;
-}
-
-/* =========================
-   TIPO
-   PAGINACIÓN
-========================= */
-
+/* Paginación */
 .inscripciones__tabla .pagination-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  min-height: 44px;
-  box-sizing: border-box;
-
-  padding: 0 14px;
-
+  min-height: 40px;
+  padding: 0 12px;
   border-top: 1px solid #e1e5ea;
-
-  background-color: #ffffff;
 }
 
 .inscripciones__tabla .pagination-info {
@@ -479,81 +168,76 @@
   color: #667085;
 }
 
-.inscripciones__tabla .pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .inscripciones__tabla .page-num-btn,
 .inscripciones__tabla .page-nav-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 22px;
-  height: 22px;
-
-  padding: 0;
-
-  border: 1px solid #d0d5dd;
-  border-radius: 4px;
-
-  background-color: #ffffff;
-  color: #475467;
-
-  font-size: 12px;
-
-  cursor: pointer;
-}
-
-.inscripciones__tabla .page-num-btn.active {
-  background-color: #07883f;
-  border-color: #07883f;
-  color: #ffffff;
+  width: 24px;
+  height: 24px;
+  border-color: #d0d5dd;
+  border-radius: 5px;
+  font-size: 11px;
 }
 
 .inscripciones__tabla .page-nav-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+  background-color: #fff;
+  color: #98a2b3;
 }
 
-.inscripciones__tabla .page-nav-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
+/* Adaptación a pantallas pequeñas */
 @media (max-width: 900px) {
   .inscripciones {
-    padding: 24px 20px 30px;
+    padding: 22px 18px 28px;
   }
 
-  .inscripciones__filtros {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto;
+  .inscripciones__tabla .participants-table {
+    min-width: 760px;
   }
 }
 
 @media (max-width: 600px) {
   .inscripciones {
-    padding: 20px 16px 30px;
+    padding: 18px 12px 24px;
   }
 
   .inscripciones__encabezado {
-    flex-direction: column;
-    gap: 16px;
+    align-items: stretch;
+    gap: 14px;
   }
 
-  .inscripciones__nueva {
+  .inscripciones__encabezado h1 {
+    font-size: 24px;
+  }
+
+  .inscripciones .inscripciones__nueva {
     width: 100%;
+    min-height: 36px;
   }
+}
 
-  .inscripciones__filtros {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(6, 32px);
-  }
+
+/* Corregir posición de la lupa */
+.inscripciones__buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inscripciones__buscador > svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.inscripciones__buscador input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 35px;
+}
+/* Título principal de inscripciones */
+.inscripciones__encabezado h1 {
+  font-weight: 700;
 }

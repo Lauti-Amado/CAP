@@ -1,4 +1,4 @@
-import './CarreraCard.css'
+
 import { useNavigate } from 'react-router-dom'
 import {
   Eye,
@@ -8,20 +8,29 @@ import {
   MapPin,
   Route,
 } from 'lucide-react'
+import { Card, Badge } from 'react-bootstrap'
 import type { Carrera } from '../../types/carrera'
+import './CarreraCard.css'
 
-type CarreraCardProps = {   carrera: Carrera }
+type CarreraCardProps = {
+  carrera: Carrera
+}
 
 function CarreraCard({ carrera }: CarreraCardProps) {
   const navigate = useNavigate()
 
   const fecha = new Date(carrera.fechaHora)
-
   const esFinalizada = carrera.estado === 'Finalizada'
 
   const distancias = carrera.distanciaCarrera
     .map((item) => `${item.distancia.kilometraje}K`)
     .join(', ')
+
+  const estadoClase = carrera.estado
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
 
   const handleVerDetalle = () => {
     navigate(`/carreras/${carrera.id}`)
@@ -36,74 +45,61 @@ function CarreraCard({ carrera }: CarreraCardProps) {
   }
 
   return (
-    <article className="carrera-card">
-
+    <Card className="carrera-card">
       <div className="carrera-card__imagen-container">
-
-        <img
+        <Card.Img
+          variant="top"
           src={carrera.imagenUrl}
           alt={`Imagen de ${carrera.nombre}`}
           className="carrera-card__imagen"
         />
 
-        <span
-          className={`carrera-card__estado carrera-card__estado--${carrera.estado.toLowerCase()}`}
+        <Badge
+          pill
+          className={`carrera-card__estado carrera-card__estado--${estadoClase}`}
         >
           <span className="carrera-card__estado-dot" />
           {carrera.estado}
-        </span>
-
+        </Badge>
       </div>
 
-      <div className="carrera-card__contenido">
-
+      <Card.Body className="carrera-card__contenido">
         <div className="carrera-card__titulo">
-          <h2>{carrera.nombre}</h2>
+          <Card.Title as="h2">{carrera.nombre}</Card.Title>
         </div>
 
         <div className="carrera-card__datos">
-
           <p>
-            <CalendarDays size={16} />
-            {fecha.toLocaleDateString('es-AR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
+            <CalendarDays size={15} />
+            <span>
+              {fecha.toLocaleDateString('es-AR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
           </p>
 
           <p>
-            <MapPin size={16} />
-            {carrera.lugar.nombre},{' '}
-            {carrera.lugar.localidad.nombre}
+            <MapPin size={15} />
+            <span>
+              {carrera.lugar.nombre}, {carrera.lugar.localidad.nombre}
+            </span>
           </p>
 
           <p>
-            <Route size={16} />
-            {distancias}
+            <Route size={15} />
+            <span>{distancias}</span>
           </p>
-
         </div>
 
         <div className="carrera-card__footer">
-
           <div className="carrera-card__inscriptos">
-
-            <span>
-              {esFinalizada
-                ? 'PARTICIPANTES'
-                : 'INSCRIPTOS'}
-            </span>
-
-            <strong>
-              —
-            </strong>
-
+            <span>{esFinalizada ? 'PARTICIPANTES' : 'INSCRIPTOS'}</span>
+            <strong>—</strong>
           </div>
 
           <div className="carrera-card__acciones">
-
-            {/* Ver detalle */}
             <button
               type="button"
               className="carrera-card__accion"
@@ -111,12 +107,10 @@ function CarreraCard({ carrera }: CarreraCardProps) {
               title="Ver detalle"
               onClick={handleVerDetalle}
             >
-              <Eye size={19} strokeWidth={2} />
+              <Eye size={17} />
             </button>
 
-            {/* Finalizada → resultados */}
             {esFinalizada ? (
-
               <button
                 type="button"
                 className="carrera-card__accion"
@@ -124,12 +118,9 @@ function CarreraCard({ carrera }: CarreraCardProps) {
                 title="Ver resultados"
                 onClick={handleVerResultados}
               >
-                <BarChart3 size={19} strokeWidth={2} />
+                <BarChart3 size={17} />
               </button>
-
             ) : (
-
-              /* No finalizada → modificar */
               <button
                 type="button"
                 className="carrera-card__accion"
@@ -137,18 +128,13 @@ function CarreraCard({ carrera }: CarreraCardProps) {
                 title="Modificar clasificación"
                 onClick={handleModificar}
               >
-                <Pencil size={19} strokeWidth={2} />
+                <Pencil size={17} />
               </button>
-
             )}
-
           </div>
-
         </div>
-
-      </div>
-
-    </article>
+      </Card.Body>
+    </Card>
   )
 }
 

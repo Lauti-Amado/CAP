@@ -1,115 +1,202 @@
-/* Contenedor principal con altura fija y scroll vertical */
-.table-container {
+
+/* ==========================================
+   TABLA REUTILIZABLE — CAP GESTIÓN
+   ========================================== */
+
+.table-wrapper-component {
   width: 100%;
-  max-height: 400px; /* Puedes ajustar este alto según tus necesidades */
-  overflow-y: auto;  /* Habilita el scroll vertical cuando hay muchos corredores */
-  overflow-x: auto;  /* Habilita el scroll horizontal si la pantalla es muy pequeña */
+  min-width: 0;
+  overflow: hidden;
+  background-color: #ffffff;
+  border: 1px solid #dfe3eb;
   border-radius: 8px;
-  border: 1px solid #E5E7EB;
-  background-color: white;
 }
 
-/* Ocultar / estilizar barra de scroll (estilo moderno para Electron) */
+/* Contenedor con scroll para listas largas */
+.table-container {
+  width: 100%;
+  max-height: 400px;
+  overflow: auto;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background-color: #ffffff;
+}
+
 .table-container::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 .table-container::-webkit-scrollbar-thumb {
-  background-color: #CBD5E1;
+  background-color: #cbd5e1;
   border-radius: 4px;
 }
 
-/* Estructura general de la tabla */
-.participants-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
+.table-container::-webkit-scrollbar-track {
+  background-color: #f8fafc;
 }
 
-/* Encabezado fijo (Sticky Header) para que no desaparezca al hacer scroll */
+/* Tabla */
+.participants-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  background-color: #ffffff;
+}
+
+/* Encabezado */
 .participants-table th {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background-color: #F8FAFC;
-  color: #64748B;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 14px 16px;
-  border-bottom: 2px solid #E2E8F0;
-  letter-spacing: 0.5px;
+  z-index: 2;
+  height: 40px;
+  padding: 0 10px;
+  background-color: #f0f3ff;
+  color: #344054;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  white-space: nowrap;
+  border: none;
+  border-bottom: 1px solid #dfe3eb;
 }
 
-/* Filas y celdas del cuerpo */
+/* Celdas */
 .participants-table td {
-  padding: 14px 16px;
-  font-size: 13px;
-  color: #1E293B;
-  border-bottom: 1px solid #F1F5F9;
+  height: 64px;
+  padding: 7px 10px;
+  color: #344054;
+  font-size: 10px;
+  line-height: 1.35;
   vertical-align: middle;
+  border: none;
+  border-bottom: 1px solid #e4e7ec;
+  overflow-wrap: anywhere;
 }
 
-/* Efecto hover al pasar el cursor sobre las filas */
-.participants-table tbody tr:hover {
-  background-color: #F8FAFC;
+.participants-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-/* Estado vacío (cuando no hay datos o la búsqueda no arroja resultados) */
-.empty-state {
+/* Hover por fila */
+.participants-table tbody tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Mensaje cuando no hay registros */
+.participants-table .empty-state {
+  height: 100px;
+  padding: 24px !important;
+  color: #667085;
+  font-size: 12px;
   text-align: center;
-  color: #64748B;
-  padding: 32px !important;
-  font-size: 14px;
 }
 
-/* Paginación */
+/* ==========================================
+   PAGINACIÓN
+   ========================================== */
+
 .pagination-footer {
   display: flex;
+  min-height: 40px;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  background-color: white;
-  border-top: 1px solid #E2E8F0;
+  gap: 12px;
+  padding: 7px 12px;
+  background-color: #ffffff;
+  border-top: 1px solid #e4e7ec;
 }
 
 .pagination-info {
-  font-size: 13px;
-  color: #64748B;
+  color: #667085;
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 .pagination-controls {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 5px;
 }
 
-.page-num-btn, .page-nav-btn {
-  background: none;
-  border: 1px solid #CBD5E1;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+.page-num-btn,
+.page-nav-btn {
   display: flex;
-  align-items: center;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
+  align-items: center;
+  padding: 0;
+  border: 1px solid #d0d5dd;
+  border-radius: 5px;
+  background-color: #ffffff;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .page-num-btn.active {
-  background-color: #16A34A;
-  border-color: #16A34A;
-  color: white;
+  background-color: #07883f;
+  border-color: #07883f;
+  color: #ffffff;
 }
 
-.page-num-btn:hover:not(.active), .page-nav-btn:hover {
-  background-color: #F1F5F9;
+.page-num-btn:hover:not(.active),
+.page-nav-btn:hover:not(:disabled) {
+  background-color: #f2f4f7;
+}
+
+.page-nav-btn:disabled {
+  background-color: #ffffff;
+  color: #c0c6d0;
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 
 .page-nav-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
+}
+
+/* Foco accesible con teclado */
+.page-num-btn:focus-visible,
+.page-nav-btn:focus-visible {
+  outline: 2px solid #07883f;
+  outline-offset: 2px;
+}
+
+/* Pantallas pequeñas */
+@media (max-width: 900px) {
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .participants-table {
+    min-width: 740px;
+  }
+
+  .pagination-footer {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination-info {
+    font-size: 9px;
+  }
+
+  .pagination-controls {
+    gap: 3px;
+  }
+
+  .page-num-btn,
+  .page-nav-btn {
+    width: 23px;
+    height: 23px;
+  }
 }

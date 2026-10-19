@@ -40,5 +40,9 @@
       "backend/node_modules/@prisma/engines",
       "backend/node_modules/.prisma"
     ]
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "react-bootstrap": "^2.10.10"
   }
 }

@@ -1495,3 +1495,56 @@
     width: 325px;
   }
 }
+
+/* =========================================================
+   INTEGRACIÓN REACT-BOOTSTRAP (manteniendo el diseño Figma)
+========================================================= */
+.nueva-inscripcion .btn {
+  font-family: Arial, sans-serif;
+  box-shadow: none;
+}
+
+.nueva-inscripcion .form-control,
+.nueva-inscripcion .form-select {
+  min-width: 0;
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  color: #172033;
+  border-color: #d9dfdc;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.nueva-inscripcion .form-control:focus,
+.nueva-inscripcion .form-select:focus {
+  border-color: #087f3f;
+  box-shadow: 0 0 0 0.15rem rgba(8, 127, 63, 0.12);
+}
+
+.nueva-inscripcion .nueva-inscripcion__campo .form-control:not([type='checkbox']),
+.nueva-inscripcion .nueva-inscripcion__campo .form-select {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 9px;
+}
+
+.nueva-inscripcion .nueva-inscripcion__modal-campo .form-control {
+  min-height: 28px;
+  padding: 0 8px;
+}
+
+.nueva-inscripcion .nueva-inscripcion__buscador .form-control {
+  min-height: 32px;
+  padding-left: 29px;
+}
+
+.nueva-inscripcion .nueva-inscripcion__acciones .btn,
+.nueva-inscripcion .nueva-inscripcion__modal-acciones .btn,
+.nueva-inscripcion .nueva-inscripcion__confirmacion-acciones .btn {
+  line-height: 1.2;
+}
+
+.nueva-inscripcion .nueva-inscripcion__confirmacion-acciones .btn:hover,
+.nueva-inscripcion .nueva-inscripcion__acciones .btn:hover {
+  box-shadow: none;
+}
