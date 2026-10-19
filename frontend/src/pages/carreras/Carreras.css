@@ -94,6 +94,10 @@
   background-color: #f0fdf4;
 }
 
+.carreras-vistas button.activo {
+  background-color: #dcfce7;
+  color: #15803d;
+}
 .carreras-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -141,6 +145,7 @@
   cursor: not-allowed;
 }
 
+
 @media (max-width: 1100px) {
   .carreras-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -160,5 +165,25 @@
 
   .carreras-grid {
     grid-template-columns: 1fr;
+  }
+}
+/* Ajustes para los controles de React-Bootstrap */
+.carreras-filtros .form-control {
+  width: auto;
+  min-width: 200px;
+  flex: 1;
+  background-color: #F9F9FF;
+  font-size: 14px;
+}
+
+.carreras-filtros select {
+  width: auto;
+}
+
+@media (max-width: 700px) {
+  .carreras-filtros .form-control,
+  .carreras-filtros select {
+    width: 100%;
+    min-width: 0;
   }
 }
