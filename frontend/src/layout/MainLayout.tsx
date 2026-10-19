@@ -1,96 +1,35 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Archive, BarChart3, BadgeCheck, Footprints, LayoutDashboard, LogOut, Settings, Timer, Trophy } from 'lucide-react';
-import './MainLayout.css';
-import Navbar from './Navbar';
+import { Outlet } from 'react-router-dom';
 
-const navigation = [
-  {
-    label: 'HOME',
-    items: [{ label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' }],
-  },
-  {
-    label: 'CLASIFICADOR',
-    items: [
-      { label: 'Clasificación', icon: Timer, path: '/dashboard-clasificacion' },
-      { label: 'Resultados', icon: BarChart3, path: '/resultados' },
-      { label: 'Grand Prix', icon: Trophy, path: '/grand-prix' },
-      { label: 'Entrega de Kits', icon: Archive, path: '/entrega-kits' }
-    ],
-  },
-  {
-    label: 'ADMINISTRADOR',
-    items: [
-      { label: 'Carreras', icon: Footprints, path: '/carreras' },
-      { label: 'Certificados', icon: BadgeCheck, path: '/certificados' },
-      { label: 'Administración', icon: Settings, path: '/administracion' },
-    ],
-  },
-];
+import MainNavbar from './navbar/MainNavbar';
+import MainAsidebar from './asidebar/MainAsidebar';
+import { Col, Container, Row } from 'react-bootstrap';
 
 export default function MainLayout() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleLogout = async () => {
-    localStorage.removeItem('usuario'); 
-    
-    try {
-      await fetch('/api/auth/logout', { 
-        method: 'POST',
-      });
-    } catch (error) {
-      console.error('Error al notificar el cierre de sesión al servidor:', error);
-    }
-
-    navigate('/', { replace: true });
-  };
-
   return (
-    <div className="app-layout">
-      <aside className="sidebar" aria-label="Navegación principal">
-        <div className="brand">
-          <img className="brand-logo" src={'./images/logo-cap.png'} alt="Logo de CAP" />
-          <div className="brand-copy">
-            <div className="brand-title">CAP Gestión</div>
-            <div className="brand-subtitle">Sistema de administración de carreras</div>
-          </div>
-        </div>
+      <Container fluid className='vh-100 overflow-hidden p-0'>
+        <Row className="h-100">
+          
+          {/*Asidebar izquierda*/}
+          <Col xs={12} md={2} className="p-0">
+            <MainAsidebar />
+          </Col>
 
-        <nav className="sidebar-nav" aria-label="Secciones">
-          {navigation.map((section) => (
-            <div className="nav-section" key={section.label}>
-              <div className="section-label">{section.label}</div>
-              {section.items.map(({ label, icon: Icon, path }) => {
-                const isActive = location.pathname === path || location.pathname.startsWith(`${path}/`);
-                return (
-                  <button
-                    className={`nav-item${isActive ? ' is-active' : ''}`}
-                    type="button"
-                    key={label}
-                    onClick={() => navigate(path)}
-                  >
-                    <Icon size={17} strokeWidth={2} aria-hidden="true" />
-                    <span>{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
+          {/*Contenido principal derecha*/}
+          <Col xs={12} md={10} className="p-0 d-flex flex-column h-100">
 
-        <div className="sidebar-footer">
-          <button className="logout-button" type="button" onClick={handleLogout}>
-            <LogOut size={17} strokeWidth={2} aria-hidden="true" />
-            <span>Cerrar Sesión</span>
-          </button>
-        </div>
-      </aside>
+            {/*Navbar*/}
+            <Row className="flex-shrink-0 g-0">
+              <MainNavbar />
+            </Row>
 
-      {/* Aquí se renderizarán de forma dinámica las vistas hijas según la ruta de React Router */}
-      <div className="app-content">
-        <Navbar />
-        <Outlet />
-      </div>
-    </div>
+            {/*Contenido principal*/}
+            <Row className="flex-grow-1 overflow-y-auto g-0">
+              <Outlet />
+            </Row>
+            
+          </Col>
+
+        </Row>
+      </Container>
   );
 }

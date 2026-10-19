@@ -1,0 +1,29 @@
+.sidebar-footer {
+  border-top: 1px solid rgba(209, 226, 214, 0.2); 
+  padding: 16px 0; 
+  width: 100%;
+}
+
+.logout-button {
+  padding: 8px 32px !important;
+  color: #d1e2d6 !important;
+  text-decoration: none;
+  font-size: 1.1rem !important; 
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.logout-button svg {
+  flex: 0 0 auto;
+}
+
+.logout-button:hover {
+  background: #367350;
+  color: #ffffff !important;
+}
+
+.logout-button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
+}

@@ -1,0 +1,49 @@
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+  padding-left: 24px;
+  padding-right: 12px;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.section-divider::after {
+  content: "";
+  flex-grow: 1;
+  height: 1px;
+  background-color: #d1e2d6;
+  opacity: 0.3;
+}
+
+.nav-button {
+  padding: 8px 32px !important;
+  color: #d1e2d6 !important;
+  text-decoration: none;
+  font-size: 1.1rem !important;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-button svg {
+  flex: 0 0 auto;
+}
+
+.nav-button:hover {
+  background: #367350;
+  color: #ffffff !important;
+}
+
+.nav-button.active {
+  background: #1cbb5f;
+  color: #183f2b !important;
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
+}

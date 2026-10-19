@@ -1,6 +1,8 @@
 import { ChevronRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
+import './Breadcrumbs.css'
+
 type BreadcrumbItem = { label: string; to?: string };
 
 const inicio = { label: 'Seleccionar carrera', to: '/seleccionar-carrera' };
