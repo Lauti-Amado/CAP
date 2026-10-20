@@ -1,25 +1,20 @@
-import { LogOut } from 'lucide-react';
+import './CerrarSesion.css'
 import { useNavigate } from 'react-router-dom';
+
+import { LogOut } from 'lucide-react';
 import { Button } from 'react-bootstrap';
 
-import './CerrarSesion.css'
+import { useAuth } from '../../context/AuthContext';
+
 
 export default function CerrarSesion() {
-    const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        localStorage.removeItem('usuario');
-
-        try {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-            });
-        } catch (error) {
-            console.error('Error al notificar el cierre de sesión al servidor:', error);
-        }
-
+    const { logout } = useAuth();
+    const navigate = useNavigate()
+    
+    const handleLogout = () => {
+        logout;
         navigate('/', { replace: true });
-    };
+    }
 
     return (
         <div className="sidebar-footer w-100">

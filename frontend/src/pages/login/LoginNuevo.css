@@ -1,0 +1,238 @@
+:root {
+  --cap-primary-green: #006F3D;
+  --cap-primary-green-dark: #005a31;
+  --cap-dark-blue: #1C2237;
+  --cap-text-gray: #555555;
+  --cap-border-gray: #D1D5DB;
+  --cap-error-red: #DC2626;
+}
+
+/* ---------- Layout ---------- */
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F9FAFB;
+  padding: 24px 12px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  border: none;
+  border-top: 3px solid var(--cap-primary-green-dark);
+  border-radius: 0;
+  padding: 24px 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- Encabezado ---------- */
+
+.header-text {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header-text h1 {
+  color: var(--cap-dark-blue);
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 5px 0;
+  letter-spacing: -0.5px;
+}
+
+.header-text h2 {
+  color: var(--cap-text-gray);
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.logo-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+}
+
+/* ---------- Formulario ---------- */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.login-form .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cap-dark-blue);
+}
+
+.label-row .form-label {
+  margin-bottom: 0;
+}
+
+.forgot-link {
+  font-size: 12px;
+  color: var(--cap-primary-green);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Inputs con ícono ---------- */
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  width: 18px;
+  height: 18px;
+  color: #9CA3AF;
+  position: absolute;
+  pointer-events: none;
+}
+
+.left-icon {
+  left: 12px;
+}
+
+.right-icon {
+  right: 12px;
+}
+
+.input-wrapper .form-control {
+  padding: 12px 12px 12px 38px;
+  border: 1px solid var(--cap-border-gray);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.input-wrapper .form-control:focus {
+  border-color: var(--cap-primary-green);
+  box-shadow: 0 0 0 0.2rem rgba(0, 111, 61, 0.15);
+}
+
+.input-wrapper .form-control.is-invalid {
+  border-color: var(--cap-error-red);
+  background-image: none;
+}
+
+.input-wrapper .form-control.is-invalid:focus {
+  border-color: var(--cap-error-red);
+  box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.15);
+}
+
+.login-form .field-error {
+  display: block;
+}
+
+.toggle-password {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  height: 100%;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Error de la API ---------- */
+
+.login-form .login-alert {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* ---------- Botón de submit ---------- */
+
+.submit-button.btn {
+  width: 100%;
+  background-color: var(--cap-primary-green);
+  border-color: var(--cap-primary-green);
+  color: #fff;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  transition: background-color 0.2s;
+}
+
+.submit-button.btn:hover,
+.submit-button.btn:focus,
+.submit-button.btn:active {
+  background-color: var(--cap-primary-green-dark) !important;
+  border-color: var(--cap-primary-green-dark) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 111, 61, 0.25) !important;
+}
+
+.submit-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Recordarme ---------- */
+
+.remember-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -5px;
+}
+
+.remember-container input[type="checkbox"] {
+  accent-color: var(--cap-primary-green);
+  cursor: pointer;
+}
+
+.remember-container label {
+  font-size: 13px;
+  color: var(--cap-text-gray);
+  cursor: pointer;
+  font-weight: 400;
+}
+
+/* ---------- Footer ---------- */
+
+.divider {
+  border: 0;
+  height: 1px;
+  background-color: #E5E7EB;
+  margin: 24px 0;
+}
