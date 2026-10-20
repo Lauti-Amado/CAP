@@ -1,123 +1,75 @@
-.corredor-no-encontrado__overlay {
-  position: fixed;
-  inset: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Modal de React-Bootstrap */
 
-  padding: 20px;
-  box-sizing: border-box;
-
-  background-color: rgba(0, 0, 0, 0.35);
-
-  z-index: 1000;
+.corredor-no-encontrado__dialog {
+  max-width: 330px;
 }
 
-
-/* =========================
-   MODAL
-   ========================= */
-
-.corredor-no-encontrado {
-  width: 100%;
-  max-width: 330px;
-
-  padding: 26px 24px 22px;
-
-  box-sizing: border-box;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  background-color: #ffffff;
-
+.corredor-no-encontrado.modal-content {
+  padding: 0;
+  border: none;
   border-radius: 8px;
-
+  background-color: #ffffff;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-
   text-align: center;
 }
 
+.corredor-no-encontrado .modal-body {
+  padding: 26px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-/* =========================
-   ICONO
-   ========================= */
+/* Icono */
 
 .corredor-no-encontrado__icono {
   width: 46px;
   height: 46px;
-
   margin-bottom: 14px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 50%;
-
   background-color: #fff1f1;
-
   color: #c62828;
 }
 
-
-/* =========================
-   TITULO
-   ========================= */
+/* Título */
 
 .corredor-no-encontrado h1 {
   margin: 0;
-
   font-size: 18px;
   line-height: 1.3;
   font-weight: 700;
-
   color: #172033;
 }
 
+/* Descripción */
 
-/* =========================
-   DESCRIPCION
-   ========================= */
-
-.corredor-no-encontrado > p {
+.corredor-no-encontrado .modal-body > p {
   max-width: 280px;
-
   margin: 9px 0 18px;
-
   font-size: 10px;
   line-height: 1.5;
-
   color: #59635e;
 }
 
-.corredor-no-encontrado > p strong {
+.corredor-no-encontrado .modal-body > p strong {
   font-weight: 700;
-
   color: #172033;
 }
 
-
-/* =========================
-   DATOS
-   ========================= */
+/* Datos del corredor */
 
 .corredor-no-encontrado__datos {
   width: 100%;
-
   padding: 10px 12px;
-
   box-sizing: border-box;
-
   display: flex;
   flex-direction: column;
-
   gap: 8px;
-
   border-radius: 6px;
-
   background-color: #eef1ff;
 }
 
@@ -125,22 +77,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   gap: 12px;
-
   text-align: left;
 }
 
 .corredor-no-encontrado__datos span {
   font-size: 8px;
-
   color: #59635e;
 }
 
 .corredor-no-encontrado__datos strong {
   font-size: 8px;
   font-weight: 700;
-
   color: #172033;
 }
 
@@ -148,84 +96,58 @@
   color: #c62828;
 }
 
-
-/* =========================
-   ACCIONES
-   ========================= */
+/* Acciones */
 
 .corredor-no-encontrado__acciones {
   width: 100%;
-
   margin-top: 18px;
-
   display: flex;
   flex-direction: column;
-
   gap: 8px;
 }
 
-.corredor-no-encontrado__acciones button {
+.corredor-no-encontrado__acciones .btn {
   width: 100%;
-
   min-height: 34px;
-
   padding: 8px 12px;
-
   border-radius: 6px;
-
   font-size: 9px;
   font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Inscribir corredor */
 
-/* =========================
-   INSCRIBIR
-   ========================= */
-
-.corredor-no-encontrado__acciones button:first-child {
-  border: 1px solid #087f3f;
-
+.corredor-no-encontrado__acciones .btn-success {
+  border-color: #087f3f;
   background-color: #087f3f;
   color: #ffffff;
 }
 
-.corredor-no-encontrado__acciones button:first-child:hover {
+.corredor-no-encontrado__acciones .btn-success:hover {
+  border-color: #066b35;
   background-color: #066b35;
 }
 
+/* Ingresar otro DNI */
 
-/* =========================
-   INGRESAR OTRO DNI
-   ========================= */
-
-.corredor-no-encontrado__acciones button:last-child {
-  border: 1px solid #bfc8c2;
-
+.corredor-no-encontrado__acciones .btn-outline-secondary {
+  border-color: #bfc8c2;
   background-color: #ffffff;
   color: #172033;
 }
 
-.corredor-no-encontrado__acciones button:last-child:hover {
+.corredor-no-encontrado__acciones .btn-outline-secondary:hover {
+  border-color: #bfc8c2;
   background-color: #f5f7f6;
+  color: #172033;
 }
 
-
-/* =========================
-   RESPONSIVE
-   ========================= */
+/* Responsive */
 
 @media (max-width: 500px) {
-  .corredor-no-encontrado__overlay {
-    padding: 16px;
-  }
-
-  .corredor-no-encontrado {
-    max-width: 100%;
+  .corredor-no-encontrado__dialog {
+    max-width: calc(100% - 16px);
+    margin: 8px auto;
   }
 }

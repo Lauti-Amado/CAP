@@ -1,5 +1,7 @@
-import './CorredorNoEncontrado.css'
+
+import { Modal, Button } from 'react-bootstrap'
 import { AlertTriangle } from 'lucide-react'
+import './CorredorNoEncontrado.css'
 
 type CorredorNoEncontradoProps = {
   dni: string
@@ -13,14 +15,24 @@ function CorredorNoEncontrado({
   onVolver,
 }: CorredorNoEncontradoProps) {
   return (
-    <div className="corredor-no-encontrado__overlay">
-      <section className="corredor-no-encontrado">
-
+    <Modal
+      show={true}
+      onHide={onVolver}
+      centered
+      backdrop="static"
+      keyboard={false}
+      dialogClassName="corredor-no-encontrado__dialog"
+      contentClassName="corredor-no-encontrado"
+      aria-labelledby="corredor-no-encontrado-titulo"
+    >
+      <Modal.Body>
         <div className="corredor-no-encontrado__icono">
           <AlertTriangle size={28} />
         </div>
 
-        <h1>Corredor no encontrado</h1>
+        <h1 id="corredor-no-encontrado-titulo">
+          Corredor no encontrado
+        </h1>
 
         <p>
           No se encontró ningún corredor inscripto con el DNI{' '}
@@ -41,23 +53,24 @@ function CorredorNoEncontrado({
         </div>
 
         <div className="corredor-no-encontrado__acciones">
-          <button
+          <Button
             type="button"
+            variant="success"
             onClick={onInscribir}
           >
             Inscribir corredor
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="outline-secondary"
             onClick={onVolver}
           >
             Ingresar otro DNI
-          </button>
+          </Button>
         </div>
-
-      </section>
-    </div>
+      </Modal.Body>
+    </Modal>
   )
 }
 
