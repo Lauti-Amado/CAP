@@ -1,0 +1,22 @@
+.cap-breadcrumbs { min-width: 0; }
+.cap-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+.cap-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cap-breadcrumbs svg { flex-shrink: 0; color: #9ca3af; }
+.cap-breadcrumbs a { color: #2d6045; text-decoration: none; }
+.cap-breadcrumbs a:hover { text-decoration: underline; }
+.cap-breadcrumbs [aria-current] { color: #263044; font-weight: 600; }
+.cap-breadcrumbs a:focus-visible { outline: 2px solid #2d6045; outline-offset: 3px; }

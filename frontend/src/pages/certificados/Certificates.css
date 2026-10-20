@@ -1,0 +1,86 @@
+/* Certificados */
+.certificates-page { padding: 16px; }
+.certificate-titlebar, .editor-titlebar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px; }
+.certificate-titlebar h1, .editor-titlebar h1 { margin:0; color:#20283a; font-size:22px; }
+.certificate-titlebar p { margin:4px 0 0; color:#69736d; font-size:11px; }
+.certificate-primary { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px; padding:0 14px; border:0; border-radius:5px; background:#20bf63; color:#fff; font-size:10px; font-weight:600; cursor:pointer; }
+.certificate-layout { display:grid; grid-template-columns:minmax(0, 2.25fr) minmax(210px, .9fr); gap:14px; }
+.certificate-workspace, .certificate-sidecard { border:1px solid #e3e8ef; border-radius:8px; background:#fff; box-shadow:0 4px 12px rgba(30,42,62,.05); }
+.certificate-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; border-bottom:1px solid #e6e9f0; font-size:12px; }
+.certificate-summary span { margin-left:5px; padding:2px 5px; border-radius:8px; background:#d6f6df; color:#198148; font-size:8px; }
+.certificate-summary small { display:block; margin-top:5px; color:#707971; font-size:8px; }
+.certificate-summary-actions { display:flex; gap:7px; }
+.certificate-summary-actions button, .editor-titlebar button { display:inline-flex; align-items:center; gap:5px; min-height:28px; padding:0 10px; border:1px solid #ccd5d0; border-radius:4px; background:#fff; color:#283344; font-size:9px; cursor:pointer; }
+.certificate-summary-actions button:last-child { background:#edf1ff; }
+.certificate-workspace > h2 { margin:13px 14px; font-size:13px; }
+.certificate-preview-shell { margin:0 14px 14px; padding:14px; display:grid; place-items:center; min-height:420px; background:#f4f6fb; border:1px solid #e4e8ef; border-radius:6px; }
+.certificate-paper { position:relative; width:min(100%, 390px); aspect-ratio:1 / 1.27; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; border:1px solid #e1e6e3; color:#252c3c; text-align:center; }
+.certificate-corner { position:absolute; width:84px; height:84px; border-style:solid; opacity:.28; }
+.certificate-corner--top { top:15px; left:15px; border-width:4px 0 0 4px; }
+.certificate-corner--bottom { right:15px; bottom:15px; border-width:0 4px 4px 0; }
+.certificate-mark { width:38px; height:38px; display:grid; place-items:center; margin-bottom:20px; border-radius:50%; background:#eaf4ff; }
+.certificate-paper h3 { max-width:360px; margin:0; font-size:25px; line-height:1.2; }
+.certificate-subtitle { margin-top:8px; color:#68706d; font-size:10px; letter-spacing:2px; }
+.certificate-paper p { margin:23px 0 9px; font-size:10px; line-height:1.55; }
+.certificate-paper > strong { font-size:17px; }
+.certificate-rule { width:90px; height:1px; margin-top:8px; opacity:.45; }
+.certificate-signatures { position:absolute; bottom:35px; width:65%; display:flex; justify-content:space-between; font-size:8px; }
+.certificate-rightbar { display:flex; flex-direction:column; gap:14px; }
+.certificate-sidecard { padding:14px; }
+.certificate-sidecard h2 { margin:0; font-size:13px; }
+.certificate-sidecard > p { margin:9px 0 12px; color:#6d7770; font-size:9px; line-height:1.4; }
+.dynamic-field-list, .template-list { list-style:none; margin:0; padding:0; }
+.dynamic-field-list { display:grid; gap:8px; }
+.dynamic-field-list li { display:flex; justify-content:space-between; gap:8px; padding:8px; border-radius:4px; background:#f4f6fb; color:#17653a; font-size:9px; }
+.dynamic-field-list code { color:#67716a; font-size:8px; }
+.template-list { display:grid; gap:8px; margin-top:12px; }
+.template-item { display:flex; align-items:center; gap:5px; padding:5px; color:#da4d55; }
+.template-item.selected { border:1px solid #20bf63; border-radius:5px; }
+.template-item > button { flex:1; display:flex; flex-direction:column; align-items:flex-start; border:0; background:transparent; cursor:pointer; text-align:left; }
+.template-item b { color:#273144; font-size:9px; }
+.template-item span { margin-top:3px; color:#747d76; font-size:8px; }
+.template-item small { width:100%; margin-top:7px; padding:5px; border:1px solid #d4ddd7; border-radius:3px; color:#455148; text-align:center; font-size:7px; }
+.certificate-editor { height:calc(100vh - 48px); display:flex; flex-direction:column; background:#f1f4ff; }
+.editor-titlebar { flex:0 0 62px; margin:0; padding:0 20px; background:#fff; border-bottom:1px solid #dde3f1; }
+.editor-titlebar > div { display:flex; gap:8px; }
+.editor-titlebar .certificate-primary { color:#fff; background:#20bf63; border:0; }
+.editor-layout { flex:1; min-height:0; display:grid; grid-template-columns:230px 1fr; }
+.editor-controls { padding:15px; overflow:auto; background:#fff; border-right:1px solid #dfe5f2; }
+.editor-controls h2 { margin:0 0 15px; color:#263346; font-size:12px; }
+.editor-controls label { display:block; margin:13px 0 7px; color:#556158; font-size:8px; font-weight:700; }
+.color-controls { display:flex; gap:25px; }
+.color-controls input { width:29px; height:29px; padding:0; border:0; border-radius:50%; overflow:hidden; background:none; cursor:pointer; }
+.editor-controls select { width:100%; padding:8px; border:1px solid #d6dce8; border-radius:4px; color:#536056; background:#fff; font-size:9px; }
+.style-option { display:flex; align-items:center; justify-content:space-between; margin:8px 0; color:#49554e; font-size:9px; }
+.style-toggle { width:24px; height:13px; padding:2px; border:0; border-radius:10px; background:#d8dfe5; cursor:pointer; }
+.style-toggle span { display:block; width:9px; height:9px; border-radius:50%; background:#fff; transition:transform .15s; }
+.style-toggle.enabled { background:#20bf63; }
+.style-toggle.enabled span { transform:translateX(11px); }
+.editor-controls .fields-heading { margin:24px 0 8px; }
+.editor-controls > p { color:#68736c; font-size:8px; line-height:1.5; }
+.editor-fields { list-style:none; margin:12px 0; padding:0; display:grid; gap:7px; }
+.editor-fields li { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px; border:1px solid #e2e7ef; border-radius:3px; font-size:8px; }
+.editor-fields code { color:#199152; }
+.editor-fields span { color:#606b64; }
+.editor-canvas { position:relative; display:grid; place-items:center; overflow:auto; padding:35px; }
+.certificate-paper--editor { width:min(76%, 620px); aspect-ratio:1.75 / 1; }
+.certificate-paper--editor .certificate-mark { display:none; }
+.certificate-paper--editor h3 { font-size:28px; }
+.certificate-token { min-width:55%; padding:12px; background:#eff6f1; font-size:21px !important; white-space:pre-line; }
+.zoom-controls { position:absolute; right:18px; bottom:16px; display:flex; align-items:center; border:1px solid #d8dee8; border-radius:4px; background:#fff; }
+.zoom-controls button { display:grid; place-items:center; width:28px; height:28px; border:0; background:#fff; cursor:pointer; }
+.zoom-controls span { font-size:8px; }
+
+@media (max-width: 880px) {
+  .certificate-layout { grid-template-columns:1fr; }
+  .certificate-rightbar { display:grid; grid-template-columns:1fr 1fr; }
+  .editor-layout { grid-template-columns:190px 1fr; }
+}
+@media (max-width: 600px) {
+  .certificate-titlebar, .certificate-summary { align-items:flex-start; flex-direction:column; }
+  .certificate-rightbar { grid-template-columns:1fr; }
+  .editor-layout { display:block; overflow:auto; }
+  .editor-controls { border-right:0; }
+  .editor-canvas { min-height:420px; padding:20px; }
+  .certificate-paper--editor { width:100%; }
+}

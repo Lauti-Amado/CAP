@@ -1,22 +1,11 @@
-//frontend/src/pages/dashboard/Dashboard.tsx
-import { useNavigate } from 'react-router-dom'
-import {
-  Archive,
-  BarChart3,
-  CalendarDays,
-  CloudCheck,
-  Footprints,
-  MapPin,
-  MoreHorizontal,
-  RefreshCw,
-  Timer,
-  Trophy,
-  UsersRound,
-  WifiOff,
-  type LucideIcon,
-} from 'lucide-react'
-import type { DashboardActivity, DashboardData } from '../../types/dashboard'
-import type { EstadoSincronizacion } from '../../types/sincronizacion'
+import { useNavigate } from 'react-router-dom';
+import { 
+  Archive, BarChart3, CalendarDays, CloudCheck, Footprints, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, 
+  type LucideIcon
+} from 'lucide-react';
+import type { DashboardActivity, DashboardData } from '../../types/dashboard';
+import type { EstadoSincronizacion } from '../../types/sincronizacion';
+import './Dashboard.css'
 // MOCK TEMPORAL
 import { dashboardMock } from './dashboardMock'
 
@@ -113,7 +102,7 @@ function Dashboard() {
             RESUMEN
         ========================= */}
         <section className="summary-grid" aria-label="Resumen">
-          <article className="summary-card race-card">
+          <article className="summary-card race-card d-flex flex-column">
             <div className="card-topline">
               <span className="summary-icon">
                 <CalendarDays size={18} aria-hidden="true" />
