@@ -13,8 +13,8 @@ export default function LogoCap() {
 
                 {/*Texto*/}
                 <Col md={8} className="d-flex flex-column justify-content-center">
-                    <div className='brand-title'>Gestión CAP</div>
-                    <div className='brand-subtitle'>Sistema clasificaciones</div>
+                    <div className='brand-title'>Sistema CAP</div>
+                    <div className='brand-subtitle'>Clasificaciones</div>
                 </Col>
             </Row>
         </Container>
