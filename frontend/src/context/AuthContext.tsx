@@ -13,7 +13,7 @@ interface AuthContextType {
   estaAutenticado: boolean;
   tieneRol: (rol: Rol) => boolean;
   login: (credenciales: Credenciales) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -25,8 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }){
 
     //Al iniciar la sesión, checkea si el usuario ya tenía una cookie válida
     useEffect(() => {
-        apiFetch<Usuario>('/auth/yo')
-            .then(setUsuario)
+        apiFetch<{ usuario: Usuario}>('/auth/yo')
+            .then((data) => setUsuario(data.usuario))
             .catch(() => setUsuario(null))
             .finally(() => setCargando(false));
     }, []);

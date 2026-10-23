@@ -1,9 +1,10 @@
 ﻿import 'bootstrap/dist/css/bootstrap.min.css';
 
-import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 
+import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layout/MainLayout';
-import LoginNuevo from './pages/login/LoginNuevo';
+import Login from './pages/login/Login';
 import SeleccionarCarrera from './pages/seleccionarCarrera/seleccionarCarrera';
 import DashboardClasificacion from './pages/clasificacion/DashboardClasificacion';
 import GrandPrix from './pages/grandPrix/GrandPrix';
@@ -23,14 +24,13 @@ import Administracion from './pages/administracion/Administracion';
 import RolesPermisos from './pages/administracion/RolesPermisos';
 import ConfiguracionClasificaciones from './pages/administracion/categorias/ConfiguracionClasificaciones';
 import NuevaCategoria from './pages/administracion/categorias/NuevaCategoria';
-import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
         {/* Ruta pública sin Sidebar */}
-        <Route path="/" element={<LoginNuevo />} />
+        <Route path="/" element={<Login />} />
 
         {/* Rutas principales que comparten el Layout con el Sidebar */}
         <Route element={<MainLayout />}>

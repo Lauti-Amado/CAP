@@ -1,181 +1,164 @@
-import { useState } from 'react';
-import './login.css';
-import { resetAdminPassword, verifyAdminPassword } from './adminCredentials';
+import './Login.css';
+
+import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
+import { ArrowRight, Mail, Eye, EyeOff, Lock } from 'lucide-react';
+
+import { useAuth } from '../../context/AuthContext';
+
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '../../schemas/usuarioSchema';
+import type { Login as LoginValidado } from '../../schemas/usuarioSchema';
 
-  const [recovering, setRecovering] = useState(false);
-  const [confirmation, setConfirmation] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [success, setSuccess] = useState('');
+export default function Login() {
+    const navigate = useNavigate();
+    const { login, usuario } = useAuth();
+    const [errorApi, setErrorApi] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
-  const switchMode = (recovery: boolean) => {
-    setRecovering(recovery);
-    setPassword('');
-    setConfirmation('');
-    setShowPassword(false);
-    setError('');
-    setSuccess('');
-  };
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<LoginValidado>({
+        resolver: zodResolver(loginSchema),
+    });
 
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    if (busy) return;
-    setError('');
-    setSuccess('');
-    setBusy(true);
-    
-    try {
-      if (recovering) {
-        if (password !== confirmation) {
-          setError('Las contraseñas no coinciden.');
-          return;
+    const onSubmit = async (datos: LoginValidado) => {
+        setErrorApi(null);
+        try {
+            await login(datos);
+        } catch (e) {
+            setErrorApi(e instanceof Error ? e.message : 'Error desconocido');
         }
-        await resetAdminPassword(email, password);
-        switchMode(false);
-        setSuccess('Contraseña guardada. Ya podés iniciar sesión con la nueva contraseña.');
-      } else if (await verifyAdminPassword(email, password)) {
-        // Guardamos un token simulado para que el botón de cerrar sesión de MainLayout funcione
-        localStorage.setItem('token', 'token-simulado');
-        navigate('/dashboard', { replace: true });
-      } else {
-        setError('Correo electrónico o contraseña incorrectos.');
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No se pudo acceder a las credenciales guardadas.');
-    } finally {
-      setBusy(false);
-    }
-  };
+    };
+    useEffect(() => {
+        if (!usuario) return;
 
-  return (
-    <div className="login-wrapper">
-      <div className="login-container">
-        {/* LOGO */}
-        <div className="logo-container">
-          <img src={'./images/logo-cap.png'} alt="Logo CAP Gestión" className="logo-image" />
-        </div>
+        if (usuario.roles.length > 0) {
+            navigate('/dashboard', { replace: true });
+        } else {
+            setErrorApi("No tienes permiso para estar aquí!");
+        }
+    }, [usuario, navigate]);
 
-        {/* ENCABEZADOS */}
-        <div className="header-text">
-          <h1>CAP Gestión</h1>
-          <h2>Sistema de administración de carreras</h2>
-        </div>
+    // Muestra el estado actual: tachado mientras la contraseña está oculta
+    const ToggleIcon = showPassword ? Eye : EyeOff;
 
-        {/* FORMULARIO */}
-        <form onSubmit={handleSubmit} className="login-form">
-          {recovering && (
-            <p className="recovery-notice">
-              Restablecer contraseña del administrador en este dispositivo.
-              Por ahora, este proceso no envía ni verifica un correo de recuperación.
-            </p>
-          )}
-          <fieldset className="login-fields" disabled={busy}>
-          {/* Input Correo */}
-          <div className="form-group">
-            <div className="label-row">
-              <label>Correo electrónico</label>
-            </div>
-           
-            <div className="input-wrapper">
-              <svg className="input-icon left-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-              </svg>
-              <input
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+    return (
+        <Container fluid className="login-wrapper">
+            <Card className="login-card">
+                <Card.Body>
+                    {/* LOGO */}
+                    <div className="logo-container">
+                        <img
+                            src="/images/logo-cap.png"
+                            alt="Logo CAP Gestión"
+                            className="logo-image"
+                        />
+                    </div>
 
-          {/* Input Contraseña */}
-          <div className="form-group">
-            <div className="label-row">
-              <label>{recovering ? 'Nueva contraseña' : 'Contraseña'}</label>
-              <button type="button" className="forgot-link recovery-link" disabled={busy} onClick={() => switchMode(!recovering)}>{recovering ? 'Volver al inicio de sesión' : '¿Olvidaste tu contraseña?'}</button>
-            </div>
-            <div className="input-wrapper">
-              <svg className="input-icon left-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                minLength={recovering ? 6 : undefined}
-                autoComplete={recovering ? 'new-password' : 'current-password'}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button 
-                type="button" 
-                className="toggle-password" 
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <svg className="input-icon right-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
-                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
-                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
-                  <line x1="2" y1="2" x2="22" y2="22"></line>
-                </svg>
-              </button>
-            </div>
-          </div>
+                    {/* TITULO */}
+                    <div className="header-text">
+                        <h1>CAP Gestión</h1>
+                        <h2>Sistema de administración de carreras</h2>
+                    </div>
 
-          {recovering && (
-            <div className="form-group">
-              <label htmlFor="confirm-password">Confirmar nueva contraseña</label>
-              <div className="input-wrapper">
-                <input
-                  id="confirm-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={confirmation}
-                  onChange={e => setConfirmation(e.target.value)}
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
-              </div>
-            </div>
-          )}
-          </fieldset>
+                    {/* FORMULARIO (noValidate: los mensajes los da zod, no el navegador) */}
+                    <Form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="login-form"
+                        noValidate
+                    >
+                        {/* Input Correo */}
+                        <Form.Group className="form-field" controlId="loginEmail">
+                            <Form.Label>Correo electrónico</Form.Label>
+                            <div className="input-wrapper">
+                                <Mail className="input-icon left-icon" />
+                                <Form.Control
+                                    type="email"
+                                    placeholder="tu@email.com"
+                                    isInvalid={!!errors.email}
+                                    {...register('email')}
+                                />
+                            </div>
+                            {errors.email && (
+                                <Form.Control.Feedback type="invalid" className="field-error">
+                                    {errors.email.message}
+                                </Form.Control.Feedback>
+                            )}
+                        </Form.Group>
 
-          {/* Checkbox Recordarme */}
-          <div className="remember-container">
-            <input type="checkbox" id="remember" />
-            <label htmlFor="remember">Recordarme en este dispositivo</label>
-          </div>
+                        {/* Input Contraseña */}
+                        <Form.Group className="form-field" controlId="loginPassword">
 
-          {/* Mensaje de error */}
-          {error && <p className="error-message" role="alert">{error}</p>}
-          {success && <p className="login-success" role="status">{success}</p>}
+                            {/* Contraseña olvidada (a implementar) */}
+                            <div className="label-row">
+                                <Form.Label>Contraseña</Form.Label>
+                                <a href="#" className="forgot-link">
+                                    ¿Olvidaste tu contraseña?
+                                </a>
+                            </div>
 
-          {/* Botón de Submit */}
-          <button type="submit" className="submit-button" disabled={busy}>
-            {busy ? 'Procesando…' : recovering ? 'Guardar nueva contraseña' : 'Iniciar sesión'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </button>
-        </form>
+                            <div className="input-wrapper">
+                                <Lock className="input-icon left-icon" />
+                                <Form.Control
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="••••••••"
+                                    isInvalid={!!errors.password}
+                                    {...register('password')}
+                                />
+                                <button
+                                    type="button"
+                                    className="toggle-password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={
+                                        showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                                    }
+                                >
+                                    <ToggleIcon className="input-icon right-icon" />
+                                </button>
+                            </div>
+                            {errors.password && (
+                                <Form.Control.Feedback type="invalid" className="field-error">
+                                    {errors.password.message}
+                                </Form.Control.Feedback>
+                            )}
+                        </Form.Group>
 
-        <hr className="divider" />
+                        {/* Checkbox Recordarme (A IMPLEMENTAR: loggea automáticamente y los tokens ya duran 30 días en el back) */}
+                        <Form.Group className="mb-3 remember-container" controlId="loginRemember">
+                            <Form.Check
+                                type="checkbox"
+                                label="Recordarme en este dispositivo"
+                                {...register('recordarme')}
+                            />
+                        </Form.Group>
 
-      </div>
-    </div>
-  );
+                        {/* Error devuelto por la API */}
+                        {errorApi && (
+                            <Alert variant="danger" className="login-alert">
+                                {errorApi}
+                            </Alert>
+                        )}
+
+                        {/* Botón de Submit */}
+                        <Button
+                            type="submit"
+                            className="submit-button"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Ingresando...' : 'Iniciar sesión'}
+                            <ArrowRight />
+                        </Button>
+                    </Form>
+
+                    <hr className="divider" />
+                </Card.Body>
+            </Card>
+        </Container>
+    );
 };
-
-export default Login;
