@@ -3,8 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { z } from "zod";
 
-import usuarioRoutes from "./routes/usuario.routes"
-import certificadosRoutes from './routes/certificados.routes' 
+import usuarioRoutes from "./routes/usuario.routes";
+import carreraRoutes from "./routes/carrera.routes";
+import certificadosRoutes from './routes/certificados.routes';
 
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 
@@ -27,7 +28,8 @@ app.get("/", (req, res) => {
 
 //ENDPOINTS
 app.use("/api/auth", usuarioRoutes);
-app.use('/api', certificadosRoutes)
+app.use("/api/carreras", carreraRoutes);
+app.use('/api', certificadosRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
 app.use(errorHandler);

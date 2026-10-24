@@ -1,18 +1,20 @@
-export type EstadoCarrera = "Creada" | "Publicada" | "Activa" | "Entrega_kits" | "En_curso" | "Finalizada" | "Cancelada";
-export type TipoDistancia = "Participativa" | "Competitiva";
+import { EstadoCarrera, TipoDistancia } from "../generated/prisma/client";
+import { Prisma } from "../generated/prisma/client";
 
-export type Carrera = {
-    id: string;
-    estado: EstadoCarrera;
-    nombre: string;
-    fechaHoraCarrera: Date;
-    fechaHoraEntregaKits: Date;
-    imagenUrl: string;
-    descripcion: string;
-    participantesMax: number;
-    lugar: Lugar;
+export type CarreraPayload = {
+    carrera: {
+        id: string;
+        estado: EstadoCarrera;
+        nombre: string;
+        fechaHoraCarrera: Date;
+        fechaHoraEntregaKits: Date;
+        imagenUrl: string;
+        descripcion: string;
+        participantesMax: number;
+        lugar: Lugar;
 
-    distancias: Distancia[] //Se accede desde una Carrera con carrera.DistanciaCarrera.Distancia
+        distancias: Distancia[]
+    }
 }
 
 export type Distancia = {
@@ -23,5 +25,37 @@ export type Distancia = {
 
 export type Lugar = {
     nombre: string;
-    localidad: string; //Se accede desde un Lugar con lugar.Localidad
+    localidad: string;
+}
+
+
+type CarreraPrisma = Prisma.CarreraGetPayload<{
+  include: {
+    lugar: { include: { localidad: true } },
+    distanciaCarrera: { include: { distancia: true } }
+  }
+}>;
+
+export function CarreraDTOMap(carrera: CarreraPrisma): CarreraPayload {
+  return {
+    carrera: {
+        id: carrera.id,
+        estado: carrera.estado,
+        nombre: carrera.nombre,
+        fechaHoraCarrera: carrera.fechaHoraCarrera,
+        fechaHoraEntregaKits: carrera.fechaHoraEntregaKits,
+        imagenUrl: carrera.imagenUrl,
+        descripcion: carrera.descripcion,
+        participantesMax: carrera.participantesMax,
+        lugar: {
+            nombre: carrera.lugar.nombre,
+            localidad: carrera.lugar.localidad.nombre
+        },
+        distancias: carrera.distanciaCarrera.map(dc => ({
+            kilometraje: dc.distancia.kilometraje,
+            tipoDistancia: dc.distancia.tipoDistancia,
+            precio: dc.precioDistancia
+        }))
+    }
+  }
 }

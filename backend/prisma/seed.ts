@@ -1,5 +1,5 @@
 import { prisma } from "../src/config/prisma";
-import { Rol, Sexo, TipoDistancia } from "../src/generated/prisma/enums";
+import { Rol, Sexo, TipoDistancia } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
 
 const usuarios = [
@@ -11,6 +11,13 @@ const usuarios = [
         corredor: { fechaNacimiento: new Date('2005-02-22'), sexo: Sexo.Femenino,
             contactoEmergencia: { dni: "99999999", nombre: "Kiara", apellido: "Petz", telefono: "2210000099" }
         }
+    },
+    { 
+        email: "admin@cap.test", 
+        password: "Admin1234", 
+        rolesAdministrativos: [Rol.Administrador, Rol.Clasificador],
+        persona: { dni: "21212121", nombre: "Bianca", apellido: "Petz", telefono: "2210000022" },
+        corredor: null
     },
     { 
         email: "clasificador@cap.test", 
