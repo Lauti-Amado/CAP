@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Award, Eye, FilePenLine, Plus, Save, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { certificatePreview, certificateTemplates, dynamicFields, type CertificateTemplate } from './certificateData'
 import './Certificates.css'
+import { Button } from 'react-bootstrap'
+import ConfirmacionModal from '../../components/modales/ConfirmacionModal'
 
 type Props = { onEditorChange: (editing: boolean) => void }
 
@@ -24,8 +26,18 @@ function CertificateCanvas({ template, editor = false }: { template: Certificate
 }
 
 function TemplateManager({ onEdit }: { onEdit: (template: CertificateTemplate) => void }) {
+  const [templates, setTemplates] = useState(certificateTemplates)
   const [selectedId, setSelectedId] = useState(certificateTemplates[0].id)
-  const selected = certificateTemplates.find((item) => item.id === selectedId) ?? certificateTemplates[0]
+  const [porEliminar, setPorEliminar] = useState<CertificateTemplate | null>(null)
+  const selected = templates.find((item) => item.id === selectedId) ?? templates[0]
+
+  const confirmarEliminacion = () => {
+    if (!porEliminar) return
+    // TODO BACKEND: DELETE de la plantilla (ruta a definir)
+    setTemplates((actuales) => actuales.filter((item) => item.id !== porEliminar.id))
+    setPorEliminar(null)
+  }
+
   const date = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(selected.updatedAt))
 
   return (
@@ -45,9 +57,44 @@ function TemplateManager({ onEdit }: { onEdit: (template: CertificateTemplate) =
         </section>
         <aside className="certificate-rightbar">
           <section className="certificate-sidecard"><h2>Campos Dinámicos</h2><p>Variables disponibles para insertar en la plantilla.</p><ul className="dynamic-field-list">{dynamicFields.map((field) => <li key={field.id}><span>{field.label}</span><code>{field.token}</code></li>)}</ul></section>
-          <section className="certificate-sidecard"><h2>Mis Plantillas</h2><div className="template-list">{certificateTemplates.map((template) => <div className={`template-item${selectedId === template.id ? ' selected' : ''}`} key={template.id}><button type="button" onClick={() => setSelectedId(template.id)}><b>{template.name}</b><span>{template.active ? 'En uso' : 'Inactiva'}</span><small>{selectedId === template.id ? 'Configurar' : 'Usar esta plantilla'}</small></button><Trash2 size={13} aria-label={`Eliminar ${template.name}`} /></div>)}</div></section>
+          <section className="certificate-sidecard">
+            <h2>Mis Plantillas</h2>
+            <div className="template-list">
+              {templates.map((template) => {
+                const noSePuedeEliminar = template.active || templates.length === 1
+                return (
+                  <div className={`template-item${selectedId === template.id ? ' selected' : ''}`} key={template.id}>
+                    <button type="button" onClick={() => setSelectedId(template.id)}>
+                      <b>{template.name}</b>
+                      <span>{template.active ? 'En uso' : 'Inactiva'}</span>
+                      <small>{selectedId === template.id ? 'Configurar' : 'Usar esta plantilla'}</small>
+                    </button>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="template-item__eliminar p-0 text-danger"
+                      aria-label={`Eliminar ${template.name}`}
+                      title={noSePuedeEliminar ? 'No se puede eliminar la plantilla en uso ni la última plantilla' : 'Eliminar plantilla'}
+                      disabled={noSePuedeEliminar}
+                      onClick={() => setPorEliminar(template)}
+                    >
+                      <Trash2 size={13} aria-hidden="true" />
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
         </aside>
       </div>
+      <ConfirmacionModal
+        show={porEliminar !== null}
+        titulo="¿Está seguro de que desea eliminar esta plantilla?"
+        descripcion="La plantilla se eliminará completamente del sistema."
+        textoConfirmar="Eliminar"
+        onConfirmar={confirmarEliminacion}
+        onCancelar={() => setPorEliminar(null)}
+      />
     </div>
   )
 }

@@ -1,0 +1,103 @@
+/* Modal de confirmación (react-bootstrap) */
+.confirmacion-modal__dialog {
+  max-width: 340px;
+}
+
+.confirmacion-modal.modal-content {
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Encabezado */
+.confirmacion-modal__encabezado {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.confirmacion-modal__encabezado--destacado {
+  background: #fff1f0;
+  border-bottom: 1px solid #fde3e1;
+}
+
+.confirmacion-modal__encabezado--simple {
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.confirmacion-modal__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: #c62828;
+}
+
+.confirmacion-modal__encabezado--destacado .confirmacion-modal__icono {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fee2e2;
+}
+
+.confirmacion-modal__textos {
+  flex: 1;
+  min-width: 0;
+}
+
+.confirmacion-modal__textos h2 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #172033;
+}
+
+.confirmacion-modal__textos p {
+  margin: 4px 0 0;
+  font-size: 0.6875rem;
+  color: #59635e;
+}
+
+/* Cuerpo y pie */
+.confirmacion-modal__cuerpo {
+  padding: 14px 16px;
+}
+
+.confirmacion-modal__pie {
+  padding: 10px 16px;
+  background: #eef1ff;
+  border-top: 0;
+  justify-content: flex-end;
+}
+
+/* Botón de confirmación */
+.confirmacion-modal .confirmacion-modal__confirmar {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #c62828;
+  --bs-btn-border-color: #c62828;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #a61f1f;
+  --bs-btn-hover-border-color: #a61f1f;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #8f1a1a;
+  --bs-btn-active-border-color: #8f1a1a;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #e29b9b;
+  --bs-btn-disabled-border-color: #e29b9b;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.confirmacion-modal .confirmacion-modal__confirmar--danger-oscuro {
+  --bs-btn-bg: #8f0000;
+  --bs-btn-border-color: #8f0000;
+  --bs-btn-hover-bg: #740000;
+  --bs-btn-hover-border-color: #740000;
+}

@@ -1,4 +1,4 @@
-import { Archive, BarChart3, BadgeCheck, Footprints, LayoutDashboard, Settings, Timer, Trophy } from 'lucide-react';
+import { Archive, BarChart3, Footprints, LayoutDashboard, Settings, Timer, Trophy } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Nav, Button } from 'react-bootstrap';
 
@@ -26,7 +26,6 @@ export default function Navegacion() {
             label: 'ADMINISTRACIÓN',
             items: [
                 { label: 'Carreras', icon: Footprints, path: '/carreras' },
-                { label: 'Certificados', icon: BadgeCheck, path: '/certificados' },
                 { label: 'Administración', icon: Settings, path: '/administracion' },
             ],
         },

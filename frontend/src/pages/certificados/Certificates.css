@@ -84,3 +84,10 @@
   .editor-canvas { min-height:420px; padding:20px; }
   .certificate-paper--editor { width:100%; }
 }
+
+/* Botón de eliminar plantilla */
+.template-item .template-item__eliminar {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+}
