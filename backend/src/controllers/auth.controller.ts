@@ -10,7 +10,7 @@ export async function login(req: Request, res: Response) {
         httpOnly: true, 
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict", //Para evitar CSRF
-        maxAge: 1000 * 60 * 60 * 2 //2 Horas a como en JWT_EXPIRES_IN del .env
+        maxAge: 1000 * 60 * 60 * 24 * 30 //30 dias maximo
     });
     
     return res.json({ usuario: resultado.usuario }); //No se devuelve el token! Lo tiene el header de la response

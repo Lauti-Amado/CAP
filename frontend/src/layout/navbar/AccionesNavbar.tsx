@@ -1,6 +1,7 @@
+import './AccionesNavbar.css'
 import { Bell, CircleHelp, UserRound, Cloud } from 'lucide-react';
 
-import './AccionesNavbar.css'
+import { useAuth } from '../../context/AuthContext';
 
 type EstadoSincronizacion = 'conectado' | 'sincronizando' | 'sin-conexion';
 
@@ -18,14 +19,23 @@ export default function AccionesNavbar() {
     const estadoSync: EstadoSincronizacion = 'sincronizando'; // Los otros valores son conectado  y sin-conexion (rojo)
     const { color, texto } = estadosSincronizacion[estadoSync];
 
+    const { usuario } = useAuth();
+
     return (
         <div className="cap-navbar-actions">
+
             <button type="button" className="cap-navbar-sync" aria-label={texto} title={texto}>
                 <Cloud size={20} /> <span className="cap-navbar-sync-dot" style={{ backgroundColor: color }} />
             </button>
+
             <button type="button" aria-label="Notificaciones"><Bell size={20} /></button>
+
             <button type="button" aria-label="Ayuda"><CircleHelp size={20} /></button>
-            <button type="button" aria-label="Perfil"><UserRound size={20} /></button>
+
+            <div className='d-flex justify-content-between align-items-center'>
+                <button type="button" aria-label="Perfil"><UserRound size={20} /></button>
+                <span>Hola, {usuario?.persona.nombre}!</span>
+            </div>
         </div>
     )
 
