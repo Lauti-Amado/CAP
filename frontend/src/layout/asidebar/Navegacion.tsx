@@ -37,7 +37,7 @@ export default function Navegacion() {
             {navigation.map((section, index) => (
                 <div className="nav-section" key={section.label}>
                     
-                    <div className={`section-divider mb-2 ${index === 0 ? 'mt-2' : 'mt-4'}`}>
+                    <div className={`section-divider mb-2 ${index === 0 ? 'mt-2' : 'mt-2'}`}>
                         <span>{section.label}</span>
                     </div>
 
