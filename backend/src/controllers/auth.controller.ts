@@ -13,7 +13,7 @@ export async function login(req: Request, res: Response) {
         maxAge: 1000 * 60 * 60 * 24 * 30 //30 dias maximo
     });
     
-    return res.json({ usuario: resultado.usuario }); //No se devuelve el token! Lo tiene el header de la response
+    return res.json(resultado.usuario); //No se devuelve el token! Lo tiene el header de la response
 }
 
 export async function logout(req: Request, res: Response) {

@@ -1,14 +1,14 @@
 import { prisma } from "../config/prisma";
 
-import type { RegistroCorredor, Login } from "../validations/usuario.validations";
-import type { PayloadToken, Usuario } from "../dtos/usuario.dto";
+import type { Login } from "../validations/usuario.validations";
+import { TokenPayload, UsuarioPayload, UsuarioDTOMap } from "../dtos/usuario.dto";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET, JWT_EXPIRES_IN, SALT_ROUNDS } from "../config/env";
+import { JWT_SECRET, JWT_EXPIRES_IN } from "../config/env";
 
 //Encontrar usuario por id
-export async function findById(id: string): Promise<Usuario | null> {
+export async function findById(id: string): Promise<UsuarioPayload | null> {
     const usuario = await prisma.usuario.findUnique({
         where: { id },
         include: {
@@ -19,16 +19,11 @@ export async function findById(id: string): Promise<Usuario | null> {
 
     if (!usuario) return null;
 
-    return {
-        id: usuario.id,
-        email: usuario.email,
-        roles: usuario.roles.map(r => r.rolAdministrativo.rol),
-        persona: usuario.persona,
-    };
+    return UsuarioDTOMap(usuario)
 }
 
 //Login
-export async function login(datos: Login): Promise<{ token: string; usuario: Usuario } | null> {
+export async function login(datos: Login): Promise<{ token: string; usuario: UsuarioPayload } | null> {
     const usuario = await prisma.usuario.findUnique({
         where: { email: datos.email },
         include: {
@@ -45,16 +40,11 @@ export async function login(datos: Login): Promise<{ token: string; usuario: Usu
 
     const roles = usuario.roles.map(r => r.rolAdministrativo.rol);
 
-    const payload: PayloadToken = { id: usuario.id, roles: roles };
+    const payload: TokenPayload = { id: usuario.id, roles: roles };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     return {
         token,
-        usuario: {
-            id: usuario.id,
-            email: usuario.email,
-            roles: roles,
-            persona: usuario.persona,
-        }
+        usuario: UsuarioDTOMap(usuario)
     };
 }
