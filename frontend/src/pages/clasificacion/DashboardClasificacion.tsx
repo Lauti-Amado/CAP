@@ -1,7 +1,15 @@
+//frontend/src/pages/clasificacion/DashboardClasificacion.tsx
 import { useState } from 'react';
-import './DashboardClasificacion.css';
 import { useNavigate } from 'react-router-dom';
-import { Tabla, type Columna } from '../../components/tabla/Tabla'; 
+import { Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
+import { AlertTriangle, ArrowRight, CalendarDays, ChevronRight, Clock, Flag, Footprints, MapPin, Pencil, Play, Ruler, Search, Square, Table as IconoTabla, Users,} from 'lucide-react';
+import './DashboardClasificacion.css';
+import { Tabla, type Columna } from '../../components/tabla/Tabla';
+import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge';
+import FinalizarCarreraModal from './modales/FinalizarCarreraModal';
+import CargaManualModal from './modales/CargaManualModal';
+import { useCronometroCarrera } from '../../hooks/useCronometroCarrera';
+import { useAuth } from '../../context/AuthContext';
 
 interface ParticipanteClasificacion {
   id: number;
@@ -13,156 +21,245 @@ interface ParticipanteClasificacion {
   tiempo?: string;
 }
 
+// MOCK TEMPORAL
+// TODO BACKEND: datos reales de la carrera y de los participantes
+const carreraMock = {
+  nombre: 'CAP 10K 2026',
+  distancia: '10 km',
+  fecha: '15 de septiembre de 2026',
+  lugar: 'La Plata',
+};
+
+const estadisticasMock = { participantes: 1248, llegados: 842 };
+
+const participantesMock: ParticipanteClasificacion[] = [
+  { id: 1, dorsal: '#1042', atleta: 'Juan Pérez', dni: '38.456.789', categoria: 'M 30-34', estado: 'PENDIENTE' },
+  { id: 2, dorsal: '#1043', atleta: 'María Gómez', dni: '39.123.456', categoria: 'F 25-29', estado: 'EN CURSO' },
+  { id: 3, dorsal: '#1044', atleta: 'Carlos Ruiz', dni: '35.987.654', categoria: 'M 35-39', estado: 'LLEGADO', tiempo: '00:45:12' },
+  { id: 4, dorsal: '#1045', atleta: 'Ana Silva', dni: '40.111.222', categoria: 'F 20-24', estado: 'PENDIENTE' },
+];
+
+const formatear = (numero: number) => numero.toLocaleString('es-AR');
+
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
+  const { tieneRol } = useAuth();
+  const esAdministrador = tieneRol('Administrador');
+  const { estado, transcurrido, iniciar, finalizar } = useCronometroCarrera();
 
-  // Estados para los filtros y búsqueda
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
+  const [mostrarFinalizar, setMostrarFinalizar] = useState(false);
+  const [mostrarCargaManual, setMostrarCargaManual] = useState(false);
 
-  // Funciones preparadas para la navegación futura
-  const handleIniciarCarrera = () => console.log("Lógica para iniciar el cronómetro");
-  const handleVerClasificacionTiempoReal = () => { navigate('/clasificacion-tiempo-real'); };
-  const handleVerParticipantes = () => console.log("Lógica para ver participantes");
-  const handleVerClasificacionCompleta = () => console.log("Lógica para ver clasificacion completa");
+  const handleIniciarCarrera = () => {
+    // TODO BACKEND: PATCH /api/carreras/{id} con { estado: 'En_curso', fechaHoraCarrera: <ahora> }
+    iniciar();
+  };
 
-  // Participantes hardcodeados para la demostración
-  const participantesMock: ParticipanteClasificacion[] = [
-    { id: 1, dorsal: '#1042', atleta: 'Juan Pérez', dni: '38.456.789', categoria: 'M 30-34', estado: 'PENDIENTE' },
-    { id: 2, dorsal: '#1043', atleta: 'María Gómez', dni: '39.123.456', categoria: 'F 25-29', estado: 'EN CURSO' },
-    { id: 3, dorsal: '#1044', atleta: 'Carlos Ruiz', dni: '35.987.654', categoria: 'M 35-39', estado: 'LLEGADO', tiempo: '00:45:12' },
-    { id: 4, dorsal: '#1045', atleta: 'Ana Silva', dni: '40.111.222', categoria: 'F 20-24', estado: 'PENDIENTE' },
+  const confirmarFinalizacion = () => {
+    // TODO BACKEND: PATCH /api/carreras/{id} con { estado: 'Finalizada' }
+    finalizar();
+    setMostrarFinalizar(false);
+  };
+
+  // Estadísticas: antes de iniciar nadie llegó todavía
+  const llegados = estado === 'sin-iniciar' ? 0 : estadisticasMock.llegados;
+  const pendientes = estadisticasMock.participantes - llegados;
+  const progreso = Math.round((llegados / estadisticasMock.participantes) * 100);
+
+  const estadisticas = [
+    { etiqueta: 'Participantes', valor: formatear(estadisticasMock.participantes), icon: Users },
+    { etiqueta: 'Llegados', valor: formatear(llegados), icon: Flag },
+    { etiqueta: 'Pendientes', valor: formatear(pendientes), icon: Footprints },
   ];
 
-  // Lógica dinámica de filtrado
-  const participantesFiltrados = participantesMock.filter(p => {
-    const coincideBusqueda = p.dorsal.includes(busqueda) || p.dni.includes(busqueda) || p.atleta.toLowerCase().includes(busqueda.toLowerCase());
+  const participantesFiltrados = participantesMock.filter((p) => {
+    const coincideBusqueda =
+      p.dorsal.includes(busqueda) ||
+      p.dni.includes(busqueda) ||
+      p.atleta.toLowerCase().includes(busqueda.toLowerCase());
     const coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado.toUpperCase();
     return coincideBusqueda && coincideEstado;
   });
 
-  // Configuración de las columnas para el componente Tabla reutilizable
   const columnasParticipantes: Columna<ParticipanteClasificacion>[] = [
-    { 
-      titulo: 'DORSAL', 
+    {
+      titulo: 'DORSAL',
       key: 'dorsal',
-      render: (p) => <strong className="dorsal-cell">{p.dorsal}</strong>
+      render: (p) => <strong className="dc-dorsal">{p.dorsal}</strong>,
     },
-    { 
-      titulo: 'ATLETA', 
+    {
+      titulo: 'ATLETA',
       key: 'atleta',
       render: (p) => (
-        <div className="athlete-info">
-          <span className="athlete-name">{p.atleta}</span>
-          <span className="athlete-dni">DNI {p.dni}</span>
+        <div>
+          <span className="dc-atleta__nombre">{p.atleta}</span>
+          <span className="dc-atleta__dni">DNI {p.dni}</span>
         </div>
-      )
+      ),
     },
-    { 
-      titulo: 'CATEGORÍA', 
-      key: 'categoria' 
-    },
-    { 
-      titulo: 'ESTADO/TIEMPO', 
+    { titulo: 'CATEGORÍA', key: 'categoria' },
+    {
+      titulo: 'ESTADO/TIEMPO',
       key: 'estado',
       render: (p) => (
         <>
-          {p.estado === 'PENDIENTE' && <span className="badge badge-gray-solid">PENDIENTE</span>}
-          {p.estado === 'EN CURSO' && <span className="badge badge-light-green">EN CURSO</span>}
-          {p.estado === 'LLEGADO' && <strong>{p.tiempo}</strong>}
+          {p.estado === 'PENDIENTE' && <span className="dc-pill dc-pill--gris">PENDIENTE</span>}
+          {p.estado === 'EN CURSO' && <span className="dc-pill dc-pill--verde">EN CURSO</span>}
+          {p.estado === 'LLEGADO' && (
+            <>
+              <span className="dc-pill dc-pill--verde">LLEGÓ</span>
+              <div className="dc-tiempo">{p.tiempo}</div>
+            </>
+          )}
         </>
-      )
+      ),
+    },
+    {
+      titulo: 'ACCIÓN',
+      key: 'accion',
+      render: (p) =>
+        p.estado === 'LLEGADO' ? (
+          <Button
+            variant="link"
+            size="sm"
+            className="dc-link-accion"
+            onClick={() => navigate(`/modificar-clasificacion/${p.id}`)}
+          >
+            Ver clasificación <ArrowRight size={12} aria-hidden="true" />
+          </Button>
+        ) : null,
     },
   ];
 
   return (
-    <div className="layout-container">
-      <main className="main-content">
-        <div className="page-content dashboard-content">
-          
-          {/* Cabecera del Dashboard */}
-          <div className="dashboard-header">
-            <h1>Dashboard de Clasificación</h1>
-            <p className="subtitle-info">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-              10 km <span className="dot">•</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              15 de septiembre de 2026 <span className="dot">•</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              La Plata
-            </p>
+    <main className="dc-pagina p-4">
+      {/* Cabecera */}
+      <header className="mb-3">
+        <h1 className="dc-titulo mb-2">Dashboard de Clasificación</h1>
+        <p className="dc-subtitulo mb-0">
+          <span className="d-inline-flex align-items-center gap-1">
+            <Ruler size={14} aria-hidden="true" /> {carreraMock.distancia}
+          </span>
+          <span aria-hidden="true">•</span>
+          <span className="d-inline-flex align-items-center gap-1">
+            <CalendarDays size={14} aria-hidden="true" /> {carreraMock.fecha}
+          </span>
+          <span aria-hidden="true">•</span>
+          <span className="d-inline-flex align-items-center gap-1">
+            <MapPin size={14} aria-hidden="true" /> {carreraMock.lugar}
+          </span>
+        </p>
+      </header>
+
+      {/* Cronómetro: cambia al iniciar y al finalizar */}
+      <Card className="dc-timer mb-3">
+        <Card.Body className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <EstadoCarreraBadge estado={estado} />
+            <div className="dc-etiqueta mt-2">TIEMPO DE CARRERA</div>
+            <div className="dc-cronometro">{transcurrido}</div>
           </div>
 
-          {/* Tarjeta del Cronómetro Principal */}
-          <div className="timer-main-card">
-            <div className="timer-info">
-              <span className="badge badge-light-green"><span className="pulse-dot"></span> EN CURSO</span>
-              <span className="timer-label">TIEMPO DE CARRERA</span>
-              <div className="timer-display">00:00:00</div>
-            </div>
-            <button className="btn btn-primary btn-large" onClick={handleIniciarCarrera}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          {esAdministrador && estado === 'sin-iniciar' && (
+            <Button
+              variant="success"
+              className="dc-btn-iniciar d-inline-flex align-items-center gap-2"
+              onClick={handleIniciarCarrera}
+            >
+              <Play size={14} fill="currentColor" aria-hidden="true" />
               INICIAR CARRERA
-            </button>
-          </div>
+            </Button>
+          )}
 
-          {/* Grid de Estadísticas */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <span className="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Participantes</span>
-              <span className="stat-value">1.248</span>
+          {esAdministrador && estado === 'en-curso' && (
+            <div className="text-end">
+              <Button
+                variant="danger"
+                className="dc-btn-detener d-inline-flex align-items-center gap-2"
+                onClick={() => setMostrarFinalizar(true)}
+              >
+                <Square size={13} fill="currentColor" aria-hidden="true" />
+                DETENER CARRERA
+              </Button>
+              <p className="dc-aviso">
+                <AlertTriangle size={12} className="flex-shrink-0" aria-hidden="true" />
+                Detener la carrera finalizará el cronómetro oficial.
+              </p>
             </div>
-            <div className="stat-card">
-              <span className="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg> Llegados</span>
-              <span className="stat-value">0</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 4v16M17 4v16M9 4v16M5 4v16"></path></svg> Pendientes</span>
-              <span className="stat-value">1.248</span>
-            </div>
-            <div className="stat-card">
-              <div className="progress-header">
-                <span className="stat-label">Progreso</span>
-                <span className="stat-value-small">0%</span>
-              </div>
-              <div className="progress-bar-container">
-                <div className="progress-bar-fill" style={{ width: '0%' }}></div>
-              </div>
-            </div>
-          </div>
+          )}
+        </Card.Body>
+      </Card>
 
-          {/* Layout de 2 Columnas (Tabla y Acciones) */}
-          <div className="dashboard-columns">
-            
-            {/* Columna Izquierda: Tabla Reutilizable de Participantes */}
-            <div className="participants-panel">
-              <div className="panel-header">
-                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Participantes</h2>
-                <div className="panel-filters">
-                  <div className="search-input">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input 
-                      type="text" 
-                      placeholder="Buscar por DNI o Dorsal..." 
+      {/* Estadísticas */}
+      <Row className="g-3 mb-3">
+        {estadisticas.map(({ etiqueta, valor, icon: Icono }) => (
+          <Col xs={6} lg={3} key={etiqueta}>
+            <Card className="dc-stat h-100">
+              <Card.Body>
+                <div className="dc-stat__etiqueta">
+                  <Icono size={14} aria-hidden="true" />
+                  {etiqueta}
+                </div>
+                <div className="dc-stat__valor">{valor}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+
+        <Col xs={6} lg={3}>
+          <Card className="dc-stat h-100">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="dc-stat__etiqueta">Progreso</span>
+                <strong>{progreso}%</strong>
+              </div>
+              <ProgressBar now={progreso} variant="success" style={{ height: 6 }} />
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row className="g-3">
+        {/* Participantes */}
+        <Col xs={12} lg={8}>
+          <Card>
+            <Card.Body>
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
+                  <IconoTabla size={16} aria-hidden="true" /> Participantes
+                </h2>
+
+                <div className="d-flex gap-2">
+                  <InputGroup size="sm" className="dc-buscador">
+                    <InputGroup.Text className="bg-white">
+                      <Search size={14} aria-hidden="true" />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder="Buscar por DNI o Dorsal..."
                       value={busqueda}
-                      onChange={(e) => setBusqueda(e.target.value)} 
+                      onChange={(e) => setBusqueda(e.target.value)}
                     />
-                  </div>
-                  <select 
-                    className="filter-select"
+                  </InputGroup>
+
+                  <Form.Select
+                    size="sm"
+                    className="dc-filtro"
                     value={filtroEstado}
+                    aria-label="Filtrar por estado"
                     onChange={(e) => setFiltroEstado(e.target.value)}
                   >
                     <option value="Todos">Estado: Todos</option>
                     <option value="Pendiente">Pendiente</option>
                     <option value="En Curso">En Curso</option>
                     <option value="Llegado">Llegado</option>
-                  </select>
+                  </Form.Select>
                 </div>
               </div>
 
-              {/* Implementación del componente Tabla reutilizable con evento de clic en filas */}
-              <Tabla 
+              <Tabla
                 columnas={columnasParticipantes}
                 datos={participantesFiltrados}
                 mensajeVacio="No se encontraron participantes."
@@ -170,41 +267,64 @@ const DashboardClasificacion = () => {
                 totalPaginas={1}
                 onCambiarPagina={() => {}}
                 textoPaginacion={`Mostrando ${participantesFiltrados.length} resultados`}
-                onRowClick={(participante) => navigate(`/modificar-clasificacion/${participante.id}`)}
               />
-            </div>
+            </Card.Body>
+          </Card>
+        </Col>
 
-            {/* Columna Derecha: Acciones Rápidas */}
-            <div className="actions-panel">
-              <h3 className="actions-title">ACCIONES RÁPIDAS</h3>
-              <div className="actions-list">
-                <button className="action-card primary-action" onClick={handleVerClasificacionTiempoReal}>
-                  <div className="action-content">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <div className="action-text">
-                      <strong>Clasificaciones en tiempo real</strong>
-                      <span>Seguimiento en directo</span>
-                    </div>
-                  </div>
-                  <svg className="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
+        {/* Acciones rápidas */}
+        <Col xs={12} lg={4}>
+          <Card>
+            <Card.Body>
+              <h3 className="dc-etiqueta mb-3">ACCIONES RÁPIDAS</h3>
 
-                <button className="action-card secondary-action" onClick={handleVerParticipantes}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                  <strong>Ver participantes</strong>
-                </button>
+              <div className="d-grid gap-2">
+                <Button
+                  variant="success"
+                  className="dc-accion-principal d-flex align-items-center gap-3"
+                  onClick={() => navigate('/clasificacion-tiempo-real')}
+                >
+                  <span className="dc-accion-icono">
+                    <Clock size={16} aria-hidden="true" />
+                  </span>
+                  <span className="flex-grow-1 text-start">
+                    <strong className="d-block small">Clasificaciones en tiempo real</strong>
+                    <span className="dc-accion-sub">Seguimiento en directo</span>
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </Button>
 
-                <button className="action-card secondary-action" onClick={handleVerClasificacionCompleta}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <strong>Ver clasificación completa</strong>
-                </button>
+                {/* TODO: navegar a la lista de participantes cuando exista la pantalla */}
+                <Button variant="outline-secondary" className="d-flex align-items-center gap-2 text-start">
+                  <Users size={15} aria-hidden="true" />
+                  <strong className="small">Ver participantes</strong>
+                </Button>
+
+                <Button
+                  variant="outline-secondary"
+                  className="d-flex align-items-center gap-2 text-start"
+                  onClick={() => setMostrarCargaManual(true)}
+                >
+                  <Pencil size={15} aria-hidden="true" />
+                  <strong className="small">Cargar tiempo manual</strong>
+                </Button>
               </div>
-            </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-          </div>
-        </div>
-      </main>
-    </div>
+      <FinalizarCarreraModal
+        show={mostrarFinalizar}
+        nombreCarrera={carreraMock.nombre}
+        tiempoTranscurrido={transcurrido}
+        estadoActual="EN CURSO"
+        onConfirmar={confirmarFinalizacion}
+        onCancelar={() => setMostrarFinalizar(false)}
+      />
+
+      <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />
+    </main>
   );
 };
 
