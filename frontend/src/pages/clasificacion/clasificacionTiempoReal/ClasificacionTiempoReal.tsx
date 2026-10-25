@@ -1,222 +1,285 @@
+//frontend/src/pages/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal.tsx
 import React, { useState } from 'react';
 import './ClasificacionTiempoReal.css';
 import { useNavigate } from 'react-router-dom';
+import { Alert, Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
+import { Layers, Pencil, Search, UserX, Wifi } from 'lucide-react';
 import { Tabla, type Columna } from '../../../components/tabla/Tabla';
+import EstadoCarreraBadge from '../../../components/carrera/EstadoCarreraBadge';
+import CargaManualModal from '../modales/CargaManualModal';
+import DescalificarCorredorModal from '../modales/DescalificarCorredorModal';
+import { llegadasMock } from '../llegadasMock';
+import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera';
+import type { LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
 
-interface LlegadaAtleta {
-  id: number;
-  puesto: number;
-  dorsal: string;
-  apellidosNombres: string;
-  dni: string;
-  categoria: string;
-  tiempo: string;
-  estado: 'OFICIAL' | 'EN REVISIÓN';
-}
+const aResumen = (llegada: LlegadaAtleta): ResumenCorredor => ({
+  id: llegada.id,
+  dorsal: `#${llegada.dorsal}`,
+  nombre: llegada.apellidosNombres,
+  dni: llegada.dni,
+  categoria: llegada.categoria,
+  estado:
+    llegada.estado === 'OFICIAL' ? 'Oficial' : llegada.estado === 'EN REVISIÓN' ? 'En revisión' : 'Descalificado',
+});
+
+// MOCK TEMPORAL
+// TODO BACKEND: totales reales de la carrera
+const resumenMock = { llegadas: 452, pendientes: 1048 };
 
 const ClasificacionTiempoReal: React.FC = () => {
   const navigate = useNavigate();
-  // Estado para la búsqueda en tiempo real
+  const { estado, transcurrido } = useCronometroCarrera();
+
+  const [llegadas, setLlegadas] = useState<LlegadaAtleta[]>(llegadasMock);
   const [busqueda, setBusqueda] = useState('');
+  const [seleccionados, setSeleccionados] = useState<number[]>([]);
+  const [mostrarCargaManual, setMostrarCargaManual] = useState(false);
+  const [corredoresADescalificar, setCorredoresADescalificar] = useState<ResumenCorredor[]>([]);
+  const [aviso, setAviso] = useState<string | null>(null);
 
-  // Acciones rápidas (mock)
-  const handleCargarTiempoManual = () => console.log("Cargar tiempo manual");
-  const handleModificarClasificacion = () => console.log("Modificar clasificación");
-  const handleDescalificar = () => console.log("Descalificar corredor");
+  const seleccion = llegadas.filter((llegada) => seleccionados.includes(llegada.id));
+  const descalificables = seleccion.filter((llegada) => llegada.estado !== 'DESCALIFICADO');
 
-  // Datos mock de llegadas recientes basados en la interfaz
-  const llegadasMock: LlegadaAtleta[] = [
-    { id: 1, puesto: 1, dorsal: '1042', apellidosNombres: 'Martínez, Juan Pablo', dni: '32.456.789', categoria: 'M 30-34', tiempo: '00:45:12.105', estado: 'OFICIAL' },
-    { id: 2, puesto: 2, dorsal: '856', apellidosNombres: 'López, Ana María', dni: '28.123.456', categoria: 'F 35-39', tiempo: '00:46:05.892', estado: 'OFICIAL' },
-    { id: 3, puesto: 3, dorsal: '2105', apellidosNombres: 'Garcia, Carlos', dni: '40.987.654', categoria: 'M 20-24', tiempo: '00:46:42.331', estado: 'EN REVISIÓN' },
-    { id: 4, puesto: 4, dorsal: '342', apellidosNombres: 'Rodriguez, Laura', dni: '35.654.321', categoria: 'F 25-29', tiempo: '00:47:10.050', estado: 'OFICIAL' },
-    { id: 5, puesto: 5, dorsal: '1899', apellidosNombres: 'Fernández, Diego', dni: '25.333.222', categoria: 'M 40-44', tiempo: '00:47:28.901', estado: 'EN REVISIÓN' },
-  ];
+  const alternarSeleccion = (id: number) =>
+    setSeleccionados((actuales) =>
+      actuales.includes(id) ? actuales.filter((actual) => actual !== id) : [...actuales, id]
+    );
 
-  // Lógica de filtrado de corredores
-  const llegadasFiltradas = llegadasMock.filter(atleta => {
-    const term = busqueda.toLowerCase().trim();
+  // Modificar: abre al primero y deja en cola a los demás (?siguientes=2,3)
+  const handleModificarClasificacion = () => {
+    if (seleccion.length === 0) return;
+    const [primero, ...resto] = seleccion;
+    const cola = resto.length > 0 ? `?siguientes=${resto.map((llegada) => llegada.id).join(',')}` : '';
+    navigate(`/modificar-clasificacion/${primero.id}${cola}`);
+  };
+
+  const handleDescalificar = () => setCorredoresADescalificar(descalificables.map(aResumen));
+
+  const confirmarDescalificacion = () => {
+    const ids = corredoresADescalificar.map((corredor) => corredor.id);
+
+    // TODO BACKEND: PATCH /api/clasificaciones/{id} con { estado: 'Descalificado' } por cada corredor
+    setLlegadas((actuales) =>
+      actuales.map((llegada) => (ids.includes(llegada.id) ? { ...llegada, estado: 'DESCALIFICADO' } : llegada))
+    );
+    setSeleccionados((actuales) => actuales.filter((id) => !ids.includes(id)));
+    setAviso(
+      ids.length === 1
+        ? `Se descalificó a ${corredoresADescalificar[0].nombre}.`
+        : `Se descalificaron ${ids.length} corredores.`
+    );
+    setCorredoresADescalificar([]);
+  };
+
+  const llegadasFiltradas = llegadas.filter((llegada) => {
+    const termino = busqueda.toLowerCase().trim();
     return (
-      atleta.dorsal.toLowerCase().includes(term) ||
-      atleta.dni.includes(term) ||
-      atleta.apellidosNombres.toLowerCase().includes(term)
+      llegada.dorsal.toLowerCase().includes(termino) ||
+      llegada.dni.includes(termino) ||
+      llegada.apellidosNombres.toLowerCase().includes(termino)
     );
   });
 
-  // Configuración de las columnas con los formatos visuales (puestos de podio, badges, etc.)
   const columnasLlegadas: Columna<LlegadaAtleta>[] = [
-    { 
-      titulo: 'PUESTO', 
-      key: 'puesto',
-      render: (atleta) => {
-        const esPodio = atleta.puesto <= 3;
-        return (
-          <span className={`rt-puesto ${esPodio ? `puesto-${atleta.puesto}` : ''}`}>
-            <strong>{atleta.puesto}</strong>
-          </span>
-        );
-      }
-    },
-    { 
-      titulo: 'DORSAL', 
-      key: 'dorsal',
-      render: (atleta) => <strong>{atleta.dorsal}</strong>
-    },
-    { 
-      titulo: 'CORREDOR', 
-      key: 'apellidosNombres',
-      render: (atleta) => <span className="rt-runner-name">{atleta.apellidosNombres}</span>
-    },
-    { 
-      titulo: 'DNI', 
-      key: 'dni',
-      render: (atleta) => <span className="rt-dni">{atleta.dni}</span>
-    },
-    { 
-      titulo: 'CATEGORÍA', 
-      key: 'categoria' 
-    },
-    { 
-      titulo: 'TIEMPO', 
-      key: 'tiempo',
-      render: (atleta) => <span className="rt-time"><strong>{atleta.tiempo}</strong></span>
-    },
-    { 
-      titulo: 'ESTADO', 
-      key: 'estado',
+    {
+      titulo: '',
+      key: 'seleccion',
       render: (atleta) => (
-        atleta.estado === 'OFICIAL' ? (
-          <span className="rt-badge-status status-oficial">OFICIAL</span>
-        ) : (
-          <span className="rt-badge-status status-revision">EN REVISIÓN</span>
-        )
-      )
+        <Form.Check
+          type="checkbox"
+          className="rt-check"
+          aria-label={`Seleccionar a ${atleta.apellidosNombres}`}
+          checked={seleccionados.includes(atleta.id)}
+          onChange={() => alternarSeleccion(atleta.id)}
+        />
+      ),
+    },
+    {
+      titulo: 'PUESTO',
+      key: 'puesto',
+      render: (atleta) => (
+        <span className={`rt-puesto ${atleta.puesto <= 3 ? `puesto-${atleta.puesto}` : ''}`}>
+          <strong>{atleta.puesto}</strong>
+        </span>
+      ),
+    },
+    { titulo: 'DORSAL', key: 'dorsal', render: (atleta) => <strong>{atleta.dorsal}</strong> },
+    { titulo: 'CORREDOR', key: 'apellidosNombres', render: (atleta) => <span className="rt-runner-name">{atleta.apellidosNombres}</span> },
+    { titulo: 'DNI', key: 'dni', render: (atleta) => <span className="rt-dni">{atleta.dni}</span> },
+    { titulo: 'CATEGORÍA', key: 'categoria' },
+    { titulo: 'TIEMPO', key: 'tiempo', render: (atleta) => <span className="rt-time"><strong>{atleta.tiempo}</strong></span> },
+    {
+      titulo: 'ESTADO',
+      key: 'estado',
+      render: (atleta) => {
+        if (atleta.estado === 'OFICIAL') return <span className="rt-badge-status status-oficial">OFICIAL</span>;
+        if (atleta.estado === 'EN REVISIÓN') return <span className="rt-badge-status status-revision">EN REVISIÓN</span>;
+        return <span className="rt-badge-status status-descalificado">DESCALIFICADO</span>;
+      },
     },
   ];
+
+  const progreso = Math.round((resumenMock.llegadas / (resumenMock.llegadas + resumenMock.pendientes)) * 100);
 
   return (
     <div className="rt-container">
       <div className="rt-content">
-        
-        {/* Cabecera de la Carrera y Cronómetro */}
-        <div className="rt-header-main">
-          <div className="rt-title-row">
-            <h1>Clasificación de la carrera Tres Ciudades</h1>
-            <button 
-              className="rt-btn-action" 
-              onClick={() => navigate('/dashboard-clasificacion')}
-            >
+        {aviso && (
+          <Alert variant="success" dismissible onClose={() => setAviso(null)}>
+            {aviso}
+          </Alert>
+        )}
+
+        {/* Cabecera */}
+        <header className="mb-3">
+          <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+            <h1 className="rt-titulo">Clasificación de la carrera Tres Ciudades</h1>
+            <Button variant="outline-secondary" size="sm" onClick={() => navigate('/dashboard-clasificacion')}>
               Volver a Dashboard de Clasificación
-            </button>
-          </div>
-          <div className="rt-timer-status-row">
-            <span className="badge badge-light-green"><span className="pulse-dot"></span> EN CURSO</span>
-            <span className="rt-timer-clock">00:47:32.284</span>
+            </Button>
           </div>
 
-          {/* Botones de acción rápida superior */}
-          <div className="rt-action-buttons">
-            <button className="rt-btn-action" onClick={handleCargarTiempoManual}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <div className="d-flex align-items-center gap-3 mb-3">
+            <EstadoCarreraBadge estado={estado} />
+            <span className="rt-reloj">{transcurrido}</span>
+          </div>
+
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <Button
+              variant="outline-secondary"
+              className="d-inline-flex align-items-center gap-2"
+              onClick={() => setMostrarCargaManual(true)}
+            >
+              <Pencil size={15} aria-hidden="true" />
               Cargar tiempo manual
-            </button>
-            <button className="rt-btn-action" onClick={handleModificarClasificacion}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-              Modificar clasificación
-            </button>
-            <button className="rt-btn-action rt-btn-danger" onClick={handleDescalificar}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-              Descalificar
-            </button>
-          </div>
-        </div>
+            </Button>
 
-        {/* Sección de Llegadas Recientes con la Tabla Reutilizable */}
-        <div className="rt-table-card">
-          <div className="rt-table-header-row">
-            <h2>Llegadas Recientes</h2>
-            <div className="rt-search-input">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input 
-                type="text" 
-                placeholder="Buscar dorsal o DNI..." 
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+            <Button
+              variant="outline-secondary"
+              className="d-inline-flex align-items-center gap-2"
+              disabled={seleccion.length === 0}
+              onClick={handleModificarClasificacion}
+            >
+              <Layers size={15} aria-hidden="true" />
+              Modificar clasificación{seleccion.length > 0 && ` (${seleccion.length})`}
+            </Button>
+
+            <Button
+              variant="outline-danger"
+              className="d-inline-flex align-items-center gap-2"
+              disabled={descalificables.length === 0}
+              onClick={handleDescalificar}
+            >
+              <UserX size={15} aria-hidden="true" />
+              Descalificar{descalificables.length > 0 && ` (${descalificables.length})`}
+            </Button>
+
+            {seleccion.length === 0 && (
+              <span className="small text-secondary">Tilde corredores para modificar o descalificar.</span>
+            )}
+          </div>
+        </header>
+
+        {/* Llegadas recientes */}
+        <Card className="mb-4">
+          <Card.Body>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <h2 className="h6 fw-bold mb-0">Llegadas Recientes</h2>
+              <InputGroup size="sm" className="rt-buscador">
+                <InputGroup.Text className="bg-white">
+                  <Search size={14} aria-hidden="true" />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Buscar dorsal o DNI..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                />
+              </InputGroup>
+            </div>
+
+            <div className="rt-tabla">
+              <Tabla
+                columnas={columnasLlegadas}
+                datos={llegadasFiltradas}
+                mensajeVacio="No se encontraron registros recientes."
+                paginaActual={1}
+                totalPaginas={1}
+                onCambiarPagina={() => {}}
+                textoPaginacion={`Mostrando ${llegadasFiltradas.length} resultados`}
               />
             </div>
-          </div>
+          </Card.Body>
+        </Card>
 
-          <Tabla 
-            columnas={columnasLlegadas}
-            datos={llegadasFiltradas}
-            mensajeVacio="No se encontraron registros recientes."
-            paginaActual={1}
-            totalPaginas={1}
-            onCambiarPagina={() => {}}
-            textoPaginacion={`Mostrando ${llegadasFiltradas.length} resultados`}
-            onRowClick={(atleta) => navigate(`/modificar-clasificacion/${atleta.id}`)}
-          />
-        </div>
+        {/* Participantes y estado del sistema */}
+        <Row className="g-3">
+          <Col xs={12} md={6}>
+            <Card className="h-100">
+              <Card.Body>
+                <h3 className="h6 fw-bold mb-3">Participantes</h3>
 
-        {/* Sección de Paneles Inferiores (Participantes y Estado del Sistema) */}
-        <div className="rt-bottom-grid">
-          
-          {/* Panel de Participantes */}
-          <div className="rt-card-box">
-            <h3>Participantes</h3>
-            <div className="rt-stats-row">
-              <div className="rt-stat-item">
-                <span className="rt-stat-label">Llegadas</span>
-                <span className="rt-stat-val">452</span>
-              </div>
-              <div className="rt-stat-item">
-                <span className="rt-stat-label">Pendientes</span>
-                <span className="rt-stat-val">1,048</span>
-              </div>
-            </div>
-            <div className="rt-progress-container">
-              <div className="rt-prog-info">
-                <span>Progreso de Carrera</span>
-                <strong>30%</strong>
-              </div>
-              <div className="rt-progress-track">
-                <div className="rt-progress-fill" style={{ width: '30%' }}></div>
-              </div>
-            </div>
-          </div>
+                <div className="d-flex gap-4 mb-3">
+                  <div>
+                    <span className="rt-stat-label d-block">Llegadas</span>
+                    <span className="rt-stat-val">{resumenMock.llegadas}</span>
+                  </div>
+                  <div>
+                    <span className="rt-stat-label d-block">Pendientes</span>
+                    <span className="rt-stat-val">{resumenMock.pendientes.toLocaleString('es-AR')}</span>
+                  </div>
+                </div>
 
-          {/* Panel de Estado del Sistema */}
-          <div className="rt-card-box">
-            <div className="rt-system-header">
-              <h3>Estado del Sistema</h3>
-              <span className="rt-rfid-status">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-                Conectado
-              </span>
-            </div>
-            
-            <div className="rt-last-read-box">
-              <span className="rt-read-title">ÚLTIMA LECTURA</span>
-              <div className="rt-read-detail">
-                <strong>Dorsal 1899</strong> <span className="rt-time-ago">hace 3s</span>
-              </div>
-            </div>
+                <div className="d-flex justify-content-between small text-secondary mb-1">
+                  <span>Progreso de Carrera</span>
+                  <strong>{progreso}%</strong>
+                </div>
+                <ProgressBar now={progreso} variant="success" style={{ height: 6 }} />
+              </Card.Body>
+            </Card>
+          </Col>
 
-            <div className="rt-antennas-status">
-              <div className="rt-antenna-row">
-                <span>Antena 1</span>
-                <span className="rt-ant-ok">OK (98%)</span>
-              </div>
-              <div className="rt-antenna-row">
-                <span>Antena 2</span>
-                <span className="rt-ant-ok">OK (95%)</span>
-              </div>
-            </div>
-          </div>
+          <Col xs={12} md={6}>
+            <Card className="h-100">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h3 className="h6 fw-bold mb-0">Estado del Sistema</h3>
+                  <span className="rt-rfid-status d-inline-flex align-items-center gap-1">
+                    <Wifi size={15} aria-hidden="true" />
+                    Conectado
+                  </span>
+                </div>
 
-        </div>
+                <div className="rt-last-read-box">
+                  <span className="rt-read-title">ÚLTIMA LECTURA</span>
+                  <div className="rt-read-detail">
+                    <strong>Dorsal 1899</strong> <span className="rt-time-ago">hace 3s</span>
+                  </div>
+                </div>
 
+                <div className="rt-antennas-status">
+                  <div className="rt-antenna-row">
+                    <span>Antena 1</span>
+                    <span className="rt-ant-ok">OK (98%)</span>
+                  </div>
+                  <div className="rt-antenna-row">
+                    <span>Antena 2</span>
+                    <span className="rt-ant-ok">OK (95%)</span>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </div>
+
+      <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />
+
+      <DescalificarCorredorModal
+        corredores={corredoresADescalificar}
+        onConfirmar={confirmarDescalificacion}
+        onCancelar={() => setCorredoresADescalificar([])}
+      />
     </div>
   );
 };
