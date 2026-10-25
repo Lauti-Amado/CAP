@@ -6,14 +6,14 @@ import './Breadcrumbs.css'
 type BreadcrumbItem = { label: string; to?: string };
 
 const inicio = { label: 'Seleccionar carrera', to: '/seleccionar-carrera' };
-const clasificacion = { label: 'Clasificación', to: '/dashboard-clasificacion' };
+const clasificacion = { label: 'Clasificación carrera', to: '/dashboard-clasificacion' };
 
 // Jerarquía de las pantallas existentes, independiente del historial de navegación.
 const breadcrumbsPorRuta: Record<string, BreadcrumbItem[]> = {
   '/seleccionar-carrera': [{ label: inicio.label }],
   '/carreras': [inicio, { label: 'Carreras' }],
-  '/dashboard-clasificacion': [inicio, { label: clasificacion.label }],
-  '/clasificacion-tiempo-real': [inicio, clasificacion, { label: 'Tiempo real' }],
+  '/dashboard-clasificacion': [{ label: 'CAP Gestión' }, { label: clasificacion.label }],
+  '/clasificacion-tiempo-real': [{ label: 'CAP Gestión' }, clasificacion, { label: 'Tiempo real' }],
   '/resultados': [inicio, { label: 'Resultados' }],
   '/entrega-kits': [inicio, { label: 'Entrega de kits' }],
   '/grand-prix': [inicio, { label: 'Grand Prix' }],

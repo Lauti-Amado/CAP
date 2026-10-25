@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layout/MainLayout';
-import Login from './pages/login/Login';
+import Login from './pages/login/login';
 import SeleccionarCarrera from './pages/seleccionarCarrera/seleccionarCarrera';
 import DashboardClasificacion from './pages/clasificacion/DashboardClasificacion';
 import GrandPrix from './pages/grandPrix/GrandPrix';
