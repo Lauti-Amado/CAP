@@ -14,6 +14,7 @@ const breadcrumbsPorRuta: Record<string, BreadcrumbItem[]> = {
   '/carreras': [inicio, { label: 'Carreras' }],
   '/dashboard-clasificacion': [{ label: 'CAP Gestión' }, { label: clasificacion.label }],
   '/clasificacion-tiempo-real': [{ label: 'CAP Gestión' }, clasificacion, { label: 'Tiempo real' }],
+  '/clasificacion-manual/corredor': [{ label: 'CAP Gestión' }, { label: 'Buscar corredor', to: '/dashboard-clasificacion' }, { label: 'Clasificación Manual - Detalle corredor' }],
   '/resultados': [inicio, { label: 'Resultados' }],
   '/entrega-kits': [inicio, { label: 'Entrega de kits' }],
   '/grand-prix': [inicio, { label: 'Grand Prix' }],
@@ -31,7 +32,8 @@ export default function Breadcrumbs() {
 
   const ruta = (pathname.replace(/\/+$/, '') || '/')
   .replace(/\/usuarios\/[^/]+\/rol$/, '/usuarios/rol')
-  .replace(/\/categorias\/[^/]+\/editar$/, '/categorias/editar');
+  .replace(/\/categorias\/[^/]+\/editar$/, '/categorias/editar')
+  .replace(/\/clasificacion-manual\/corredor\/[^/]+$/, '/clasificacion-manual/corredor');
   
   const items = breadcrumbsPorRuta[ruta] ?? [];
 

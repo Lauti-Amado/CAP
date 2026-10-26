@@ -1,4 +1,6 @@
 //frontend/src/types/clasificacion.ts
+import type { EstadoVerificacion } from './entregaKits'
+
 export type EstadoClasificacion = 'Oficial' | 'En revisión' | 'Descalificado'
 
 // Datos mínimos de un corredor para mostrar en los modales
@@ -11,8 +13,15 @@ export type ResumenCorredor = {
   estado: EstadoClasificacion
 }
 
-// Corredor inscripto en la carrera (carga manual)
-export type CorredorClasificacion = ResumenCorredor
+// Corredor inscripto en la carrera (carga manual y detalle)
+export type CorredorClasificacion = ResumenCorredor & {
+  distancia: string
+  talleRemera: string
+  clubTeam: string
+  estadoInscripcion: EstadoVerificacion
+  estadoAptoMedico: EstadoVerificacion
+  chipRfid: string
+}
 
 // Llegada registrada (tabla de clasificación en tiempo real)
 export type LlegadaAtleta = {
