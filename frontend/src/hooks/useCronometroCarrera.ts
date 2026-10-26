@@ -1,6 +1,6 @@
 //frontend/src/hooks/useCronometroCarrera.ts
 import { useCallback, useEffect, useState } from 'react'
-import { formatearDuracion } from '../utils/tiempo'
+import { formatearDuracionConMs } from '../utils/tiempo'
 
 export type EstadoCronometro = 'sin-iniciar' | 'en-curso' | 'finalizada'
 
@@ -10,6 +10,8 @@ type RegistroCarrera = { inicio: number; fin?: number }
 // TODO BACKEND: la hora de inicio es Carrera.fechaHoraCarrera (se actualiza al iniciar,
 // junto con estado = En_curso). El fin se registra al pasar la carrera a Finalizada.
 const CLAVE = 'cap.carrera.cronometro'
+
+const INTERVALO_MS = 50
 
 function leer(): RegistroCarrera | null {
   try {
@@ -38,7 +40,7 @@ export function useCronometroCarrera() {
   useEffect(() => {
     if (!enCurso) return undefined
     setAhora(Date.now())
-    const intervalo = setInterval(() => setAhora(Date.now()), 1000)
+    const intervalo = setInterval(() => setAhora(Date.now()), INTERVALO_MS)
     return () => clearInterval(intervalo)
   }, [enCurso])
 
@@ -53,6 +55,11 @@ export function useCronometroCarrera() {
     setRegistro(nuevo)
   }, [])
 
+  const reiniciar = useCallback(() => {
+  guardar(null)
+  setRegistro(null)
+}, [])
+
   const finalizar = useCallback(() => {
     if (!registro || registro.fin !== undefined) return
     const nuevo: RegistroCarrera = { ...registro, fin: Date.now() }
@@ -60,5 +67,5 @@ export function useCronometroCarrera() {
     setRegistro(nuevo)
   }, [registro])
 
-  return { estado, transcurrido: formatearDuracion(transcurridoMs), iniciar, finalizar }
+  return { estado, transcurrido: formatearDuracionConMs(transcurridoMs), iniciar, finalizar, reiniciar }
 }

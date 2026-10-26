@@ -2,14 +2,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
-import { AlertTriangle, ArrowRight, CalendarDays, ChevronRight, Clock, Flag, Footprints, MapPin, Pencil, Play, Ruler, Search, Square, Table as IconoTabla, Users,} from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarDays, ChevronRight, Clock, Flag, Footprints, MapPin, Pencil, Play, RotateCcw, Ruler, Search, Square, Table as IconoTabla, Users,} from 'lucide-react';
 import './DashboardClasificacion.css';
 import { Tabla, type Columna } from '../../components/tabla/Tabla';
 import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge';
 import FinalizarCarreraModal from './modales/FinalizarCarreraModal';
 import CargaManualModal from './modales/CargaManualModal';
 import { useCronometroCarrera } from '../../hooks/useCronometroCarrera';
-import { useAuth } from '../../context/AuthContext';
+//import { useAuth } from '../../context/AuthContext'; para cuando hagamos lo de admin con iniciar y finalizar
 
 interface ParticipanteClasificacion {
   id: number;
@@ -43,9 +43,9 @@ const formatear = (numero: number) => numero.toLocaleString('es-AR');
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
-  const { tieneRol } = useAuth();
-  const esAdministrador = tieneRol('Administrador');
-  const { estado, transcurrido, iniciar, finalizar } = useCronometroCarrera();
+  //const { tieneRol } = useAuth();
+  //const esAdministrador = tieneRol('Administrador'); para cuando el iniciar y finalizar sea solo admin 
+  const { estado, transcurrido, iniciar, finalizar, reiniciar } = useCronometroCarrera();
 
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
@@ -56,6 +56,11 @@ const DashboardClasificacion = () => {
     // TODO BACKEND: PATCH /api/carreras/{id} con { estado: 'En_curso', fechaHoraCarrera: <ahora> }
     iniciar();
   };
+
+  const handleReiniciarCarrera = () => {
+  // TEMPORAL (solo pruebas): quitar cuando el estado de la carrera venga del backend
+  reiniciar();
+};
 
   const confirmarFinalizacion = () => {
     // TODO BACKEND: PATCH /api/carreras/{id} con { estado: 'Finalizada' }
@@ -162,7 +167,19 @@ const DashboardClasificacion = () => {
             <div className="dc-cronometro">{transcurrido}</div>
           </div>
 
-          {esAdministrador && estado === 'sin-iniciar' && (
+          {import.meta.env.DEV && estado !== 'sin-iniciar' && (
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="mt-2 d-inline-flex align-items-center gap-1"
+              onClick={handleReiniciarCarrera}
+            >
+              <RotateCcw size={12} aria-hidden="true" />
+              Reiniciar (solo pruebas)
+            </Button>
+          )}
+
+          {/* esAdmin &&*/estado === 'sin-iniciar' && (
             <Button
               variant="success"
               className="dc-btn-iniciar d-inline-flex align-items-center gap-2"
@@ -173,7 +190,7 @@ const DashboardClasificacion = () => {
             </Button>
           )}
 
-          {esAdministrador && estado === 'en-curso' && (
+          {/* esAdmin &&*/ estado === 'en-curso' && (
             <div className="text-end">
               <Button
                 variant="danger"

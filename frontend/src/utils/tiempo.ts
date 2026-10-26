@@ -7,3 +7,10 @@ export function formatearDuracion(milisegundos: number): string {
   const segundos = totalSegundos % 60
   return [horas, minutos, segundos].map((n) => String(n).padStart(2, '0')).join(':')
 }
+
+// 5400123 ms -> "01:30:00.123"
+export function formatearDuracionConMs(milisegundos: number): string {
+  const total = Math.max(0, Math.floor(milisegundos))
+  const milis = String(total % 1000).padStart(3, '0')
+  return `${formatearDuracion(total)}.${milis}`
+}

@@ -499,3 +499,6 @@
 }
 
 .dc-accion-sub { font-size: 0.65rem; opacity: 0.9; }
+
+.dc-cronometro { font-variant-numeric: tabular-nums; }
+.rt-reloj { font-variant-numeric: tabular-nums; }
