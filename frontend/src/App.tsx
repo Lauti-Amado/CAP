@@ -24,6 +24,7 @@ import Administracion from './pages/administracion/Administracion';
 import RolesPermisos from './pages/administracion/RolesPermisos';
 import ConfiguracionClasificaciones from './pages/administracion/categorias/ConfiguracionClasificaciones';
 import NuevaCategoria from './pages/administracion/categorias/NuevaCategoria';
+import ClasificacionManualDetalle from './pages/clasificacion/ClasificacionManualDetalle';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/entrega-kits/corredor/:dni" element={<DetalleCorredor />} />
           <Route path="/grand-prix" element={<GrandPrix />} />
           <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
+          <Route path="/clasificacion-manual/corredor/:dni" element={<ClasificacionManualDetalle />} />
           <Route path="/certificados" element={<Certificates onEditorChange={() => { }} />} />
           <Route path="/entrega-kits/inscripciones" element={<Inscripciones />} />
           <Route path="/entrega-kits/inscripciones/nueva" element={<NuevaInscripcion />} />
