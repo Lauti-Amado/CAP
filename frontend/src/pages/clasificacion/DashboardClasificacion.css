@@ -367,3 +367,138 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+/* ===== Dashboard de clasificación (react-bootstrap) ===== */
+.dc-pagina {
+  min-height: 100%;
+  background: #f8f9ff;
+}
+
+.dc-titulo { font-size: 2rem; font-weight: 800; color: #111827; }
+
+.dc-subtitulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+/* Cronómetro */
+.dc-timer.card { border-left: 4px solid #22c55e; border-radius: 8px; }
+
+.dc-etiqueta {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+
+.dc-cronometro {
+  font-family: 'Courier New', monospace;
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #111827;
+}
+
+.dc-btn-iniciar {
+  --bs-btn-bg: #16a34a;
+  --bs-btn-border-color: #16a34a;
+  --bs-btn-hover-bg: #15803d;
+  --bs-btn-hover-border-color: #15803d;
+  --bs-btn-active-bg: #166534;
+  --bs-btn-active-border-color: #166534;
+  font-weight: 700;
+}
+
+.dc-btn-detener {
+  --bs-btn-bg: #b91c1c;
+  --bs-btn-border-color: #b91c1c;
+  --bs-btn-hover-bg: #991b1b;
+  --bs-btn-hover-border-color: #991b1b;
+  --bs-btn-active-bg: #7f1d1d;
+  --bs-btn-active-border-color: #7f1d1d;
+  font-weight: 700;
+}
+
+.dc-aviso {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 260px;
+  margin: 8px 0 0 auto;
+  font-size: 0.7rem;
+  color: #c62828;
+  text-align: left;
+}
+
+/* Estadísticas */
+.dc-stat.card { border-radius: 8px; }
+
+.dc-stat__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.dc-stat__valor { font-size: 1.75rem; font-weight: 700; color: #111827; }
+
+/* Tabla de participantes */
+.dc-buscador { max-width: 220px; }
+.dc-filtro { width: auto; }
+.dc-dorsal { font-size: 1rem; }
+.dc-atleta__nombre { display: block; font-weight: 700; }
+.dc-atleta__dni { display: block; font-size: 0.7rem; color: #6b7280; }
+
+.dc-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.7em;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.dc-pill--gris { background: #dbe4f5; color: #475467; }
+.dc-pill--verde { background: #bbf7d0; color: #166534; }
+
+.dc-tiempo { margin-top: 2px; font-family: monospace; font-size: 0.8rem; font-weight: 700; }
+
+.dc-link-accion.btn-link {
+  padding: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #087f3f;
+  text-decoration: none;
+}
+
+/* Acciones rápidas */
+.dc-accion-principal.btn {
+  --bs-btn-bg: #16a34a;
+  --bs-btn-border-color: #16a34a;
+  --bs-btn-hover-bg: #15803d;
+  --bs-btn-hover-border-color: #15803d;
+  --bs-btn-active-bg: #166534;
+  --bs-btn-active-border-color: #166534;
+}
+
+.dc-accion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dc-accion-sub { font-size: 0.65rem; opacity: 0.9; }
+
+.dc-cronometro { font-variant-numeric: tabular-nums; }
+.rt-reloj { font-variant-numeric: tabular-nums; }

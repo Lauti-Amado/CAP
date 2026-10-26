@@ -375,3 +375,28 @@
   font-weight: 600;
   color: #16A34A;
 }
+
+/* ===== Tiempo real (react-bootstrap) ===== */
+.rt-titulo { margin: 0; font-size: 1.9rem; font-weight: 800; color: #111827; }
+
+.rt-reloj {
+  font-family: 'Courier New', monospace;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.rt-buscador { max-width: 280px; }
+
+.status-descalificado { background-color: #991b1b; color: #fff; }
+
+/* Columna de checkbox */
+.rt-tabla th:first-child,
+.rt-tabla td:first-child { width: 44px; }
+
+.rt-check.form-check { min-height: 0; margin: 0; padding-left: 0; }
+.rt-check .form-check-input { float: none; margin: 0; }
+.rt-check .form-check-input:checked { background-color: #087f3f; border-color: #087f3f; }
+
+/* Fila seleccionada */
+.rt-tabla tr:has(.rt-check input:checked) td { background: #f0faf4; }

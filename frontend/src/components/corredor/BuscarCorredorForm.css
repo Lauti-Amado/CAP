@@ -1,0 +1,58 @@
+.buscar-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.buscar-form__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: #e7f7ed;
+  color: #087f3f;
+}
+
+.buscar-form__titulo {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #172033;
+}
+
+.buscar-form__descripcion {
+  max-width: 260px;
+  margin: 6px 0 16px;
+  font-size: 0.6875rem;
+  color: #59635e;
+}
+
+.buscar-form__form {
+  width: 100%;
+}
+
+.buscar-form__error {
+  margin: 6px 0 0;
+  font-size: 0.6875rem;
+  text-align: left;
+  color: #c62828;
+}
+
+.buscar-form .btn-success {
+  --bs-btn-bg: #087f3f;
+  --bs-btn-border-color: #087f3f;
+  --bs-btn-hover-bg: #066b35;
+  --bs-btn-hover-border-color: #066b35;
+  --bs-btn-active-bg: #055a2d;
+  --bs-btn-active-border-color: #055a2d;
+  font-weight: 600;
+}
+
+.buscar-form .form-control:focus {
+  border-color: #087f3f;
+  box-shadow: 0 0 0 0.2rem rgba(8, 127, 63, 0.15);
+}
