@@ -1,25 +1,35 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { RUTA_TIEMPO_REAL, rutaTrasGuardar } from '../../../utils/colaModificacion';
+import { llegadasMock } from '../llegadasMock';
 import './ModClasifCorredor.css';
 
 const ModClasifCorredor: React.FC = () => {
-  const navigate = useNavigate();
-  const { id } = useParams(); // Captura el ID del corredor seleccionado desde la URL
+  const { id } = useParams();
+  return <FormularioModificacion key={id} id={id} />;
+};
 
-  // Estados del formulario (pueden precargarse con datos reales vía API/DB)
-  const [tiempoOficial, setTiempoOficial] = useState('01:45:23.450');
-  const [puestoGeneral, setPuestoGeneral] = useState('42');
+const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
+  const navigate = useNavigate();
+  const { search } = useLocation();
+
+  // TODO BACKEND: GET /api/clasificaciones/{id}
+  const llegada = llegadasMock.find((l) => String(l.id) === id);
+
+  const [tiempoOficial, setTiempoOficial] = useState(llegada?.tiempo ?? '01:45:23.450');
+  const [puestoGeneral, setPuestoGeneral] = useState(String(llegada?.puesto ?? 42));
   const [categoria, setCategoria] = useState('Masc 35 a 39 años');
 
   const handleGuardar = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Guardando modificaciones para el registro:", id);
-    // Lógica para guardar en base de datos / Electron y volver
-    navigate('/dashboard-clasificacion');
+    console.log('Guardando modificaciones para el registro:', id);
+    // TODO BACKEND: PATCH /api/clasificaciones/{id}
+    // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
+    navigate(rutaTrasGuardar(search), { replace: true });
   };
 
   const handleCancelar = () => {
-    navigate('/dashboard-clasificacion');
+    navigate(RUTA_TIEMPO_REAL, { replace: true });
   };
 
   return (
@@ -74,27 +84,27 @@ const ModClasifCorredor: React.FC = () => {
             <div className="mod-grid-inputs">
               <div className="mod-input-group">
                 <label>Nombre y apellido</label>
-                <input type="text" value="Juan Pérez Mónaco" disabled />
+                <input type="text" value={llegada?.apellidosNombres ?? 'Juan Pérez Mónaco'} disabled />
               </div>
               <div className="mod-input-group">
                 <label>DNI</label>
-                <input type="text" value="34.567.890" disabled />
+                <input type="text" value={llegada?.dni ?? '34.567.890'} disabled />
               </div>
               <div className="mod-input-group">
                 <label>Sexo</label>
-                <input type="text" value="Masculino" disabled />
+                <input type="text" value={llegada?.sexo ?? 'Masculino'} disabled /> 
               </div>
               <div className="mod-input-group">
                 <label>Dorsal</label>
-                <input type="text" value="# 1045" disabled />
+                <input type="text" value={`# ${llegada?.dorsal ?? '1045'}`} disabled /> 
               </div>
               <div className="mod-input-group">
                 <label>Organización / Club</label>
-                <input type="text" value="Running Team Sur" disabled />
+                <input type="text" value={llegada?.club ?? 'Running Team Sur'} disabled />
               </div>
               <div className="mod-input-group">
                 <label>Equipo</label>
-                <input type="text" value="Elite" disabled />
+                <input type="text" value={llegada?.equipo ?? 'Elite'} disabled />  
               </div>
             </div>
           </div>
