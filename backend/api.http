@@ -1,0 +1,38 @@
+@baseUrl = http://localhost:3000
+
+### Hello
+GET {{baseUrl}}/
+
+### ==========================================
+### CARRERAS
+### ==========================================
+
+### Listar carreras (200 OK)
+# @name listarCarreras
+GET {{baseUrl}}/api/carreras
+
+@primeraCarreraId = {{listarCarreras.response.body.$[0].carrera.id}}
+
+### Ver carrera por id (200 OK)
+GET {{baseUrl}}/api/carreras/{{primeraCarreraId}}
+
+### Listar carreras por año (200 OK)
+GET {{baseUrl}}/api/carreras?anio=2027
+
+
+### ==========================================
+### AUTENTICACIÓN (LOGIN)
+### ==========================================
+
+### Iniciar sesion con super usuario
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@cap.test",
+  "password": "Superadmin1234"
+}
+
+### GET mis datos
+GET {{baseUrl}}/api/auth/yo
+Content-Type: application/json

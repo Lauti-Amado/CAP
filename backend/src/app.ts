@@ -6,6 +6,7 @@ import { z } from "zod";
 import usuarioRoutes from "./routes/usuario.routes"
 import certificadosRoutes from './routes/certificados.routes' 
 import dorsalRoutes from './routes/dorsal.routes'
+import carreraRoutes from "./routes/carrera.routes";
 
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", usuarioRoutes);
 app.use('/api', certificadosRoutes)
 app.use('/api', dorsalRoutes)
+app.use("/api/carreras", carreraRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
 app.use(errorHandler);
