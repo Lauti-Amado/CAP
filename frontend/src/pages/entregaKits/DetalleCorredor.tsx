@@ -1,23 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import {
-  UserRound,
-  Banknote,
-  PackageCheck,
-  Info,
-  BadgeCheck,
-  CircleCheck,
-} from 'lucide-react'
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Form,
-  Button,
-  Badge,
-} from 'react-bootstrap'
-import './DetalleCorredor.css'
+import { PackageCheck, Info, CircleCheck } from 'lucide-react'
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap'
+import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
+import '../../components/corredor/DetalleCorredor.css'
 
 // MOCK TEMPORAL
 // Reemplazar por GET /api/corredores/{dni} al conectar el backend.
@@ -94,91 +80,16 @@ function DetalleCorredor() {
       <Row className="detalle-corredor__contenido g-3">
         {/* COLUMNA IZQUIERDA */}
         <Col xs={12} md={5} lg={4} xl={3}>
-          <div className="detalle-corredor__columna-izquierda">
-            {/* DATOS DEL CORREDOR */}
-            <Card className="detalle-corredor__tarjeta corredor">
-              <Card.Body>
-                <div className="detalle-corredor__avatar">
-                  <UserRound size={30} strokeWidth={2} />
-                </div>
-
-                <h2>{corredor.nombre}</h2>
-
-                <p className="detalle-corredor__dni">
-                  DNI: {corredor.dni}
-                </p>
-
-                <div className="detalle-corredor__separador" />
-
-                <div className="detalle-corredor__datos">
-                  <div>
-                    <span>CATEGORÍA</span>
-                    <strong>{corredor.categoria}</strong>
-                  </div>
-
-                  <div>
-                    <span>DISTANCIA</span>
-                    <strong>{corredor.distancia}</strong>
-                  </div>
-
-                  <div>
-                    <span>TALLE REMERA</span>
-                    <strong>{corredor.talleRemera || '—'}</strong>
-                  </div>
-
-                  <div>
-                    <span>CLUB/TEAM</span>
-                    <strong>{corredor.clubTeam || '—'}</strong>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-
-            {/* ESTADO DE PAGO */}
-            <Card className="detalle-corredor__tarjeta pago">
-              <Card.Body>
-                <div className="detalle-corredor__titulo-pago">
-                  <span className="detalle-corredor__icono-pago">
-                    <Banknote size={19} strokeWidth={2.2} />
-                  </span>
-
-                  <strong>ESTADO DE PAGO</strong>
-                </div>
-
-                <div className="detalle-corredor__estado">
-                  <span>Inscripción</span>
-
-                  {corredor.inscripcion.estado === 'pagado' ? (
-                    <Badge bg="success">
-                      <BadgeCheck size={12} />
-                      PAGADO
-                    </Badge>
-                  ) : (
-                    <Badge bg="warning" text="dark">
-                      PENDIENTE
-                    </Badge>
-                  )}
-                </div>
-
-                {corredor.aptoMedico && (
-                  <div className="detalle-corredor__estado">
-                    <span>Apto Médico</span>
-
-                    {corredor.aptoMedico.estado === 'verificado' ? (
-                      <Badge bg="success">
-                        <BadgeCheck size={12} />
-                        VERIFICADO
-                      </Badge>
-                    ) : (
-                      <Badge bg="warning" text="dark">
-                        PENDIENTE
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </div>
+          <TarjetasCorredor
+            nombre={corredor.nombre}
+            dni={corredor.dni}
+            categoria={corredor.categoria}
+            distancia={corredor.distancia}
+            talleRemera={corredor.talleRemera}
+            clubTeam={corredor.clubTeam}
+            estadoInscripcion={corredor.inscripcion.estado}
+            estadoAptoMedico={corredor.aptoMedico?.estado}
+          />
         </Col>
 
         {/* COLUMNA DERECHA */}
