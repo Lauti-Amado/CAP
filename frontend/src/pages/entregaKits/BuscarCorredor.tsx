@@ -41,7 +41,7 @@ function BuscarCorredor() {
     )
 
     if (corredor) {
-      navigate(`/entrega-kits/corredor/${corredor.dni}`)
+      navigate(`/clasificador/entrega-kits/corredor/${corredor.dni}`)
       return
     }
 
@@ -75,7 +75,7 @@ function BuscarCorredor() {
         <Button
           type="button"
           variant="success"
-          onClick={() => navigate('/entrega-kits/inscripciones')}
+          onClick={() => navigate('/clasificador/entrega-kits/inscripciones')}
         >
           Ingresar a lista de inscripciones
         </Button>
@@ -132,7 +132,7 @@ function BuscarCorredor() {
           dni={dni}
           onInscribir={() => {
             navigate(
-              `/entrega-kits/inscripciones/nueva?dni=${encodeURIComponent(
+              `/clasificador/entrega-kits/inscripciones/nueva?dni=${encodeURIComponent(
                 dni.trim()
               )}`
             )

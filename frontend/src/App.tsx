@@ -42,7 +42,7 @@ export default function App() {
 
           {/*CLASIFICADOR*/}
           <Route path='clasificador'>
-            <Route index element={<SeleccionarCarrera />} />
+            <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
 
             {/*Entrega kits*/}
             <Route path='entrega-kits'>
@@ -58,6 +58,7 @@ export default function App() {
               <Route index element={<DashboardClasificacion />} />
               <Route path="modificar/:id" element={<ModClasifCorredor />} />
               <Route path='tiempo-real' element={<ClasificacionTiempoReal />} />
+              <Route path="manual/corredor/:dni" element={<ClasificacionManualDetalle />} />
             </Route>
 
             {/*Resultados*/}
@@ -74,7 +75,7 @@ export default function App() {
             <Route path="carreras/:id" element={<DetalleCarrera />} />
 
             {/*Administracion*/}
-            <Route path='administracion'>
+            <Route path='configuraciones'>
               <Route index element={<Administracion />} />
               <Route path="categorias" element={<ConfiguracionClasificaciones />} />
               <Route path="categorias/nueva" element={<NuevaCategoria />} />
@@ -82,42 +83,8 @@ export default function App() {
               <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
               <Route path="usuarios/:id/rol" element={<RolesPermisos />} />
             </Route>
-
           </Route>
-
-
-
-          {/*CLASI*/}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/seleccionar-carrera" element={<SeleccionarCarrera />} />
-
-          <Route path="/entrega-kits" element={<BuscarCorredor />} />
-          <Route path="/entrega-kits/corredor/:dni" element={<DetalleCorredor />} />
-          <Route path="/entrega-kits/inscripciones" element={<Inscripciones />} />
-          <Route path="/entrega-kits/inscripciones/nueva" element={<NuevaInscripcion />} />
-          <Route path="/entrega-kits/inscripciones/:id" element={<DetalleInscripcion />} />
-
-          <Route path="/dashboard-clasificacion" element={<DashboardClasificacion />} />
-          <Route path="/modificar-clasificacion/:id" element={<ModClasifCorredor />} />
-          <Route path="/clasificacion-tiempo-real" element={<ClasificacionTiempoReal />} />
-          <Route path="/clasificacion-manual/corredor/:dni" element={<ClasificacionManualDetalle />} />
-
-          <Route path="/resultados" element={<Resultados />} />
-
-          <Route path="/grand-prix" element={<GrandPrix />} />
-
-
-          {/*ADMIN*/}
-          <Route path="/carreras" element={<Carreras />} />
-          <Route path="/carreras/:id" element={<DetalleCarrera />} />
-
-          <Route path="/administracion" element={<Administracion />} />
-          <Route path="/administracion/usuarios/:id/rol" element={<RolesPermisos />} />
-          <Route path="/administracion/categorias" element={<ConfiguracionClasificaciones />} />
-          <Route path="/administracion/categorias/nueva" element={<NuevaCategoria />} />
-          <Route path="/administracion/categorias/:id/editar" element={<NuevaCategoria />} />
-          <Route path="/certificados" element={<Certificates onEditorChange={() => { }} />} />
-
+          
         </Route>
 
       </Routes>

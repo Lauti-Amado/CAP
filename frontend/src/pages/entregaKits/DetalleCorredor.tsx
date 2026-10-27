@@ -28,7 +28,7 @@ function DetalleCorredor() {
             type="button"
             variant="link"
             className="detalle-corredor__volver"
-            onClick={() => navigate('/entrega-kits')}
+            onClick={() => navigate('/clasificador/entrega-kits')}
           >
             ← Volver al buscador
           </Button>
@@ -70,7 +70,7 @@ function DetalleCorredor() {
           type="button"
           variant="link"
           className="detalle-corredor__volver"
-          onClick={() => navigate('/entrega-kits')}
+          onClick={() => navigate('/clasificador/entrega-kits')}
         >
           ← Volver al buscador
         </Button>

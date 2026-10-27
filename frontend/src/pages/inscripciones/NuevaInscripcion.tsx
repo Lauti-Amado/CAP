@@ -137,7 +137,7 @@ function NuevaInscripcion() {
 
 
   const volverAInscripciones = () => {
-    navigate('/entrega-kits/inscripciones')
+    navigate('/clasificador/entrega-kits/inscripciones')
   }
 
 
@@ -370,7 +370,7 @@ function NuevaInscripcion() {
    */
 
   const verInscripcion = () => {
-    navigate('/entrega-kits/inscripciones')
+    navigate('/clasificador/entrega-kits/inscripciones')
   }
 
 

@@ -2,7 +2,7 @@ import './MainAsidebar.css'
 
 import { Container } from 'react-bootstrap';
 
-import LogoCap from '../../components/logo-cap/LogoCap';
+import LogoCap from './LogoCap';
 import CerrarSesion from './../asidebar/CerrarSesion';
 import Navegacion from './Navegacion';
 

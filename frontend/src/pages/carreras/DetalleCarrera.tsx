@@ -99,7 +99,7 @@ function DetalleCarrera() {
         type="button"
         variant="link"
         className="detalle-carrera__volver"
-        onClick={() => navigate('/carreras')}
+        onClick={() => navigate('/administrador/carreras')}
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Volver al listado de carreras
@@ -119,17 +119,7 @@ function DetalleCarrera() {
             </span>
           )}
 
-          <Button
-            type="button"
-            className="detalle-carrera__clasificacion"
-            onClick={() =>
-              navigate(`/dashboard-clasificacion-modificar/${id}`)
-            }
-          >
-            MODIFICAR
-            <br />
-            CLASIFICACIÓN
-          </Button>
+
         </div>
       </header>
 

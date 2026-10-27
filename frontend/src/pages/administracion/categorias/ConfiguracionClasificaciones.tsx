@@ -69,7 +69,7 @@ function ConfiguracionClasificaciones() {
         <button
           type="button"
           className="btn btn-sm cat-btn-oscuro d-inline-flex align-items-center gap-2"
-          onClick={() => navigate('/administracion/categorias/nueva')}
+          onClick={() => navigate('/administrador/configuraciones/categorias/nueva')}
         >
           <Plus size={14} aria-hidden="true" />
           Nueva categoría
@@ -88,7 +88,7 @@ function ConfiguracionClasificaciones() {
                       type="button"
                       className="btn btn-sm btn-link text-secondary p-0"
                       aria-label={`Editar ${clasificacion.nombre}`}
-                      onClick={() => navigate(`/administracion/categorias/${clasificacion.id}/editar`)}
+                      onClick={() => navigate(`/administrador/configuraciones/categorias/${clasificacion.id}/editar`)}
                     >
                       <Pencil size={14} aria-hidden="true" />
                     </button>

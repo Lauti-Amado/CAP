@@ -50,7 +50,7 @@ const ClasificacionTiempoReal: React.FC = () => {
     if (seleccion.length === 0) return;
     const [primero, ...resto] = seleccion;
     const cola = resto.length > 0 ? `?siguientes=${resto.map((llegada) => llegada.id).join(',')}` : '';
-    navigate(`/modificar-clasificacion/${primero.id}${cola}`);
+    navigate(`/clasificador/clasificaciones/modificar/${primero.id}${cola}`);
   };
 
   const handleDescalificar = () => setCorredoresADescalificar(descalificables.map(aResumen));
@@ -134,7 +134,7 @@ const ClasificacionTiempoReal: React.FC = () => {
         <header className="mb-3">
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
             <h1 className="rt-titulo">Clasificación de la carrera Tres Ciudades</h1>
-            <Button variant="outline-secondary" size="sm" onClick={() => navigate('/dashboard-clasificacion')}>
+            <Button variant="outline-secondary" size="sm" onClick={() => navigate('/clasificador/clasificaciones')}>
               Volver a Dashboard de Clasificación
             </Button>
           </div>

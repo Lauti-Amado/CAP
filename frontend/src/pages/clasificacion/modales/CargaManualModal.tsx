@@ -28,7 +28,7 @@ function CargaManualModal({ show, onCerrar }: CargaManualModalProps) {
     }
 
     onCerrar()
-    navigate(`/clasificacion-manual/corredor/${dniBuscado}`)
+    navigate(`/clasificador/clasificaciones/manual/corredor/${dniBuscado}`)
     return null
   }
 

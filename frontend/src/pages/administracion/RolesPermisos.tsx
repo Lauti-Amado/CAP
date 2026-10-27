@@ -19,7 +19,7 @@ function RolesPermisos() {
     usuario?.rol ?? null
   )
 
-  const volverAAdministracion = () => navigate('/administracion')
+  const volverAAdministracion = () => navigate('/administrador/configuraciones')
 
   if (!usuario) {
     return (

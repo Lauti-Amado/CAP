@@ -2,7 +2,6 @@
 import { useNavigate } from 'react-router-dom'
 import {
   Eye,
-  Pencil,
   BarChart3,
   CalendarDays,
   MapPin,
@@ -33,11 +32,7 @@ function CarreraCard({ carrera }: CarreraCardProps) {
     .replace(/\s+/g, '-')
 
   const handleVerDetalle = () => {
-    navigate(`/carreras/${carrera.id}`)
-  }
-
-  const handleModificar = () => {
-    navigate(`/dashboard-clasificacion-modificar/${carrera.id}`)
+    navigate(`/administrador/carreras/${carrera.id}`)
   }
 
   const handleVerResultados = () => {
@@ -121,15 +116,7 @@ function CarreraCard({ carrera }: CarreraCardProps) {
                 <BarChart3 size={17} />
               </button>
             ) : (
-              <button
-                type="button"
-                className="carrera-card__accion"
-                aria-label="Modificar clasificación"
-                title="Modificar clasificación"
-                onClick={handleModificar}
-              >
-                <Pencil size={17} />
-              </button>
+              <></>
             )}
           </div>
         </div>
