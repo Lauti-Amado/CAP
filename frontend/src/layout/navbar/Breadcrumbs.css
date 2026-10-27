@@ -1,22 +1,53 @@
-.cap-breadcrumbs { min-width: 0; }
-.cap-breadcrumbs ol {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
+.cap-breadcrumbs .breadcrumb-item {
+  padding-left: 0;
 }
-.cap-breadcrumbs li {
+
+.cap-breadcrumbs .breadcrumb-item + .breadcrumb-item::before {
+  display: none;
+}
+
+.cap-breadcrumbs .cap-separator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
+  margin: 0 0.5rem;
 }
-.cap-breadcrumbs svg { flex-shrink: 0; color: #9ca3af; }
-.cap-breadcrumbs a { color: #2d6045; text-decoration: none; }
-.cap-breadcrumbs a:hover { text-decoration: underline; }
-.cap-breadcrumbs [aria-current] { color: #263044; font-weight: 600; }
-.cap-breadcrumbs a:focus-visible { outline: 2px solid #2d6045; outline-offset: 3px; }
+
+.cap-breadcrumbs .cap-separator.pipe {
+  color: #cbd5e1;
+  font-weight: 300;
+  padding-bottom: 3px; 
+}
+
+.cap-breadcrumbs .cap-separator.chevron {
+  color: #94a3b8;
+}
+
+.cap-breadcrumbs .cap-root {
+  color: #64748b;
+  font-weight: 300;
+  letter-spacing: 0.05rem;
+}
+
+.cap-breadcrumbs .cap-link {
+  color: #2d6045;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.cap-breadcrumbs .cap-link:hover {
+  color: #163324;
+  text-decoration: underline;
+  text-decoration-thickness:2px;
+}
+
+.cap-breadcrumbs .cap-current {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.cap-breadcrumbs a:focus-visible {
+  outline: 2px solid #2d6045;
+  outline-offset: 3px;
+  border-radius: 2px;
+}

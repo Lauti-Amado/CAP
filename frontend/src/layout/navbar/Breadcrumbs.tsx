@@ -1,56 +1,71 @@
+import { useLocation, Link } from 'react-router-dom';
+import { Breadcrumb } from 'react-bootstrap';
 import { ChevronRight } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import './Breadcrumbs.css';
 
-import './Breadcrumbs.css'
+const customNames: Record<string, string> = {
+  'home': 'HOME',
+  'clasificador': 'CLASIFICADOR',
+  'administrador': 'ADMINISTRADOR',
+};
 
-type BreadcrumbItem = { label: string; to?: string };
-
-const inicio = { label: 'Seleccionar carrera', to: '/seleccionar-carrera' };
-const clasificacion = { label: 'Clasificación carrera', to: '/dashboard-clasificacion' };
-
-// Jerarquía de las pantallas existentes, independiente del historial de navegación.
-const breadcrumbsPorRuta: Record<string, BreadcrumbItem[]> = {
-  '/seleccionar-carrera': [{ label: inicio.label }],
-  '/carreras': [inicio, { label: 'Carreras' }],
-  '/dashboard-clasificacion': [{ label: 'CAP Gestión' }, { label: clasificacion.label }],
-  '/clasificacion-tiempo-real': [{ label: 'CAP Gestión' }, clasificacion, { label: 'Tiempo real' }],
-  '/clasificacion-manual/corredor': [{ label: 'CAP Gestión' }, { label: 'Buscar corredor', to: '/dashboard-clasificacion' }, { label: 'Clasificación Manual - Detalle corredor' }],
-  '/resultados': [inicio, { label: 'Resultados' }],
-  '/entrega-kits': [inicio, { label: 'Entrega de kits' }],
-  '/grand-prix': [inicio, { label: 'Grand Prix' }],
-  '/certificados': [inicio, { label: 'Certificados' }],
-  '/dashboard': [{ label: 'CAP Gestión' }, { label: 'Dashboard' }],
-  '/administracion': [{ label: 'CAP Gestión' }, { label: 'Administración' }, { label: 'Panel Principal' },],
-  '/administracion/usuarios/rol': [{ label: 'CAP Gestión' }, { label: 'Administración', to: '/administracion' }, { label: 'Roles y Permisos' },],
-  '/administracion/categorias': [{ label: 'CAP Gestión' }, { label: 'Panel de administración', to: '/administracion' }, { label: 'Clasificación carrera' },],
-  '/administracion/categorias/nueva': [{ label: 'CAP Gestión' }, { label: 'Clasificación', to: '/administracion/categorias' }, { label: 'Crear Clasificación' },],                                                                  // NUEVO
-  '/administracion/categorias/editar': [{ label: 'CAP Gestión' }, { label: 'Clasificación', to: '/administracion/categorias' }, { label: 'Editar Clasificación' },], 
+const formatearNombreRuta = (segment: string) => {
+  if (customNames[segment]) {
+    return customNames[segment];
+  }
+  return segment
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 export default function Breadcrumbs() {
   const { pathname } = useLocation();
+  const pathSegments = pathname.split('/').filter(segment => segment !== '');
 
-  const ruta = (pathname.replace(/\/+$/, '') || '/')
-  .replace(/\/usuarios\/[^/]+\/rol$/, '/usuarios/rol')
-  .replace(/\/categorias\/[^/]+\/editar$/, '/categorias/editar')
-  .replace(/\/clasificacion-manual\/corredor\/[^/]+$/, '/clasificacion-manual/corredor');
-  
-  const items = breadcrumbsPorRuta[ruta] ?? [];
+  if (pathSegments.length === 0) {
+    return null;
+  }
+
+  const rootSections = ['home', 'clasificador', 'administrador'];
 
   return (
-    <nav className="cap-breadcrumbs" aria-label="Ruta de navegación">
-      <ol>
-        {items.map((item, index) => (
-          <li key={item.label}>
-            {index > 0 && <ChevronRight size={16} aria-hidden="true" />}
-            {item.to ? (
-              <Link to={item.to}>{item.label}</Link>
+    <Breadcrumb 
+      className="cap-breadcrumbs" 
+      listProps={{ className: 'd-flex align-items-center m-0 p-0 fs-5' }}
+    >
+      {pathSegments.map((segment, index) => {
+        const isLast = index === pathSegments.length - 1;
+        const isRoot = rootSections.includes(segment.toLowerCase());
+        const isClickable = !isRoot && !isLast;
+        const path = `/${pathSegments.slice(0, index + 1).join('/')}`;
+
+        return (
+          <li 
+            key={path} 
+            className={`breadcrumb-item d-flex align-items-center lh-1 ${isLast ? 'active' : ''}`}
+            aria-current={isLast ? 'page' : undefined}
+          >
+            {index > 0 && (
+              index === 1 ? (
+                <span className="cap-separator pipe">|</span>
+              ) : (
+                <ChevronRight className="cap-separator chevron" size={18} strokeWidth={2.5} />
+              )
+            )}
+
+            {isClickable ? (
+              <Link to={path} className="cap-link d-flex align-items-center lh-1">
+                {formatearNombreRuta(segment)}
+              </Link>
             ) : (
-              <span aria-current="page">{item.label}</span>
+              <span className={`${isRoot ? 'cap-root' : 'cap-current'} d-flex align-items-center lh-1`}>
+                {formatearNombreRuta(segment)}
+              </span>
             )}
           </li>
-        ))}
-      </ol>
-    </nav>
+        );
+      })}
+    </Breadcrumb>
   );
 }

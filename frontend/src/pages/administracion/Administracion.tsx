@@ -160,7 +160,7 @@ function Administracion() {
                         type="button"
                         className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
                         aria-label={`Editar rol de ${usuario.nombre}`}
-                        onClick={() => navigate(`/administrador/configuraciones/usuarios/${usuario.id}/rol`)}
+                        onClick={() => navigate(`/administrador/configuraciones/${usuario.id}`)}
                       >
                         <Pencil size={13} aria-hidden="true" />
                       </button>

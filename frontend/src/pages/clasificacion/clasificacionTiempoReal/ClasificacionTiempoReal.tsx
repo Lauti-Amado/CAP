@@ -50,7 +50,7 @@ const ClasificacionTiempoReal: React.FC = () => {
     if (seleccion.length === 0) return;
     const [primero, ...resto] = seleccion;
     const cola = resto.length > 0 ? `?siguientes=${resto.map((llegada) => llegada.id).join(',')}` : '';
-    navigate(`/clasificador/clasificaciones/modificar/${primero.id}${cola}`);
+    navigate(`/clasificador/clasificaciones/${primero.id}${cola}`);
   };
 
   const handleDescalificar = () => setCorredoresADescalificar(descalificables.map(aResumen));

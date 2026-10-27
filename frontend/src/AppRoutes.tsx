@@ -53,9 +53,9 @@ export default function AppRoutes() {
             {/*Dashboard clasificacion*/}
             <Route path="clasificaciones">
               <Route index element={<DashboardClasificacion />} />
-              <Route path="modificar/:id" element={<ModClasifCorredor />} />
+              <Route path=":id" element={<ModClasifCorredor />} />
               <Route path='tiempo-real' element={<ClasificacionTiempoReal />} />
-              <Route path="manual/corredor/:dni" element={<ClasificacionManualDetalle />} />
+              <Route path="manual/:dni" element={<ClasificacionManualDetalle />} />
             </Route>
 
             {/*Resultados*/}
@@ -76,9 +76,9 @@ export default function AppRoutes() {
               <Route index element={<Administracion />} />
               <Route path="categorias" element={<ConfiguracionClasificaciones />} />
               <Route path="categorias/nueva" element={<NuevaCategoria />} />
-              <Route path="categorias/:id/editar" element={<NuevaCategoria />} />
+              <Route path="categorias/:id" element={<NuevaCategoria />} />
               <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
-              <Route path="usuarios/:id/rol" element={<RolesPermisos />} />
+              <Route path=":id" element={<RolesPermisos />} />
             </Route>
           </Route>
           
