@@ -41,7 +41,7 @@
   background: transparent;
   color: #087f3f;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
   text-decoration: none;
@@ -119,7 +119,7 @@
   width: 100%;
   margin: 0;
   color: #172033;
-  font-size: 17px;
+  font-size: 21px;
   line-height: 1.35;
   font-weight: 700;
   text-align: center;
@@ -129,7 +129,7 @@
 .detalle-corredor__dni {
   margin: 5px 0 14px;
   color: #4f5a54;
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -143,7 +143,7 @@
 .detalle-corredor__datos {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 14px;
   width: 100%;
 }
 
@@ -157,14 +157,14 @@
 .detalle-corredor__datos span {
   flex-shrink: 0;
   color: #68736d;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
 .detalle-corredor__datos strong {
   min-width: 0;
   color: #172033;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.5;
   text-align: right;
@@ -198,7 +198,7 @@
 
 .detalle-corredor__titulo-pago > strong {
   color: #172033;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -216,7 +216,7 @@
 
 .detalle-corredor__estado > span {
   color: #344054;
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .detalle-corredor__estado .badge {
@@ -225,9 +225,9 @@
   justify-content: center;
   gap: 3px;
   flex-shrink: 0;
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: 20px;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -249,7 +249,7 @@
 }
 
 .detalle-corredor__kit-header {
-  min-height: 43px;
+  min-height: 48px;
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -257,7 +257,7 @@
   gap: 7px;
   color: #fff;
   text-align: center;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -282,7 +282,7 @@
   margin-bottom: 17px;
   color: #68736d;
   text-align: center;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.7px;
 }
@@ -313,7 +313,7 @@
   display: block;
   margin: 0 0 11px;
   color: #59635e;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 500;
   text-align: center;
 }
@@ -329,7 +329,7 @@
 .detalle-corredor__dorsal > span {
   flex-shrink: 0;
   color: #087f3f;
-  font-size: 29px;
+  font-size: 32px;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -344,7 +344,7 @@
   box-shadow: none;
   color: #087f3f;
   font-family: inherit;
-  font-size: clamp(23px, 2.4vw, 30px);
+  font-size: clamp(26px, 2.8vw, 34px);
   font-weight: 700;
   line-height: 1.2;
   text-align: left;
@@ -402,7 +402,7 @@
 .detalle-corredor__aviso p {
   margin: 0;
   color: #59635e;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -418,7 +418,7 @@
   border-radius: 6px;
   background-color: #ecfdf3;
   color: #087f3f;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -430,8 +430,8 @@
 
 .detalle-corredor__entregar.btn-success {
   align-self: center;
-  min-width: 145px;
-  min-height: 43px;
+  min-width: 180px;
+  min-height: 48px;
   margin-top: auto;
   margin-bottom: 4px;
   padding: 11px 20px;
@@ -444,7 +444,7 @@
   background-color: #20c968;
   color: #07351e;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   box-shadow: none;
   transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -538,18 +538,18 @@
   }
 
   .detalle-corredor__datos span {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .detalle-corredor__datos strong {
-    font-size: 9px;
+    font-size: 13px;
   }
 }
 
 /* ===== Clasificación manual - detalle ===== */
 .detalle-corredor__valor-grande {
   color: #087f3f;
-  font-size: clamp(23px, 2.4vw, 30px);
+  font-size: clamp(26px, 2.8vw, 34px);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -565,6 +565,7 @@
 }
 
 .detalle-corredor__puesto.form-control {
-  max-width: 200px;
+  max-width: 240px;
   font-weight: 700;
+  font-size: 22px;
 }
