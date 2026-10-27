@@ -130,7 +130,7 @@ const DashboardClasificacion = () => {
             variant="link"
             size="sm"
             className="dc-link-accion"
-            onClick={() => navigate(`/clasificador/clasificaciones/modificar/${p.id}`)}
+            onClick={() => navigate(`/clasificador/clasificaciones/${p.id}`)}
           >
             Ver clasificación <ArrowRight size={12} aria-hidden="true" />
           </Button>
