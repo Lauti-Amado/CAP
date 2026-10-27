@@ -33,7 +33,7 @@ function NuevaCategoria() {
     ...(existente ? { nombre: existente.nombre, descripcion: existente.descripcion } : {}),
   })
 
-  const volver = () => navigate('/administracion/categorias')
+  const volver = () => navigate('/administrador/configuraciones/categorias')
 
   if (editando && !existente) {
     return (

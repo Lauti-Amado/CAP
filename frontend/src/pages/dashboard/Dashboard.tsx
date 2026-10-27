@@ -10,9 +10,9 @@ import './Dashboard.css'
 import { dashboardMock } from './dashboardMock'
 
 const quickActions = [
-  { label: 'Ver carreras', icon: Footprints, path: '/carreras' },
-  { label: 'Ver Resultados', icon: BarChart3, path: '/resultados' },
-  { label: 'Grand Prix', icon: Trophy, path: '/grand-prix' },
+  { label: 'Ver carreras', icon: Footprints, path: '/administrador/carreras' },
+  { label: 'Ver Resultados', icon: BarChart3, path: '/clasificador/resultados' },
+  { label: 'Grand Prix', icon: Trophy, path: '/clasificador/grand-prix' },
 ]
 
 const activityIcons = {

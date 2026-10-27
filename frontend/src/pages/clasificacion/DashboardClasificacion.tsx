@@ -130,7 +130,7 @@ const DashboardClasificacion = () => {
             variant="link"
             size="sm"
             className="dc-link-accion"
-            onClick={() => navigate(`/modificar-clasificacion/${p.id}`)}
+            onClick={() => navigate(`/clasificador/clasificaciones/modificar/${p.id}`)}
           >
             Ver clasificación <ArrowRight size={12} aria-hidden="true" />
           </Button>
@@ -299,7 +299,7 @@ const DashboardClasificacion = () => {
                 <Button
                   variant="success"
                   className="dc-accion-principal d-flex align-items-center gap-3"
-                  onClick={() => navigate('/clasificacion-tiempo-real')}
+                  onClick={() => navigate('/clasificador/clasificaciones/tiempo-real')}
                 >
                   <span className="dc-accion-icono">
                     <Clock size={16} aria-hidden="true" />

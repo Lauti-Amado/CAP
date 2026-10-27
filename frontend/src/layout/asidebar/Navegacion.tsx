@@ -1,4 +1,4 @@
-import { Archive, BarChart3, Footprints, LayoutDashboard, Settings, Timer, Trophy } from 'lucide-react';
+import { Archive, BarChart3, Flag, Footprints, LayoutDashboard, Settings, Timer, Trophy } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Nav, Button } from 'react-bootstrap';
 import type { LucideIcon } from 'lucide-react';
@@ -15,28 +15,29 @@ export default function Navegacion() {
     const navigation: SeccionNavegacion[] = [
     {
         label: 'HOME',
-        items: [{ label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' }],
+        items: [
+            { label: 'Dashboard', icon: LayoutDashboard, path: '/home' }
+        ]
     },
     {
-        label: 'CLASIFICACIÓN',
+        label: 'CLASIFICADOR',
         items: [
-            { label: 'Entrega de Kits', icon: Archive, path: '/entrega-kits' },
-            {
-                label: 'Clasificación',
-                icon: Timer,
-                path: '/dashboard-clasificacion',
-                relacionadas: ['/clasificacion-tiempo-real', '/modificar-clasificacion', '/clasificacion-manual'],
-            },
-            { label: 'Resultados', icon: BarChart3, path: '/resultados' },
-            { label: 'Grand Prix', icon: Trophy, path: '/grand-prix' },
-        ],
+            { label: 'Seleccionar carrera', icon: Flag, path: '/clasificador/seleccionar-carrera' },
+            { label: 'Entrega de Kits', icon: Archive, path: '/clasificador/entrega-kits',
+                relacionadas: ['/clasificador/entrega-kits/corredor', '/clasificador/entrega-kits/inscripciones', '/clasificador/entrega-kits/inscripciones/nueva', '/clasificador/entrega-kits/inscripciones/:id'] },
+            { label: 'Clasificaciones', icon: Timer, path: '/clasificador/clasificaciones',
+                relacionadas: ['/clasificador/clasificaciones/modificar', '/clasificador/clasificaciones/tiempo-real', '/clasificador/clasificaciones/manual/corredor'] },
+            { label: 'Resultados', icon: Trophy, path: '/clasificador/resultados' },
+            { label: 'Grand Prix', icon: BarChart3, path: '/clasificador/grand-prix' }
+        ]
     },
     {
-        label: 'ADMINISTRACIÓN',
+        label: 'ADMINISTRADOR',
         items: [
-            { label: 'Carreras', icon: Footprints, path: '/carreras' },
-            { label: 'Administración', icon: Settings, path: '/administracion', relacionadas: ['/certificados'] },
-        ],
+            { label: 'Carreras', icon: Footprints, path: '/administrador/carreras' },
+            { label: 'Configuraciones', icon: Settings, path: '/administrador/configuraciones', 
+                relacionadas: ['/administrador/configuraciones/categorias', '/administrador/configuraciones/certificados', '/administrador/configuraciones/usuarios'] }
+        ]
     },
 ];
 

@@ -24,10 +24,10 @@ type Atajo = {
 }
 
 const atajos: Atajo[] = [
-  { titulo: 'Categorías', descripcion: 'Clasificaciones de corredores.', icon: Shapes, path: '/administracion/categorias' },
+  { titulo: 'Categorías', descripcion: 'Clasificaciones de corredores.', icon: Shapes, path: '/administrador/configuraciones/categorias' },
   // TODO: navegar a la configuración RFID cuando exista
   { titulo: 'Configuración RFID', descripcion: 'Parámetros de cronometraje.', icon: Cpu },
-  { titulo: 'Certificados', descripcion: 'Plantillas de premiación.', icon: Award, path: '/certificados' },
+  { titulo: 'Certificados', descripcion: 'Plantillas de premiación.', icon: Award, path: '/administrador/configuraciones/certificados' },
 ]
 
 const claseRol: Record<RolUsuario, string> = {
@@ -160,7 +160,7 @@ function Administracion() {
                         type="button"
                         className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
                         aria-label={`Editar rol de ${usuario.nombre}`}
-                        onClick={() => navigate(`/administracion/usuarios/${usuario.id}/rol`)}
+                        onClick={() => navigate(`/administrador/configuraciones/usuarios/${usuario.id}/rol`)}
                       >
                         <Pencil size={13} aria-hidden="true" />
                       </button>

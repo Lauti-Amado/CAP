@@ -117,7 +117,7 @@ function Inscripciones() {
               aria-label="Ver detalle de inscripción"
               title="Ver detalle"
               onClick={() =>
-                navigate(`/entrega-kits/inscripciones/${inscripcion.id}`)
+                navigate(`/clasificador/entrega-kits/inscripciones/${inscripcion.id}`)
               }
             >
               <Eye size={13} />
@@ -139,7 +139,7 @@ function Inscripciones() {
             className="inscripciones__dar-kit"
             size="sm"
             onClick={() =>
-              navigate(`/entrega-kits/corredor/${inscripcion.dni}`)
+              navigate(`/clasificador/entrega-kits/corredor/${inscripcion.dni}`)
             }
           >
             Dar Kit
@@ -164,7 +164,7 @@ function Inscripciones() {
           type="button"
           className="inscripciones__nueva"
           onClick={() =>
-            navigate('/entrega-kits/inscripciones/nueva')
+            navigate('/clasificador/entrega-kits/inscripciones/nueva')
           }
         >
           <UserRoundPlus size={15} />

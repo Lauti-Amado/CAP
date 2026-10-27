@@ -30,7 +30,7 @@ function DetalleInscripcion() {
     )
 
   const volverAInscripciones = () => {
-    navigate('/entrega-kits/inscripciones')
+    navigate('/clasificador/entrega-kits/inscripciones')
   }
 
   if (!inscripcion) {

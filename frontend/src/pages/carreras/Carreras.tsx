@@ -110,11 +110,7 @@ function Carreras() {
   }, [busqueda, filtroAnio, filtroEstado])
 
   const verCarrera = (id: number) => {
-    navigate(`/carreras/${id}`)
-  }
-
-  const modificarCarrera = (id: number) => {
-    navigate(`/dashboard-clasificacion-modificar/${id}`)
+    navigate(`/administrador/carreras/${id}`)
   }
 
   const verRanking = (id: number) => {
@@ -312,15 +308,7 @@ function Carreras() {
                             🏆
                           </Button>
                         ) : (
-                          <Button
-                            type="button"
-                            variant="light"
-                            onClick={() => modificarCarrera(carrera.id)}
-                            title="Modificar clasificación"
-                            aria-label={`Modificar clasificación de ${carrera.nombre}`}
-                          >
-                            ✏️
-                          </Button>
+                          <></>
                         )}
                       </div>
                     ),

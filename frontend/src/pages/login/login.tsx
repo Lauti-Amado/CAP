@@ -39,7 +39,7 @@ export default function Login() {
         if (!usuario) return;
 
         if (usuario.roles.length > 0) {
-            navigate('/dashboard', { replace: true });
+            navigate('/home', { replace: true });
         } else {
             setErrorApi("No tienes permiso para estar aquí!");
         }
