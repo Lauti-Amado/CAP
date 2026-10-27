@@ -56,3 +56,32 @@
   border-color: #087f3f;
   box-shadow: 0 0 0 0.2rem rgba(8, 127, 63, 0.15);
 }
+
+/* ===== Versión dentro del modal: más grande ===== */
+.buscar-corredor-modal__dialog {
+  --bs-modal-width: 480px;
+}
+
+.buscar-corredor-modal .buscar-form__icono {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 16px;
+}
+
+.buscar-corredor-modal .buscar-form__titulo { font-size: 1.5rem; }
+
+.buscar-corredor-modal .buscar-form__descripcion {
+  max-width: 360px;
+  margin: 8px 0 22px;
+  font-size: 0.9375rem;
+}
+
+.buscar-corredor-modal .buscar-form .form-control,
+.buscar-corredor-modal .buscar-form .btn,
+.buscar-corredor-modal .buscar-form .input-group-text {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  font-size: 1rem;
+}
+
+.buscar-corredor-modal .buscar-form__error { font-size: 0.875rem; margin-top: 8px; }
