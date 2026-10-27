@@ -1,29 +1,28 @@
-export type Distancia = {
-  kilometraje: number
-  tipoDistancia: string
+type EstadoCarrera = "Creada" | "Publicada" | "Activa" | "Entrega_kits" | "En_curso" | "Finalizada" | "Cancelada"
+type TipoDistancia = "Participativa" | "Competitiva"
+
+//este Carrera type es igual a como lo manda en el payload el backend
+export type Carrera = {
+  id: string;
+  estado: EstadoCarrera;
+  nombre: string;
+  fechaHoraCarrera: Date;
+  fechaHoraEntregaKits: Date;
+  imagenUrl: string;
+  descripcion: string;
+  participantesMax: number;
+  lugar: Lugar;
+
+  distancias: Distancia[]
 }
 
-export type DistanciaCarrera = {
-  id?: number
-  precioDistancia?: number
-  distancia: Distancia
+export type Distancia = {
+  kilometraje: number;
+  tipoDistancia: TipoDistancia;
+  precio: number;
 }
 
 export type Lugar = {
-  nombre: string
-  localidad: {
-    nombre: string
-  }
-}
-
-export type Carrera = {
-  id: number
-  nombre: string
-  fechaHora: string
-  imagenUrl: string
-  descripcion: string
-  cupoMax: number
-  estado: string
-  lugar: Lugar
-  distanciaCarrera: DistanciaCarrera[]
+  nombre: string;
+  localidad: string;
 }
