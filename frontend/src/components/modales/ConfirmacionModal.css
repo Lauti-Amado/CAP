@@ -1,6 +1,6 @@
 /* Modal de confirmación (react-bootstrap) */
 .confirmacion-modal__dialog {
-  max-width: 340px;
+  --bs-modal-width: 520px; 
 }
 
 .confirmacion-modal.modal-content {
@@ -14,11 +14,12 @@
 .confirmacion-modal__encabezado {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 20px 24px;
 }
 
 .confirmacion-modal__encabezado--destacado {
+  align-items: center;
   background: #fff1f0;
   border-bottom: 1px solid #fde3e1;
 }
@@ -38,8 +39,8 @@
 }
 
 .confirmacion-modal__encabezado--destacado .confirmacion-modal__icono {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: #fee2e2;
 }
@@ -51,25 +52,29 @@
 
 .confirmacion-modal__textos h2 {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.3;
   color: #172033;
 }
 
-.confirmacion-modal__textos p {
-  margin: 4px 0 0;
-  font-size: 0.6875rem;
+.confirmacion-modal__descripcion {
+  margin: 0;
+  font-size: 1rem;
   color: #59635e;
+}
+
+.confirmacion-modal__descripcion + * {
+  margin-top: 16px;
 }
 
 /* Cuerpo y pie */
 .confirmacion-modal__cuerpo {
-  padding: 14px 16px;
+  padding: 20px 24px;
 }
 
 .confirmacion-modal__pie {
-  padding: 10px 16px;
+  padding: 14px 24px;
   background: #eef1ff;
   border-top: 0;
   justify-content: flex-end;

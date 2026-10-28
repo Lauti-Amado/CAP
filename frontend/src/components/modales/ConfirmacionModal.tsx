@@ -44,12 +44,11 @@ function ConfirmacionModal({
     >
       <div className={`confirmacion-modal__encabezado confirmacion-modal__encabezado--${encabezado}`}>
         <span className="confirmacion-modal__icono">
-          <AlertTriangle size={encabezado === 'destacado' ? 18 : 14} aria-hidden="true" />
+          <AlertTriangle size={encabezado === 'destacado' ? 22 : 18} aria-hidden="true" />
         </span>
 
         <div className="confirmacion-modal__textos">
           <h2 id="confirmacion-modal-titulo">{titulo}</h2>
-          {descripcion && <p>{descripcion}</p>}
         </div>
 
         {encabezado === 'simple' && (
@@ -57,16 +56,20 @@ function ConfirmacionModal({
         )}
       </div>
 
-      {children && <Modal.Body className="confirmacion-modal__cuerpo">{children}</Modal.Body>}
+      {(descripcion || children) && (
+        <Modal.Body className="confirmacion-modal__cuerpo">
+          {descripcion && <p className="confirmacion-modal__descripcion">{descripcion}</p>}
+          {children}
+        </Modal.Body>
+      )}
 
       <Modal.Footer className="confirmacion-modal__pie">
-        <Button variant="outline-secondary" size="sm" disabled={cargando} onClick={onCancelar}>
+        <Button variant="outline-secondary" disabled={cargando} onClick={onCancelar}>
           Cancelar
         </Button>
 
         <Button
           variant="danger"
-          size="sm"
           className={`confirmacion-modal__confirmar confirmacion-modal__confirmar--${variante}`}
           disabled={cargando}
           onClick={onConfirmar}

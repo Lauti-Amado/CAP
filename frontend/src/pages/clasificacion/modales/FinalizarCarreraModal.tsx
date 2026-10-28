@@ -27,16 +27,16 @@ function FinalizarCarreraModal({
       variante="danger-oscuro"
       titulo="¿Desea finalizar la carrera?"
       textoConfirmar="Finalizar carrera"
-      iconoConfirmar={<Flag size={13} aria-hidden="true" />}
+      iconoConfirmar={<Flag size={16} aria-hidden="true" />}
       onConfirmar={onConfirmar}
       onCancelar={onCancelar}
     >
-      <p className="small text-secondary mb-3">
+      <p className="text-secondary mb-3">
         Al finalizar la carrera se detendrá el cronómetro oficial y la carrera quedará marcada como finalizada.
       </p>
 
       <section className="modal-resumen">
-        <div className="row g-2">
+        <div className="row g-3">
           <div className="col-6">
             <div className="modal-resumen__etiqueta">Carrera</div>
             <div className="modal-resumen__valor">{nombreCarrera}</div>
@@ -53,7 +53,7 @@ function FinalizarCarreraModal({
       </section>
 
       <div className="modal-advertencia" role="alert">
-        <AlertTriangle size={14} className="flex-shrink-0" aria-hidden="true" />
+        <AlertTriangle size={20} className="flex-shrink-0" aria-hidden="true" />
         <div>
           <strong className="d-block">Advertencia</strong>
           Esta acción finalizará el tiempo oficial de la carrera.
