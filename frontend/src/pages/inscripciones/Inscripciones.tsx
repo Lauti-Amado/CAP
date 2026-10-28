@@ -1,6 +1,6 @@
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Container, Form, Row, Col } from 'react-bootstrap'
 import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
 import './Inscripciones.css'
@@ -20,6 +20,7 @@ function Inscripciones() {
   const [paginaActual, setPaginaActual] = useState(1)
 
   const navigate = useNavigate()
+  const { nombreCarrera } = useParams();
 
   const filtros: FiltrosInscripciones = {
     dni,
@@ -117,7 +118,7 @@ function Inscripciones() {
               aria-label="Ver detalle de inscripción"
               title="Ver detalle"
               onClick={() =>
-                navigate(`/clasificador/entrega-kits/inscripciones/${inscripcion.id}`)
+                navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/${inscripcion.id}`)
               }
             >
               <Eye size={13} />
@@ -139,7 +140,7 @@ function Inscripciones() {
             className="inscripciones__dar-kit"
             size="sm"
             onClick={() =>
-              navigate(`/clasificador/entrega-kits/corredor/${inscripcion.dni}`)
+              navigate(`/clasificador/entrega-kits/${nombreCarrera}/corredor/${inscripcion.dni}`)
             }
           >
             Dar Kit
@@ -164,7 +165,7 @@ function Inscripciones() {
           type="button"
           className="inscripciones__nueva"
           onClick={() =>
-            navigate('/clasificador/entrega-kits/inscripciones/nueva')
+            navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)
           }
         >
           <UserRoundPlus size={15} />

@@ -1,9 +1,9 @@
-import type { PayloadToken } from "../dtos/usuario.dto";
+import type { TokenPayload } from "../dtos/usuario.dto";
 
 declare global {
     namespace Express {
         interface Request {
-            usuario?: PayloadToken;
+            usuario?: TokenPayload;
         }
     }
 }

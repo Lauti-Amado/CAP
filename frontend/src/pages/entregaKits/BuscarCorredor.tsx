@@ -1,6 +1,6 @@
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Search, PackageCheck, Flag } from 'lucide-react'
 import { Container, Card, Button, Form, Badge } from 'react-bootstrap'
 import './BuscarCorredor.css'
@@ -19,10 +19,11 @@ function BuscarCorredor() {
   const [dni, setDni] = useState('')
   const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null)
   const [mostrarNoEncontrado, setMostrarNoEncontrado] = useState(false)
-
+  
   const carreraActiva = carreraActivaMock
   const ultimasEntregas = ultimasEntregasMock
   const navigate = useNavigate()
+  const { nombreCarrera } = useParams();
 
   const buscarCorredor = () => {
     const dniIngresado = dni.trim()
@@ -41,7 +42,7 @@ function BuscarCorredor() {
     )
 
     if (corredor) {
-      navigate(`/clasificador/entrega-kits/corredor/${corredor.dni}`)
+      navigate(`/clasificador/entrega-kits/${nombreCarrera}/${corredor.dni}`)
       return
     }
 
@@ -75,7 +76,7 @@ function BuscarCorredor() {
         <Button
           type="button"
           variant="success"
-          onClick={() => navigate('/clasificador/entrega-kits/inscripciones')}
+          onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)}
         >
           Ingresar a lista de inscripciones
         </Button>
@@ -132,7 +133,7 @@ function BuscarCorredor() {
           dni={dni}
           onInscribir={() => {
             navigate(
-              `/clasificador/entrega-kits/inscripciones/nueva?dni=${encodeURIComponent(
+              `/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva?dni=${encodeURIComponent(
                 dni.trim()
               )}`
             )

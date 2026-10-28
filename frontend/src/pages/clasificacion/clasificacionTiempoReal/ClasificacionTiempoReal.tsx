@@ -1,7 +1,7 @@
 //frontend/src/pages/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal.tsx
 import React, { useState } from 'react';
 import './ClasificacionTiempoReal.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
 import { Layers, Pencil, Search, UserX, Wifi } from 'lucide-react';
 import { Tabla, type Columna } from '../../../components/tabla/Tabla';
@@ -28,6 +28,7 @@ const resumenMock = { llegadas: 452, pendientes: 1048 };
 
 const ClasificacionTiempoReal: React.FC = () => {
   const navigate = useNavigate();
+  const { nombreCarrera } = useParams();
   const { estado, transcurrido } = useCronometroCarrera();
 
   const [llegadas, setLlegadas] = useState<LlegadaAtleta[]>(llegadasMock);
@@ -50,7 +51,7 @@ const ClasificacionTiempoReal: React.FC = () => {
     if (seleccion.length === 0) return;
     const [primero, ...resto] = seleccion;
     const cola = resto.length > 0 ? `?siguientes=${resto.map((llegada) => llegada.id).join(',')}` : '';
-    navigate(`/clasificador/clasificaciones/${primero.id}${cola}`);
+    navigate(`/clasificador/clasificaciones/${nombreCarrera}/${primero.id}${cola}`);
   };
 
   const handleDescalificar = () => setCorredoresADescalificar(descalificables.map(aResumen));
@@ -134,7 +135,7 @@ const ClasificacionTiempoReal: React.FC = () => {
         <header className="mb-3">
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
             <h1 className="rt-titulo">Clasificación de la carrera Tres Ciudades</h1>
-            <Button variant="outline-secondary" size="sm" onClick={() => navigate('/clasificador/clasificaciones')}>
+            <Button variant="outline-secondary" size="sm" onClick={() => navigate(`/clasificador/clasificaciones/${nombreCarrera}`)}>
               Volver a Dashboard de Clasificación
             </Button>
           </div>

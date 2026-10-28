@@ -1,5 +1,5 @@
 //frontend/src/pages/clasificacion/modales/CargaManualModal.tsx
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import BuscarCorredorModal from '../../../components/corredor/BuscarCorredorModal'
 import { corredoresClasificacionMock } from '../corredoresClasificacionMock'
 import { llegadasMock } from '../llegadasMock'
@@ -12,6 +12,7 @@ type CargaManualModalProps = {
 
 function CargaManualModal({ show, onCerrar }: CargaManualModalProps) {
   const navigate = useNavigate()
+  const { nombreCarrera } = useParams();
 
   // Devuelve un mensaje de error, o null si encontró al corredor
   const buscar = (dni: string): string | null => {
@@ -28,7 +29,7 @@ function CargaManualModal({ show, onCerrar }: CargaManualModalProps) {
     }
 
     onCerrar()
-    navigate(`/clasificador/clasificaciones/manual/${dniBuscado}`)
+    navigate(`/clasificador/clasificaciones/${nombreCarrera}/manual/${dniBuscado}`)
     return null
   }
 

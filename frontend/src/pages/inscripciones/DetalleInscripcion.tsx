@@ -21,6 +21,7 @@ import { inscripcionDetalleMock } from './detalleInscripcionMock'
 function DetalleInscripcion() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { nombreCarrera } = useParams();
 
   // MOCK TEMPORAL
   // TODO BACKEND: reemplazar por GET /api/inscripciones/{id}
@@ -30,7 +31,7 @@ function DetalleInscripcion() {
     )
 
   const volverAInscripciones = () => {
-    navigate('/clasificador/entrega-kits/inscripciones')
+    navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
 
   if (!inscripcion) {

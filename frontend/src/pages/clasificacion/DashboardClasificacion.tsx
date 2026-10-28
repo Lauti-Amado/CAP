@@ -1,6 +1,6 @@
 //frontend/src/pages/clasificacion/DashboardClasificacion.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
 import { AlertTriangle, ArrowRight, CalendarDays, ChevronRight, Clock, Flag, Footprints, MapPin, Pencil, Play, RotateCcw, Ruler, Search, Square, Table as IconoTabla, Users,} from 'lucide-react';
 import './DashboardClasificacion.css';
@@ -43,6 +43,7 @@ const formatear = (numero: number) => numero.toLocaleString('es-AR');
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
+  const { nombreCarrera } = useParams();
   //const { tieneRol } = useAuth();
   //const esAdministrador = tieneRol('Administrador'); para cuando el iniciar y finalizar sea solo admin 
   const { estado, transcurrido, iniciar, finalizar, reiniciar } = useCronometroCarrera();
@@ -130,7 +131,7 @@ const DashboardClasificacion = () => {
             variant="link"
             size="sm"
             className="dc-link-accion"
-            onClick={() => navigate(`/clasificador/clasificaciones/${p.id}`)}
+            onClick={() => navigate(`/clasificador/clasificaciones/${nombreCarrera}/${p.id}`)}
           >
             Ver clasificación <ArrowRight size={12} aria-hidden="true" />
           </Button>
@@ -299,7 +300,7 @@ const DashboardClasificacion = () => {
                 <Button
                   variant="success"
                   className="dc-accion-principal d-flex align-items-center gap-3"
-                  onClick={() => navigate('/clasificador/clasificaciones/tiempo-real')}
+                  onClick={() => navigate(`/clasificador/clasificaciones/${nombreCarrera}/tiempo-real`)}
                 >
                   <span className="dc-accion-icono">
                     <Clock size={16} aria-hidden="true" />
