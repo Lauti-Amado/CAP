@@ -1,8 +1,12 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
+import { CarreraProvider } from './context/CarreraContext';
+import { SeleccionarCarreraProvider } from './context/SeleccionarCarreraContext';
 
 import MainLayout from './layout/MainLayout';
+import { PrivateRoute } from './layout/PrivateRoute';
+
 import Login from './pages/login/login';
 import SeleccionarCarrera from './pages/seleccionarCarrera/seleccionarCarrera';
 import DashboardClasificacion from './pages/clasificacion/DashboardClasificacion';
@@ -32,56 +36,76 @@ export default function AppRoutes() {
 
         <Route path='/' element={<Login />} />
 
-        <Route element={<MainLayout />}>
+        <Route element={<PrivateRoute roles={["Administrador", "Clasificador"]} />}>
+          <Route element={<CarreraProvider />}>
+            <Route element={<MainLayout />}>
 
-          {/*HOME*/}
-          <Route path='home' element={<Dashboard />} />
+              {/*HOME------------------------------------*/}
+              <Route path='home' element={<Dashboard />} />
 
-          {/*CLASIFICADOR*/}
-          <Route path='clasificador'>
-            <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
+              {/*CLASIFICADOR----------------------------*/}
+              <Route path='clasificador'>
 
-            {/*Entrega kits*/}
-            <Route path='entrega-kits'>
-              <Route index element={<BuscarCorredor />} />
-              <Route path="corredor/:dni" element={<DetalleCorredor />} />
-              <Route path="inscripciones" element={<Inscripciones />} />
-              <Route path="inscripciones/nueva" element={<NuevaInscripcion />} />
-              <Route path="inscripciones/:id" element={<DetalleInscripcion />} />
+                {/*Entrega de kits*/}
+                <Route path="entrega-kits" element={<SeleccionarCarreraProvider />}>
+                  <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
+                  <Route path=':nombreCarrera'>
+                    <Route index element={<Navigate to="buscar-corredor" replace />} />
+
+                    <Route path="buscar-corredor" element={<BuscarCorredor />} />
+                    <Route path=":dni" element={<DetalleCorredor />} />
+                    <Route path="inscripciones" element={<Inscripciones />} />
+                    <Route path="inscripciones/nueva" element={<NuevaInscripcion />} />
+                    <Route path="inscripciones/:id" element={<DetalleInscripcion />} />
+                  </Route>
+                </Route>
+
+                {/*Clasificaciones*/}
+                <Route path="clasificaciones" element={<SeleccionarCarreraProvider />}>
+                  <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
+                  <Route path=':nombreCarrera'>
+                    <Route index element={<Navigate to="dashboard-clasificaciones" replace />} />
+
+                    <Route path="dashboard-clasificaciones" element={<DashboardClasificacion />} />
+                    <Route path=":id" element={<ModClasifCorredor />} />
+                    <Route path='tiempo-real' element={<ClasificacionTiempoReal />} />
+                    <Route path="manual/:dni" element={<ClasificacionManualDetalle />} />
+                  </Route>
+                </Route>
+
+                {/*Resultados*/}
+                <Route path="resultados" element={<SeleccionarCarreraProvider />}>
+                  <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
+                  <Route path=':nombreCarrera'>
+                    <Route index element={<Navigate to="resultado" replace />} />
+
+                    <Route path="resultado" element={<Resultados />} />
+                  </Route>
+                </Route>
+
+                {/*Grand prix*/}
+                <Route path="grand-prix" element={<GrandPrix />} />
+              </Route>
+
+              {/*ADMINISTRADOR-----------------------------*/}
+              <Route path='administrador'>
+                {/*Carreras*/}
+                <Route path="carreras" element={<Carreras />} />
+                <Route path="carreras/:id" element={<DetalleCarrera />} />
+
+                {/*Administracion*/}
+                <Route path='configuraciones'>
+                  <Route index element={<Administracion />} />
+                  <Route path="categorias" element={<ConfiguracionClasificaciones />} />
+                  <Route path="categorias/nueva" element={<NuevaCategoria />} />
+                  <Route path="categorias/:id" element={<NuevaCategoria />} />
+                  <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
+                  <Route path=":id" element={<RolesPermisos />} />
+                </Route>
+              </Route>
+
             </Route>
-
-            {/*Dashboard clasificacion*/}
-            <Route path="clasificaciones">
-              <Route index element={<DashboardClasificacion />} />
-              <Route path=":id" element={<ModClasifCorredor />} />
-              <Route path='tiempo-real' element={<ClasificacionTiempoReal />} />
-              <Route path="manual/:dni" element={<ClasificacionManualDetalle />} />
-            </Route>
-
-            {/*Resultados*/}
-            <Route path="resultados" element={<Resultados />} />
-
-            {/*Grand prix*/}
-            <Route path="grand-prix" element={<GrandPrix />} />
           </Route>
-
-          {/*ADMINISTRADOR*/}
-          <Route path='administrador'>
-            {/*Carreras*/}
-            <Route path="carreras" element={<Carreras />} />
-            <Route path="carreras/:id" element={<DetalleCarrera />} />
-
-            {/*Administracion*/}
-            <Route path='configuraciones'>
-              <Route index element={<Administracion />} />
-              <Route path="categorias" element={<ConfiguracionClasificaciones />} />
-              <Route path="categorias/nueva" element={<NuevaCategoria />} />
-              <Route path="categorias/:id" element={<NuevaCategoria />} />
-              <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
-              <Route path=":id" element={<RolesPermisos />} />
-            </Route>
-          </Route>
-          
         </Route>
 
       </Routes>

@@ -1,144 +1,156 @@
-import {useState} from 'react';
-import './SeleccionarCarrera.css';
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Alert, Spinner, Stack } from "react-bootstrap";
+
+import type { Carrera } from "../../types/carrera";
+import { useCarrera } from "../../context/CarreraContext";
+import { useSeleccionarCarrera } from "../../context/SeleccionarCarreraContext";
+
+import CarreraSeleccionCard from "./components/CarreraSeleccionCard";
+import CarreraFiltros from "./components/CarreraFiltros";
+import { ESTADOS_ORDENADOS, type EstadoCarrera } from "./components/carreraEstadoBadge";
+
+import "./seleccionarCarrera.css";
+
+const timestampDe = (carrera: Carrera) => new Date(carrera.fechaHoraCarrera).getTime();
+const anioDe = (carrera: Carrera) => new Date(carrera.fechaHoraCarrera).getFullYear();
+
+// Búsqueda sin distinguir mayúsculas ni tildes
+const normalizar = (texto: string) =>
+  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 const SeleccionarCarrera = () => {
+  const { cargando, error, getCarreras } = useCarrera();
+  const { carreraSeleccionada, seleccionarCarrera } = useSeleccionarCarrera();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
-  const [busqueda, setBusqueda] = useState('');
-  const [filtroAno, setFiltroAno] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('');
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroAnio, setFiltroAnio] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<EstadoCarrera | "">("");
+
+  const carreras = useMemo(() => getCarreras(), [getCarreras]);
+
+  // La carrera más reciente por fecha de realización, como acceso rápido
+  const carreraReciente = useMemo(
+    () =>
+      carreras.length > 0
+        ? carreras.reduce((a, b) => (timestampDe(b) > timestampDe(a) ? b : a))
+        : null,
+    [carreras]
+  );
+
+  const otrasCarreras = useMemo(
+    () => carreras.filter((c) => c.id !== carreraReciente?.id),
+    [carreras, carreraReciente]
+  );
+
+  const aniosDisponibles = useMemo(
+    () => [...new Set(otrasCarreras.map(anioDe))].sort((a, b) => b - a),
+    [otrasCarreras]
+  );
+
+  const estadosDisponibles = useMemo(
+    () => ESTADOS_ORDENADOS.filter((e) => otrasCarreras.some((c) => c.estado === e)),
+    [otrasCarreras]
+  );
+
+  const carrerasFiltradas = useMemo(() => {
+    const texto = normalizar(busqueda.trim());
+
+    return otrasCarreras
+      .filter((c) => !texto || normalizar(c.nombre).includes(texto))
+      .filter((c) => !filtroAnio || anioDe(c) === Number(filtroAnio))
+      .filter((c) => !filtroEstado || c.estado === filtroEstado)
+      .sort((a, b) => timestampDe(b) - timestampDe(a));
+  }, [otrasCarreras, busqueda, filtroAnio, filtroEstado]);
+
+  // Guarda la carrera y vuelve a la raíz de la sección: el provider
+  // redirige desde ahí a la carrera seleccionada.
+  const continuarConCarrera = (carrera: Carrera) => {
+    seleccionarCarrera(carrera);
+    const seccion = pathname.split("/")[2];
+    navigate(`/clasificador/${seccion}`);
+  };
+
+  if (cargando) {
+    return (
+      <div className="sc-page sc-estado">
+        <Spinner animation="border" role="status" />
+      </div>
+    );
+  }
 
   return (
-    <div className="layout-container">
-      
-      
-      <main className="main-content">
+    <div className="sc-page">
+      <header className="sc-header">
+        <h1>Seleccionar carrera</h1>
+        <p>Elija la carrera que desea gestionar para continuar con esta sección.</p>
+      </header>
 
-        {/* Contenido de la página */}
-        <div className="page-content">
-          <div className="page-header">
-            <h1>Seleccionar carrera</h1>
-            <p>Seleccione la carrera que desea gestionar.</p>
+      {error && (
+        <Alert variant="danger">
+          No se pudieron cargar las carreras.
+          {typeof error === "string" ? ` ${error}` : ""}
+        </Alert>
+      )}
+
+      {!error && carreras.length === 0 && (
+        <Alert variant="info">Todavía no hay carreras creadas.</Alert>
+      )}
+
+      {carreraReciente && (
+        <section className="sc-section">
+          <h2>Carrera más reciente</h2>
+          <CarreraSeleccionCard
+            destacada
+            carrera={carreraReciente}
+            seleccionada={carreraSeleccionada?.id === carreraReciente.id}
+            onSeleccionar={seleccionarCarrera}
+            onContinuar={continuarConCarrera}
+          />
+        </section>
+      )}
+
+      {otrasCarreras.length > 0 && (
+        <>
+          <div className="sc-divider">
+            <span>o seleccione otra carrera</span>
           </div>
 
-          {/* Sección Última Carrera */}
-          <section className="section-block">
-            <h2>Última carrera</h2>
-            <div className="race-card highlighted-card">
-              <div className="race-info">
-                <div className="race-header">
-                  <h3>CAP 10K 2026</h3>
-                  <span className="badge badge-gray">FINALIZADA</span>
-                </div>
-                <div className="race-details">
-                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg> 10 km</span>
-                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> 15 de septiembre de 2026</span>
-                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> La Plata</span>
-                </div>
-                <p className="race-description">Acceda rápidamente a la carrera más reciente disponible.</p>
-              </div>
-              <button className="btn btn-primary">Gestionar carrera <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+          <section className="sc-section">
+            <div className="sc-section-encabezado">
+              <h2>Otras carreras</h2>
+              <CarreraFiltros
+                busqueda={busqueda}
+                anio={filtroAnio}
+                estado={filtroEstado}
+                anios={aniosDisponibles}
+                estados={estadosDisponibles}
+                onBusquedaChange={setBusqueda}
+                onAnioChange={setFiltroAnio}
+                onEstadoChange={setFiltroEstado}
+              />
             </div>
+
+            {carrerasFiltradas.length === 0 ? (
+              <Alert variant="light">No se encontraron carreras con los filtros aplicados.</Alert>
+            ) : (
+              <Stack gap={3}>
+                {carrerasFiltradas.map((carrera) => (
+                  <CarreraSeleccionCard
+                    key={carrera.id}
+                    carrera={carrera}
+                    seleccionada={carreraSeleccionada?.id === carrera.id}
+                    onSeleccionar={seleccionarCarrera}
+                    onContinuar={continuarConCarrera}
+                  />
+                ))}
+              </Stack>
+            )}
           </section>
-
-          <div className="divider">
-            <span>o seleccionar una carrera específica</span>
-          </div>
-
-          {/* Sección Seleccionar otra carrera */}
-          <section className="section-block">
-            <div className="section-header-row">
-              <h2>Seleccionar otra carrera</h2>
-              <div className="filters">
-                <div className="search-input">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input 
-                    type="text" 
-                    placeholder="Buscar carrera por nombre" 
-                    value={busqueda} 
-                    onChange={(e) => setBusqueda(e.target.value)} 
-                />
-                </div>
-                <select 
-                className="filter-select"
-                value={filtroAno}
-                onChange={(e) => setFiltroAno(e.target.value)}
-                >
-                    <option value="">Año</option>
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                </select>
-                <select 
-                className="filter-select"
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-                >
-                    <option value="">Estado</option>
-                    <option value="PUBLICADA">PUBLICADA</option>
-                    <option value="PENDIENTE">PENDIENTE</option>
-                    <option value="CANCELADA">CANCELADA</option>
-                    <option value="FINALIZADA">FINALIZADA</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="race-list">
-              {/* Tarjeta Seleccionada */}
-              <div className="race-card selected-card">
-                <div className="race-info">
-                  <div className="race-header">
-                    <h3>CAP 21K 2026</h3>
-                    <span className="badge badge-green">PUBLICADA</span>
-                    <span className="selected-text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Carrera seleccionada</span>
-                  </div>
-                  <div className="race-details">
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg> 21 km</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> 20 de octubre de 2026</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> La Plata</span>
-                  </div>
-                </div>
-                <button className="btn btn-primary">Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
-              </div>
-
-              {/* Tarjeta Normal 1 */}
-              <div className="race-card">
-                <div className="race-info">
-                  <div className="race-header">
-                    <h3>CAP 5K 2026</h3>
-                    <span className="badge badge-green">PUBLICADA</span>
-                  </div>
-                  <div className="race-details">
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg> 5 km</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> 12 de noviembre de 2026</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> La Plata</span>
-                  </div>
-                </div>
-                <button className="btn btn-outline">Seleccionar</button>
-              </div>
-
-              {/* Tarjeta Normal 2 */}
-              <div className="race-card">
-                <div className="race-info">
-                  <div className="race-header">
-                    <h3>CAP 10K 2025</h3>
-                    <span className="badge badge-gray">FINALIZADA</span>
-                  </div>
-                  <div className="race-details">
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg> 10 km</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> 15 de septiembre de 2025</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> La Plata</span>
-                  </div>
-                </div>
-                <button className="btn btn-outline">Seleccionar</button>
-              </div>
-            </div>
-          </section>
-
-        </div>
-      </main>
+        </>
+      )}
     </div>
   );
 };

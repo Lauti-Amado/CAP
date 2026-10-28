@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Form } from 'react-bootstrap'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Check,
@@ -52,6 +52,7 @@ type DatosCorredor = {
 function NuevaInscripcion() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { nombreCarrera } = useParams();
 
   /*
    * Si se llega a esta pantalla desde el modal
@@ -137,7 +138,7 @@ function NuevaInscripcion() {
 
 
   const volverAInscripciones = () => {
-    navigate('/clasificador/entrega-kits/inscripciones')
+    navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
 
 
@@ -370,7 +371,7 @@ function NuevaInscripcion() {
    */
 
   const verInscripcion = () => {
-    navigate('/clasificador/entrega-kits/inscripciones')
+    navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
 
 

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env";
-import type { PayloadToken } from "../dtos/usuario.dto";
+import type { TokenPayload } from "../dtos/usuario.dto";
 import { Rol } from "../generated/prisma/client";
 
 //Error 401: validar si el usuario es quien dice ser
@@ -13,7 +13,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     }
 
     try {
-        const payload = jwt.verify(token, JWT_SECRET) as PayloadToken;
+        const payload = jwt.verify(token, JWT_SECRET) as TokenPayload;
         req.usuario = { id: payload.id, roles: payload.roles };
         next();
     } catch (error) {

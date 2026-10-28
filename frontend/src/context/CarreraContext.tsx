@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { ReactNode } from 'react';
 
 import type { Carrera } from "../types/carrera";
 
 import { apiFetch } from "../services/apiService";
+import { Outlet } from "react-router-dom";
 
 
 interface CarreraContextType {
+    carreras: Carrera[]
+
     cargando: boolean;
     error: string | undefined;
 
@@ -16,18 +18,21 @@ interface CarreraContextType {
 
 const CarreraContext = createContext<CarreraContextType | null>(null);
 
-export function CarreraProvider({ children }: { children: ReactNode }) {
+export function CarreraProvider() {
 
-    const [carreras, setCarreras] = useState<Carrera[]>([]);
+    const [carrerasRec, setCarrerasRec] = useState<Carrera[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | undefined>()
 
     //Al empezar, fetchea carreras
     useEffect(() => {
-        apiFetch<{ carreras: Carrera[] }>('/carreras')
-            .then((data) => setCarreras(data.carreras))
+        apiFetch<{ carrera: Carrera }[]>('/carreras')
+            .then((data) => {
+                const carreras = data.map(d => d.carrera);
+                setCarrerasRec(carreras)
+            })
             .catch((err) => {
-                setCarreras([]);
+                setCarrerasRec([]);
                 setError(err instanceof Error ? err.message : "Ocurrió un error al cargar las carreras");
             })
             .finally(() => setCargando(false));
@@ -38,16 +43,17 @@ export function CarreraProvider({ children }: { children: ReactNode }) {
 
     //getCarrerras por año / todas (si no se especifica año)
     const getCarreras = useCallback((anio?: number) => {
-        if (!anio) return carreras;
-        return carreras.filter(c => new Date(c.fechaHoraCarrera).getFullYear() === anio);
-    }, [carreras]);
+        if (!anio) return carrerasRec;
+        return carrerasRec.filter(c => new Date(c.fechaHoraCarrera).getFullYear() === anio);
+    }, [carrerasRec]);
 
     //getCarreraById
     const getCarreraById = useCallback((id: string) => {
-        return carreras.find(c => c.id === id);
-    }, [carreras]);
+        return carrerasRec.find(c => c.id === id);
+    }, [carrerasRec]);
 
     const contextValue = useMemo(() => ({
+        carreras: carrerasRec,
         cargando,
         error,
         getCarreras,
@@ -56,7 +62,7 @@ export function CarreraProvider({ children }: { children: ReactNode }) {
 
     return (
         <CarreraContext.Provider value={contextValue}>
-            {children}
+            <Outlet />
         </CarreraContext.Provider>
     );
 
