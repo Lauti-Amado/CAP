@@ -1,14 +1,14 @@
 import { prisma } from "../config/prisma";
 
 import type { Login } from "../validations/usuario.validations";
-import { TokenPayload, UsuarioPayload, UsuarioDTOMap } from "../dtos/usuario.dto";
+import { TokenPayload, UsuarioDTO, toUsuarioDto } from "../dtos/usuario.dto";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../config/env";
 
 //Encontrar usuario por id
-export async function findById(id: string): Promise<UsuarioPayload | null> {
+export async function findById(id: string): Promise<UsuarioDTO | null> {
     const usuario = await prisma.usuario.findUnique({
         where: { id },
         include: {
@@ -19,11 +19,11 @@ export async function findById(id: string): Promise<UsuarioPayload | null> {
 
     if (!usuario) return null;
 
-    return UsuarioDTOMap(usuario)
+    return toUsuarioDto(usuario)
 }
 
 //Login
-export async function login(datos: Login): Promise<{ token: string; usuario: UsuarioPayload } | null> {
+export async function login(datos: Login): Promise<{ token: string; usuario: UsuarioDTO } | null> {
     const usuario = await prisma.usuario.findUnique({
         where: { email: datos.email },
         include: {
@@ -45,6 +45,6 @@ export async function login(datos: Login): Promise<{ token: string; usuario: Usu
 
     return {
         token,
-        usuario: UsuarioDTOMap(usuario)
+        usuario: toUsuarioDto(usuario)
     };
 }

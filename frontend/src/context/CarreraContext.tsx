@@ -26,15 +26,9 @@ export function CarreraProvider() {
 
     //Al empezar, fetchea carreras
     useEffect(() => {
-        apiFetch<{ carrera: Carrera }[]>('/carreras')
-            .then((data) => {
-                const carreras = data.map(d => d.carrera);
-                setCarrerasRec(carreras)
-            })
-            .catch((err) => {
-                setCarrerasRec([]);
-                setError(err instanceof Error ? err.message : "Ocurrió un error al cargar las carreras");
-            })
+        apiFetch<Carrera[]>('/carreras')
+            .then((carreras) => setCarrerasRec(carreras))
+            .catch((err) => setError(err instanceof Error ? err.message : "Ocurrió un error al cargar las carreras"))
             .finally(() => setCargando(false));
     }, []);
 

@@ -25,8 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }){
 
     //Al iniciar la sesión, checkea si el usuario ya tenía una cookie válida
     useEffect(() => {
-        apiFetch<{ usuario: Usuario}>('/auth/yo')
-            .then((data) => setUsuario(data.usuario))
+        apiFetch<Usuario>('/auth/yo')
+            .then((usuario) => setUsuario(usuario))
             .catch(() => setUsuario(null))
             .finally(() => setCargando(false));
     }, []);
@@ -36,12 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }){
 
     //Login: le pedimos al server que nos mande la session cookie
     const login = async (credenciales: Credenciales) => {
-        const data = await apiFetch<{ usuario: Usuario }>('/auth/login', {
+        const usuarioFetch = await apiFetch<Usuario>('/auth/login', {
             method: 'POST',
             body: JSON.stringify(credenciales)
         });
 
-        setUsuario(data.usuario);
+        setUsuario(usuarioFetch);
     };
 
     //Logout: le pedimos al server que destruya la session cookie

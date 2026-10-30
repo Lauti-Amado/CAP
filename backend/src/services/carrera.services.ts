@@ -1,10 +1,10 @@
 import { prisma } from "../config/prisma";
 
-import { CarreraPayload, CarreraDTOMap } from "../dtos/carrera.dto";
+import { CarreraDTO, toCarreraDto } from "../dtos/carrera.dto";
 
 
 //Find all por año
-export async function findAll(anio?: number): Promise<CarreraPayload[]> {
+export async function findAll(anio?: number): Promise<CarreraDTO[]> {
   let carrerasPrisma;
 
   if (anio === undefined) {
@@ -27,11 +27,11 @@ export async function findAll(anio?: number): Promise<CarreraPayload[]> {
     });
   }
 
-  return carrerasPrisma.map(c => CarreraDTOMap(c))
+  return carrerasPrisma.map(c => toCarreraDto(c))
 }
 
 //Find by id
-export async function findById(id: string): Promise<CarreraPayload | null> {
+export async function findById(id: string): Promise<CarreraDTO | null> {
   const c = await prisma.carrera.findUnique({
     where: { id },
     include: {
@@ -42,5 +42,5 @@ export async function findById(id: string): Promise<CarreraPayload | null> {
 
   if (!c) return null;
 
-  return CarreraDTOMap(c)
+  return toCarreraDto(c)
 }
