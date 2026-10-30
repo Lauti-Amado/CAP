@@ -11,7 +11,7 @@ GET {{baseUrl}}/
 # @name listarCarreras
 GET {{baseUrl}}/api/carreras
 
-@primeraCarreraId = {{listarCarreras.response.body.$[0].carrera.id}}
+@primeraCarreraId = {{listarCarreras.response.body.$[0].id}}
 
 ### Ver carrera por id (200 OK)
 GET {{baseUrl}}/api/carreras/{{primeraCarreraId}}
