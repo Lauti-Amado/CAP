@@ -37,3 +37,16 @@ export type LlegadaAtleta = {
   club: string
   equipo: string
 }
+
+export type EstadoParticipante = 'PENDIENTE' | 'EN CURSO' | 'LLEGADO'
+
+// Fila de la tabla de participantes del dashboard de clasificación
+export type ParticipanteClasificacion = {
+  id: number
+  dorsal: string
+  atleta: string
+  dni: string
+  categoria: string
+  estado: EstadoParticipante
+  tiempo?: string
+}

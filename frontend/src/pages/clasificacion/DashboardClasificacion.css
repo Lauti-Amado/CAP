@@ -492,13 +492,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.2);
 }
 
-.dc-accion-sub { font-size: 0.65rem; opacity: 0.9; }
+.dc-accion-sub { font-size: 0.8rem; opacity: 0.9; }
 
 .dc-cronometro { font-variant-numeric: tabular-nums; }
 .rt-reloj { font-variant-numeric: tabular-nums; }
+
+/* Tarjeta de carrera finalizada */
+.dc-timer--finalizada.card { border-left-color: #92400e; }
+
+/* Botón principal en formato mosaico */
+.dc-accion-principal--tile { min-height: 180px; padding: 24px 16px; }
+.dc-accion-principal--tile .dc-accion-icono { width: 64px; height: 64px; border-radius: 50%; }
+.dc-accion-principal--tile .dc-accion-sub { font-size: 0.85rem; }

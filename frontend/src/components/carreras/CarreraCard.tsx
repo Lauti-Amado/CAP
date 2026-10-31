@@ -18,11 +18,11 @@ type CarreraCardProps = {
 function CarreraCard({ carrera }: CarreraCardProps) {
   const navigate = useNavigate()
 
-  const fecha = new Date(carrera.fechaHora)
+  const fecha = new Date(carrera.fechaHoraCarrera)
   const esFinalizada = carrera.estado === 'Finalizada'
 
-  const distancias = carrera.distanciaCarrera
-    .map((item) => `${item.distancia.kilometraje}K`)
+  const distancias = carrera.distancias
+    .map((item) => `${item.kilometraje}K`)
     .join(', ')
 
   const estadoClase = carrera.estado
@@ -78,7 +78,7 @@ function CarreraCard({ carrera }: CarreraCardProps) {
           <p>
             <MapPin size={15} />
             <span>
-              {carrera.lugar.nombre}, {carrera.lugar.localidad.nombre}
+              {carrera.lugar.nombre}, {carrera.lugar.localidad}
             </span>
           </p>
 

@@ -407,3 +407,16 @@
     width: 100%;
   }
 }
+
+.detalle-carrera__modificar.btn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #f97316;
+  --bs-btn-border-color: #f97316;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #ea580c;
+  --bs-btn-hover-border-color: #ea580c;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #c2410c;
+  --bs-btn-active-border-color: #c2410c;
+  font-weight: 600;
+}

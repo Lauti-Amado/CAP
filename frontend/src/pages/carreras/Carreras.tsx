@@ -55,9 +55,9 @@ function Carreras() {
     obtenerCarreras()
   }, [])
 
-  const aniosDisponibles = useMemo(() => {
+    const aniosDisponibles = useMemo(() => {
     const anios = carreras.map((carrera) =>
-      new Date(carrera.fechaHora).getFullYear()
+      new Date(carrera.fechaHoraCarrera).getFullYear()
     )
 
     return [...new Set(anios)].sort((a, b) => b - a)
@@ -75,9 +75,9 @@ function Carreras() {
         texto === '' ||
         carrera.nombre.toLowerCase().includes(texto) ||
         carrera.lugar.nombre.toLowerCase().includes(texto) ||
-        carrera.lugar.localidad.nombre.toLowerCase().includes(texto)
+        carrera.lugar.localidad.toLowerCase().includes(texto)
 
-      const anioCarrera = new Date(carrera.fechaHora).getFullYear()
+      const anioCarrera = new Date(carrera.fechaHoraCarrera).getFullYear()
 
       const coincideAnio =
         filtroAnio === 'todos' ||
@@ -109,11 +109,11 @@ function Carreras() {
     setPaginaActual(1)
   }, [busqueda, filtroAnio, filtroEstado])
 
-  const verCarrera = (id: number) => {
+    const verCarrera = (id: string) => {
     navigate(`/administrador/carreras/${id}`)
   }
 
-  const verRanking = (id: number) => {
+  const verRanking = (id: string) => {
     navigate(`/resultados?carreraId=${id}`)
   }
 
@@ -268,15 +268,15 @@ function Carreras() {
                   },
                   {
                     titulo: 'Fecha',
-                    key: 'fechaHora',
+                    key: 'fechaHoraCarrera',
                     render: (carrera) =>
-                      new Date(carrera.fechaHora).toLocaleDateString('es-AR'),
+                      new Date(carrera.fechaHoraCarrera).toLocaleDateString('es-AR'),
                   },
                   {
                     titulo: 'Lugar',
                     key: 'lugar',
                     render: (carrera) =>
-                      `${carrera.lugar.nombre} - ${carrera.lugar.localidad.nombre}`,
+                      `${carrera.lugar.nombre} - ${carrera.lugar.localidad}`,
                   },
                   {
                     titulo: 'Estado',
