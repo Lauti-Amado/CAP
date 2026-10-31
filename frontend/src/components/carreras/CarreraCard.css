@@ -53,12 +53,12 @@
   background-color: #16a34a;
 }
 
-.carrera-card__estado--borrador {
+.carrera-card__estado--creada {
   background-color: #f9fafb !important;
   color: #475467 !important;
 }
 
-.carrera-card__estado--borrador .carrera-card__estado-dot {
+.carrera-card__estado--creada .carrera-card__estado-dot {
   background-color: #98a2b3;
 }
 

@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { RUTA_TIEMPO_REAL, rutaTrasGuardar } from '../../../utils/colaModificacion';
+import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion';
 import { llegadasMock } from '../llegadasMock';
 import './ModClasifCorredor.css';
 
 const ModClasifCorredor: React.FC = () => {
-  const { id } = useParams();
-  return <FormularioModificacion key={id} id={id} />;
+  const { id, corredorId } = useParams();
+  const llegadaId = corredorId ?? id;
+  return <FormularioModificacion key={llegadaId} id={llegadaId} />;
 };
 
 const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const rutas = useRutasClasificacion();
 
   // TODO BACKEND: GET /api/clasificaciones/{id}
   const llegada = llegadasMock.find((l) => String(l.id) === id);
@@ -25,11 +27,11 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
     console.log('Guardando modificaciones para el registro:', id);
     // TODO BACKEND: PATCH /api/clasificaciones/{id}
     // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
-    navigate(rutaTrasGuardar(search), { replace: true });
+    navigate(rutas.trasGuardar(search), { replace: true });
   };
 
   const handleCancelar = () => {
-    navigate(RUTA_TIEMPO_REAL, { replace: true });
+    navigate(rutas.listado, { replace: true });
   };
 
   return (

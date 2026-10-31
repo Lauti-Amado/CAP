@@ -6,7 +6,7 @@ import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap'
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import '../../components/corredor/DetalleCorredor.css'
 import { corredoresClasificacionMock } from './corredoresClasificacionMock'
-import { RUTA_TIEMPO_REAL } from '../../utils/colaModificacion'
+import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
 
 // MOCK TEMPORAL
 // TODO BACKEND: cantidad real de participantes de la carrera
@@ -15,6 +15,7 @@ const TOTAL_PARTICIPANTES = 1248
 function ClasificacionManualDetalle() {
   const { dni } = useParams<{ dni: string }>()
   const navigate = useNavigate()
+  const rutas = useRutasClasificacion()
   const [puesto, setPuesto] = useState('')
   const [guardado, setGuardado] = useState(false)
 
@@ -24,7 +25,7 @@ function ClasificacionManualDetalle() {
     (c) => c.dni.replace(/\D/g, '') === dni
   )
 
-  const volverATiempoReal = () => navigate(RUTA_TIEMPO_REAL, { replace: true })
+  const volverATiempoReal = () => navigate(rutas.listado, { replace: true })
 
   if (!corredor) {
     return (
@@ -61,7 +62,7 @@ function ClasificacionManualDetalle() {
   console.log('Guardar clasificación', { dni: corredor.dni, puestoGeneral: puestoNumero })
 
   // Al guardar vuelve directo a tiempo real
-  navigate(RUTA_TIEMPO_REAL, { replace: true })
+  navigate(rutas.listado, { replace: true })
 }
 
   return (

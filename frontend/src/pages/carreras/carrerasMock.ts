@@ -1,227 +1,90 @@
 //Despues borrar despues del domingo
+import type { Carrera, Distancia } from '../../types/carrera'
 
-import type { Carrera } from '../../types/carrera'
+const dist = (kilometraje: number, tipoDistancia: Distancia['tipoDistancia'], precio = 10000): Distancia => ({
+  kilometraje,
+  tipoDistancia,
+  precio,
+})
 
 export const carrerasMock: Carrera[] = [
   {
-    id: 1,
+    id: '1',
     nombre: 'Maratón de Buenos Aires 2024',
-    fechaHora: '2024-09-22T08:00:00',
+    fechaHoraCarrera: new Date('2024-09-22T08:00:00'),
+    fechaHoraEntregaKits: new Date('2024-09-21T10:00:00'),
     imagenUrl: '',
-    descripcion:
-      'Maratón internacional realizada en Buenos Aires.',
-    cupoMax: 15000,
+    descripcion: 'Maratón internacional realizada en Buenos Aires.',
+    participantesMax: 15000,
     estado: 'Publicada',
-    lugar: {
-      nombre: 'Buenos Aires',
-      localidad: {
-        nombre: 'Buenos Aires',
-      },
-    },
-    distanciaCarrera: [
-      {
-        distancia: {
-          kilometraje: 42,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 21,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-    ],
+    lugar: { nombre: 'Buenos Aires', localidad: 'Buenos Aires' },
+    distancias: [dist(42, 'Competitiva'), dist(21, 'Competitiva')],
   },
-
   {
-    id: 2,
+    id: '2',
     nombre: 'Cruce de los Andes Ultra Trail',
-    fechaHora: '2024-11-15T07:00:00',
+    fechaHoraCarrera: new Date('2024-11-15T07:00:00'),
+    fechaHoraEntregaKits: new Date('2024-11-14T10:00:00'),
     imagenUrl: '',
-    descripcion:
-      'Carrera de trail desarrollada en la región cordillerana.',
-    cupoMax: 10000,
-    estado: 'Borrador',
-    lugar: {
-      nombre: 'Mendoza',
-      localidad: {
-        nombre: 'Mendoza',
-      },
-    },
-    distanciaCarrera: [
-      {
-        distancia: {
-          kilometraje: 100,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 50,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 21,
-          tipoDistancia: 'Participativa',
-        },
-      },
-    ],
+    descripcion: 'Carrera de trail desarrollada en la región cordillerana.',
+    participantesMax: 10000,
+    estado: 'Creada',
+    lugar: { nombre: 'Mendoza', localidad: 'Mendoza' },
+    distancias: [dist(100, 'Competitiva'), dist(50, 'Competitiva'), dist(21, 'Participativa')],
   },
-
   {
-    id: 3,
+    id: '3',
     nombre: 'Patagonia Run Mountain 2023',
-    fechaHora: '2023-04-15T08:00:00',
+    fechaHoraCarrera: new Date('2023-04-15T08:00:00'),
+    fechaHoraEntregaKits: new Date('2023-04-14T10:00:00'),
     imagenUrl: '',
-    descripcion:
-      'Carrera de montaña realizada en San Martín de los Andes.',
-    cupoMax: 10000,
+    descripcion: 'Carrera de montaña realizada en San Martín de los Andes.',
+    participantesMax: 10000,
     estado: 'Finalizada',
-    lugar: {
-      nombre: 'San Martín de los Andes',
-      localidad: {
-        nombre: 'Neuquén',
-      },
-    },
-    distanciaCarrera: [
-      {
-        distancia: {
-          kilometraje: 160,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 110,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 70,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 42,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 21,
-          tipoDistancia: 'Participativa',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 10,
-          tipoDistancia: 'Participativa',
-        },
-      },
+    lugar: { nombre: 'San Martín de los Andes', localidad: 'Neuquén' },
+    distancias: [
+      dist(160, 'Competitiva'),
+      dist(110, 'Competitiva'),
+      dist(70, 'Competitiva'),
+      dist(42, 'Competitiva'),
+      dist(21, 'Participativa'),
+      dist(10, 'Participativa'),
     ],
   },
-
   {
-    id: 4,
+    id: '4',
     nombre: 'Maratón Internacional CAP 2024',
-    fechaHora: '2024-11-15T07:00:00',
+    fechaHoraCarrera: new Date('2024-11-15T07:00:00'),
+    fechaHoraEntregaKits: new Date('2024-11-14T10:00:00'),
     imagenUrl: '',
-    descripcion:
-      'Evento deportivo organizado por el Círculo de Atletas Platenses.',
-    cupoMax: 10000,
+    descripcion: 'Evento deportivo organizado por el Círculo de Atletas Platenses.',
+    participantesMax: 10000,
     estado: 'Publicada',
-    lugar: {
-      nombre: 'Palermo',
-      localidad: {
-        nombre: 'Buenos Aires',
-      },
-    },
-    distanciaCarrera: [
-      {
-        distancia: {
-          kilometraje: 42,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 21,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 10,
-          tipoDistancia: 'Participativa',
-        },
-      },
-    ],
+    lugar: { nombre: 'Palermo', localidad: 'Buenos Aires' },
+    distancias: [dist(42, 'Competitiva'), dist(21, 'Competitiva'), dist(10, 'Participativa')],
   },
-
   {
-    id: 5,
+    id: '5',
     nombre: 'La Plata Corre 10K',
-    fechaHora: '2025-03-16T09:00:00',
+    fechaHoraCarrera: new Date('2025-03-16T09:00:00'),
+    fechaHoraEntregaKits: new Date('2025-03-15T10:00:00'),
     imagenUrl: '',
-    descripcion:
-      'Carrera urbana organizada en la ciudad de La Plata.',
-    cupoMax: 5000,
+    descripcion: 'Carrera urbana organizada en la ciudad de La Plata.',
+    participantesMax: 5000,
     estado: 'Publicada',
-    lugar: {
-      nombre: 'Centro',
-      localidad: {
-        nombre: 'La Plata',
-      },
-    },
-    distanciaCarrera: [
-      {
-        distancia: {
-          kilometraje: 10,
-          tipoDistancia: 'Competitiva',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 5,
-          tipoDistancia: 'Participativa',
-        },
-      },
-    ],
+    lugar: { nombre: 'Centro', localidad: 'La Plata' },
+    distancias: [dist(10, 'Competitiva'), dist(5, 'Participativa')],
   },
-
   {
-    id: 6,
+    id: '6',
     nombre: 'Carrera Solidaria CAP',
-    fechaHora: '2025-06-08T10:00:00',
+    fechaHoraCarrera: new Date('2025-06-08T10:00:00'),
+    fechaHoraEntregaKits: new Date('2025-06-07T10:00:00'),
     imagenUrl: '',
-    descripcion:
-      'Carrera participativa organizada por CAP.',
-    cupoMax: 3000,
+    descripcion: 'Carrera participativa organizada por CAP.',
+    participantesMax: 3000,
     estado: 'Finalizada',
-    lugar: {
-      nombre: 'Paseo del Bosque',
-      localidad: {
-        nombre: 'La Plata',
-      },
-    },
-    distanciaCarrera: [
-      {
-        distancia: {
-          kilometraje: 10,
-          tipoDistancia: 'Participativa',
-        },
-      },
-      {
-        distancia: {
-          kilometraje: 5,
-          tipoDistancia: 'Participativa',
-        },
-      },
-    ],
+    lugar: { nombre: 'Paseo del Bosque', localidad: 'La Plata' },
+    distancias: [dist(10, 'Participativa'), dist(5, 'Participativa')],
   },
 ]
