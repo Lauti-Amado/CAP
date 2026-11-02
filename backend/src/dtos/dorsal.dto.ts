@@ -1,56 +1,93 @@
 //backend/src/dtos/dorsal.dto.ts
-import type { EstadoCarrera, EstadoInscripcion, MetodoPago, Sexo, TipoDistancia } from "../generated/prisma/client";
+import type { EntregaKit, Prisma, TipoDistancia } from "../generated/prisma/client";
 
-export type DorsalAsignado = {
+// Un dorsal es un número físico que puede (o no) tener un chip RFID integrado
+export type ChipDTO = {
     id: string;
-    numero: string;
-    chipNumero: number | null;
+    numero: number;
 };
 
-export type InscripcionEntregaKit = {
+export type DorsalDTO = {
+    id: string;
+    numero: string;
+    chip: ChipDTO | null;
+};
+
+export type EntregaDTO = {
+    id: string;
     inscripcionId: string;
-    estadoInscripcion: EstadoInscripcion;
-    corredor: {
-        nombre: string;
-        apellido: string;
-        dni: string;
-        sexo: Sexo;
-        fechaNacimiento: Date;
-    };
-    carrera: { id: string; nombre: string; estado: EstadoCarrera };
+    fechaHoraEntrega: Date;
+};
+
+export type DorsalEnCarreraDTO = DorsalDTO & {
+    entrega: EntregaDTO | null;
+};
+
+// La entrega de un kit con el dorsal (y su chip) que se entregó
+export type EntregaKitDTO = EntregaDTO & {
+    dorsal: DorsalDTO;
+};
+
+// Feed de entregas recientes
+export type EntregaRecienteDTO = EntregaKitDTO & {
+    corredor: { nombre: string; apellido: string };
     distancia: { kilometraje: number; tipoDistancia: TipoDistancia };
-    clubTeam: string | null;
-    categoria: string;
-    talleRemera: string | null;
-    pagado: boolean;
-    metodoPago: MetodoPago;
-    aptoMedico: { requerido: boolean; vigente: boolean; fechaVencimiento: Date | null };
-    productos: { nombre: string; variante: string; cantidad: number }[];
-    dorsal: DorsalAsignado | null;
-    fechaHoraEntrega: Date | null;
-    habilitado: boolean; // true si se le puede asignar dorsal ahora
-    motivos: string[];   // por qué no está habilitado
 };
 
-export type CarreraEntregaKits = {
-    id: string;
-    nombre: string;
-    edicion: number;
-    estado: EstadoCarrera;
-    distancias: string[]; // ["10K", "21K"]
-};
 
-export type EntregaReciente = {
-    id: string;
-    nombreCorredor: string;
-    numeroKit: number;
-    distancia: string;
-    minutosDesdeEntrega: number;
-};
+type DorsalPrisma = Prisma.DorsalGetPayload<{ include: { chip: true } }>;
 
-export type ConsultaDorsal = {
-    numero: string;
-    enInventario: boolean;
-    chipNumero: number | null;
-    disponible: boolean; // false si ya se entregó en esa carrera
-};
+type DorsalConEntregasPrisma = Prisma.DorsalGetPayload<{ include: { chip: true; entregas: true } }>;
+
+type EntregaConDorsalPrisma = Prisma.EntregaKitGetPayload<{
+    include: { dorsal: { include: { chip: true } } };
+}>;
+
+type EntregaRecientePrisma = Prisma.EntregaKitGetPayload<{
+    include: {
+        dorsal: { include: { chip: true } };
+        inscripcion: {
+            include: {
+                corredor: { include: { persona: true } };
+                distanciaCarrera: { include: { distancia: true } };
+            };
+        };
+    };
+}>;
+
+export function toDorsalDto(dorsal: DorsalPrisma): DorsalDTO {
+    return {
+        id: dorsal.id,
+        numero: dorsal.numero,
+        chip: dorsal.chip ? { id: dorsal.chip.id, numero: dorsal.chip.numero } : null,
+    };
+}
+
+export function toEntregaDto(entrega: EntregaKit): EntregaDTO {
+    return {
+        id: entrega.id,
+        inscripcionId: entrega.inscripcionId,
+        fechaHoraEntrega: entrega.fechaHoraEntrega,
+    };
+}
+
+// `entregas` viene filtrada por carrera, así que hay a lo sumo una
+export function toDorsalEnCarreraDto(dorsal: DorsalConEntregasPrisma): DorsalEnCarreraDTO {
+    const [entrega] = dorsal.entregas;
+    return { ...toDorsalDto(dorsal), entrega: entrega ? toEntregaDto(entrega) : null };
+}
+
+export function toEntregaKitDto(entrega: EntregaConDorsalPrisma): EntregaKitDTO {
+    return { ...toEntregaDto(entrega), dorsal: toDorsalDto(entrega.dorsal) };
+}
+
+export function toEntregaRecienteDto(entrega: EntregaRecientePrisma): EntregaRecienteDTO {
+    const { persona } = entrega.inscripcion.corredor;
+    const { distancia } = entrega.inscripcion.distanciaCarrera;
+
+    return {
+        ...toEntregaKitDto(entrega),
+        corredor: { nombre: persona.nombre, apellido: persona.apellido },
+        distancia: { kilometraje: distancia.kilometraje, tipoDistancia: distancia.tipoDistancia },
+    };
+}
