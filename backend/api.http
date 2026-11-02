@@ -36,3 +36,12 @@ Content-Type: application/json
 ### GET mis datos
 GET {{baseUrl}}/api/auth/yo
 Content-Type: application/json
+
+### Iniciar sesion con corredor (para testear)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "corredor@cap.test",
+  "password": "Corredor1234"
+}

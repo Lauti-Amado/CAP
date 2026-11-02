@@ -124,18 +124,30 @@ model Compra {
     //usuarioModificacion
 }
 
-//DIFIERE: codigoComprobante, entidadEmisora, entidadEmisoraId
 model Comprobante {
-    id                          String @id @default(uuid())
-    montoTotalPago              Float
-    fechaHoraPago               DateTime
+    id                        String   @id @default(uuid())
+    montoTotalPago            Float
+    fechaHoraPago             DateTime
 
     //El titular del pago no es necesariamente el mismo corredor que viene a inscribirse presencialmente!
-    documentoTitularPago        String
-    nombreApellidoTitularPago   String
+    documentoTitularPago      String
+    nombreApellidoTitularPago String
 
-    compraId                    String @unique
-    compra                      Compra @relation(fields: [compraId], references: [id], onDelete: Cascade)
+    //Datos de la entidad del comprobante de pago (pueden ser opcionales por si el pago es presencial)
+    codigoComprobante String?
+    entidadEmisoraId  String?
+    entidadEmisora    EntidadEmisora? @relation(fields: [entidadEmisoraId], references: [id])
+
+    compraId String @unique
+    compra   Compra @relation(fields: [compraId], references: [id], onDelete: Cascade)
+}
+
+model EntidadEmisora {
+    id     String @id @default(uuid())
+    nombre String
+    cuit   String
+
+    comprobantes Comprobante[]
 }
 
 
