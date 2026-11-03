@@ -1,10 +1,10 @@
 //backend/src/services/dorsal.service.ts
 import { prisma } from "../config/prisma";
-import { Prisma } from "../generated/prisma/client";
+import { Prisma } from "../generated/prisma";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import type { InscripcionEntregaKit, CarreraEntregaKits, ConsultaDorsal, EntregaReciente } from "../dtos/dorsal.dto";
-import type { EstadoCarrera, Sexo } from "../generated/prisma/client";
+import type { EstadoCarrera, Sexo } from "../generated/prisma";
 import type { AsignarDorsal, ItemInventario } from "../validations/dorsal.validations";
 
 // Estados de la carrera en los que se puede entregar (o deshacer) un kit
