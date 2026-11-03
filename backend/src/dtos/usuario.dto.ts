@@ -6,7 +6,27 @@ export function toUsuarioDto(usuario: UsuarioPrisma): UsuarioDTO {
     id: usuario.id,
     email: usuario.email,
     roles: usuario.roles.map(r => r.rolAdministrativo.rol),
-    persona: usuario.persona
+    persona: {
+      id: usuario.persona.id,
+      nombre: usuario.persona.nombre,
+      apellido: usuario.persona.apellido,
+      telefono: usuario.persona.telefono,
+      dni: usuario.persona.dni,
+      corredor: usuario.persona.corredor ? {
+        id: usuario.persona.corredor.id,
+        fechaNacimiento: usuario.persona.corredor.fechaNacimiento,
+        sexo: usuario.persona.corredor.sexo,
+        discapacidad: usuario.persona.corredor.discapacidad,
+        contactoEmergencia: {
+          dni: usuario.persona.corredor.contactoEmergencia.dni,
+          nombre: usuario.persona.corredor.contactoEmergencia.nombre,
+          apellido: usuario.persona.corredor.contactoEmergencia.apellido,
+          telefono: usuario.persona.corredor.contactoEmergencia.telefono,
+        },
+        aptosMedicos: usuario.persona.corredor.aptosMedicos ? usuario.persona.corredor.aptosMedicos : null,
+        afiliacion: usuario.persona.corredor.afiliacion ? usuario.persona.corredor.afiliacion : null
+      } : null
+    }
   }
 }
 
@@ -14,9 +34,11 @@ export function toUsuarioDto(usuario: UsuarioPrisma): UsuarioDTO {
 export type UsuarioPrisma = Prisma.UsuarioGetPayload<{
   include: {
     roles: { include: { rolAdministrativo: true } },
-    persona: { include: { corredor: true } }
+    persona: { include: { corredor: { include: { contactoEmergencia: true, aptosMedicos: true, afiliacion: true } } } }
   },
-  omit: { passwordHash: true }
+  omit:
+  { passwordHash: true },
+
 }>;
 
 
@@ -43,7 +65,26 @@ export type PersonaDTO = {
 
 export type CorredorDTO = {
   id: string;
-  fechaNacimiento: Date
+  fechaNacimiento: Date;
   sexo: Sexo;
   discapacidad?: Discapacidad | null;
+  contactoEmergencia: ContactoEmergenciaDTO;
+  aptosMedicos?: AptoMedicoDTO[] | null;
+  afiliacion?: AfiliacionDTO | null
+}
+
+export type ContactoEmergenciaDTO = {
+  dni: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+}
+
+export type AptoMedicoDTO = {
+  aprobado: boolean;
+  fechaVencimiento: Date;
+}
+
+export type AfiliacionDTO = {
+  numeroSocio: number;
 }

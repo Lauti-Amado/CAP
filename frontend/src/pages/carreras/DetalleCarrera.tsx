@@ -40,9 +40,7 @@ function DetalleCarrera() {
         }
 
         // MOCK: borrar cuando se conecte con el backend
-        const carreraMock = carrerasDetalleMock.find(
-          (c) => c.id === Number(id)
-        )
+        const carreraMock = carrerasDetalleMock.find((c) => c.id === id)
 
         if (carreraMock) {
           setCarrera(carreraMock)
@@ -83,10 +81,10 @@ function DetalleCarrera() {
     return <p>No se encontró la carrera.</p>
   }
 
-  const fecha = new Date(carrera.fechaHora)
+  const fecha = new Date(carrera.fechaHoraCarrera)
 
-  const distancias = carrera.distanciaCarrera.map(
-    (item) => `${item.distancia.kilometraje}K`
+  const distancias = carrera.distancias.map(
+    (item) => `${item.kilometraje}K`
   )
 
   const inscripcionesAbiertas =
@@ -119,7 +117,15 @@ function DetalleCarrera() {
             </span>
           )}
 
-
+          {carrera.estado === 'Finalizada' && (
+            <Button
+              variant="warning"
+              className="detalle-carrera__modificar"
+              onClick={() => navigate(`/administrador/carreras/${carrera.id}/clasificacion`)}
+            >
+              Modificar clasificación
+            </Button>
+          )}
         </div>
       </header>
 
@@ -170,13 +176,13 @@ function DetalleCarrera() {
               <span>CUPO DE CORREDORES</span>
 
               <strong>
-                {carrera.cantidadInscriptos} / {carrera.cupoMax}
+                {carrera.cantidadInscriptos} / {carrera.participantesMax}
               </strong>
             </div>
 
             <progress
               value={carrera.cantidadInscriptos}
-              max={carrera.cupoMax}
+              max={carrera.participantesMax}
             />
           </div>
         </article>

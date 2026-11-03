@@ -1,3 +1,4 @@
+//backend/src/app.ts
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -6,7 +7,9 @@ import { z } from "zod";
 import usuarioRoutes from "./routes/usuario.routes"
 import certificadosRoutes from './routes/certificados.routes' 
 import dorsalRoutes from './routes/dorsal.routes'
+import entregaKitRoutes from './routes/entregaKit.routes'
 import carreraRoutes from "./routes/carrera.routes";
+import clasificacionRoutes from './routes/clasificacion.routes'
 
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 
@@ -31,7 +34,9 @@ app.get("/", (req, res) => {
 app.use("/api/auth", usuarioRoutes);
 app.use('/api', certificadosRoutes)
 app.use('/api', dorsalRoutes)
+app.use('/api', entregaKitRoutes)
 app.use("/api/carreras", carreraRoutes);
+app.use('/api', clasificacionRoutes)
 
 app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
 app.use(errorHandler);
