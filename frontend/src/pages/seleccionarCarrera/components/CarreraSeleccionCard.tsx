@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import type { Carrera } from "../../../types/carrera";
-import CarreraEstadoBadge from "./carreraEstadoBadge";
+import CarreraEstadoBadge from "./CarreraEstadoBadge";
 
 interface Props {
   carrera: Carrera;

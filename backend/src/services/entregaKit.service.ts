@@ -3,7 +3,14 @@ import { prisma } from "../config/prisma";
 import type { EstadoCarrera, Prisma } from "../generated/prisma/client";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
-import { toEntregaKitDto, toEntregaRecienteDto, type EntregaKitDTO, type EntregaRecienteDTO,} from "../dtos/dorsal.dto";
+import {
+    toEntregaKitDto,
+    toEntregaRecienteDto,
+    toCorredorEntregaKitDto,
+    type EntregaKitDTO,
+    type EntregaRecienteDTO,
+    type CorredorEntregaKitDTO,
+} from "../dtos/dorsal.dto";
 import { asociarChip, obtenerOCrearDorsal } from "./dorsal.service";
 import type { EntregarKit } from "../validations/dorsal.validations";
 
@@ -17,6 +24,44 @@ export const inscripcionParaEntregaInclude = {
     corredor: { include: { aptosMedicos: true } },
     distanciaCarrera: { include: { distancia: true, carrera: true } },
     entregaKit: true,
+} satisfies Prisma.InscripcionInclude;
+
+const inscripcionParaBusquedaInclude = {
+    compra: {
+        include: {
+            detallesProductos: {
+                include: {
+                    producto: {
+                        include: {
+                            producto: true,
+                        },
+                    },
+                },
+            },
+        },
+    },
+    corredor: {
+        include: {
+            persona: true,
+            aptosMedicos: true,
+        },
+    },
+    distanciaCarrera: {
+        include: {
+            distancia: true,
+            carrera: true,
+        },
+    },
+    equipo: true,
+    entregaKit: {
+        include: {
+            dorsal: {
+                include: {
+                    chip: true,
+                },
+            },
+        },
+    },
 } satisfies Prisma.InscripcionInclude;
 
 export type InscripcionParaEntrega = Prisma.InscripcionGetPayload<{
@@ -139,4 +184,39 @@ export async function entregasRecientes(carreraId: string, limite: number): Prom
         },
     });
     return entregas.map(toEntregaRecienteDto);
+}
+
+export async function buscarCorredorPorDni(
+    carreraId: string,
+    dni: string
+): Promise<CorredorEntregaKitDTO> {
+    const inscripcion = await prisma.inscripcion.findFirst({
+        where: {
+            corredor: {
+                persona: {
+                    dni,
+                },
+            },
+            distanciaCarrera: {
+                idCarrera: carreraId,
+            },
+        },
+        include: inscripcionParaBusquedaInclude,
+    });
+
+    if (!inscripcion) {
+        throw new ErrorNoEncontrado(
+            "No se encontró una inscripción para este corredor en la carrera seleccionada."
+        );
+    }
+
+    const vencimientoApto = vencimientoAptoVigente(inscripcion);
+    const motivos = motivosNoHabilitado(inscripcion);
+
+    return toCorredorEntregaKitDto(
+        inscripcion,
+        vencimientoApto,
+        motivos.length === 0,
+        motivos
+    );
 }
