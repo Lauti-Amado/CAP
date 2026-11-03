@@ -13,7 +13,7 @@ export async function findById(id: string): Promise<UsuarioDTO | null> {
         where: { id },
         include: {
             roles: { include: { rolAdministrativo: true } },
-            persona: { include: { corredor: true } }
+            persona: { include: { corredor: { include: { contactoEmergencia: true, aptosMedicos: true, afiliacion: true } } } }
         }
     });
 
@@ -28,7 +28,7 @@ export async function login(datos: Login): Promise<{ token: string; usuario: Usu
         where: { email: datos.email },
         include: {
             roles: { include: { rolAdministrativo: true } },
-            persona: { include: { corredor: true } }
+            persona: { include: { corredor: { include: { contactoEmergencia: true, aptosMedicos: true, afiliacion: true } } } }
         },
         omit: { passwordHash: false }, //Por defecto no trae el passwordHash. El login lo necesita y por eso se pide
     });

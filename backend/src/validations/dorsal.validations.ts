@@ -1,37 +1,27 @@
 //backend/src/validations/dorsal.validations.ts
 import { z } from "zod";
 
-const chipNumero = z.number().int().positive().max(2147483647, "Número de chip inválido");
+const MAX_CHIP = 2147483647;
+
+const chipNumero = z.number().int().positive().max(MAX_CHIP, "Número de chip inválido");
 
 export const numeroDorsal = z.string()
     .trim()
     .regex(/^\d{1,5}$/, "El dorsal debe ser un número de hasta 5 dígitos")
     .transform((v) => String(Number(v))); // "0042" -> "42"
 
-export const asignarDorsalSchema = z.object({
+// Un dorsal: el número físico y, opcionalmente, el chip RFID que trae integrado
+const dorsalSchema = z.object({
     numero: numeroDorsal,
     chipNumero: chipNumero.optional(),
 });
 
+export const crearDorsalSchema = dorsalSchema;
+export const entregarKitSchema = dorsalSchema; // al entregar se indica qué dorsal (y chip) se lleva el corredor
 export const vincularChipSchema = z.object({ chipNumero });
 
-export const numeroParamSchema = z.object({ numero: numeroDorsal });
-
-export const dniQuerySchema = z.object({
-    dni: z.string().trim().regex(/^\d{7,8}$/, "DNI inválido, ingresa solo números sin puntos"),
-});
-
-export const busquedaQuerySchema = z.object({
-    busqueda: z.string().trim().max(100).optional(),
-});
-
-export const limiteQuerySchema = z.object({
-    limite: z.coerce.number().int().min(1).max(50).default(5),
-});
-
-// Carga masiva del inventario de dorsales (cada dorsal físico trae su chip)
 export const inventarioSchema = z.object({
-    dorsales: z.array(z.object({ numero: numeroDorsal, chipNumero: chipNumero.optional() }))
+    dorsales: z.array(dorsalSchema)
         .min(1, "Enviá al menos un dorsal")
         .max(5000),
 }).superRefine((datos, ctx) => {
@@ -51,5 +41,20 @@ export const inventarioSchema = z.object({
     });
 });
 
-export type AsignarDorsal = z.infer<typeof asignarDorsalSchema>;
-export type ItemInventario = z.infer<typeof inventarioSchema>["dorsales"][number];
+export const numeroParamSchema = z.object({ numero: numeroDorsal });
+
+export const chipParamSchema = z.object({
+    numero: z.coerce.number().int().positive().max(MAX_CHIP, "Número de chip inválido"),
+});
+
+export const busquedaQuerySchema = z.object({
+    busqueda: z.string().trim().max(100).optional(),
+});
+
+export const limiteQuerySchema = z.object({
+    limite: z.coerce.number().int().min(1).max(50).default(5),
+});
+
+export type CrearDorsal = z.infer<typeof crearDorsalSchema>;
+export type EntregarKit = z.infer<typeof entregarKitSchema>;
+export type ItemInventario = CrearDorsal;

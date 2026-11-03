@@ -28,6 +28,7 @@ import RolesPermisos from './pages/administracion/RolesPermisos';
 import ConfiguracionClasificaciones from './pages/administracion/categorias/ConfiguracionClasificaciones';
 import NuevaCategoria from './pages/administracion/categorias/NuevaCategoria';
 import ClasificacionManualDetalle from './pages/clasificacion/ClasificacionManualDetalle';
+import ModificarClasificacionCarrera from './pages/clasificacion/ModificarClasificacionCarrera';
 
 export default function AppRoutes() {
   return (
@@ -92,6 +93,9 @@ export default function AppRoutes() {
                 {/*Carreras*/}
                 <Route path="carreras" element={<Carreras />} />
                 <Route path="carreras/:id" element={<DetalleCarrera />} />
+                <Route path="carreras/:id/clasificacion" element={<ModificarClasificacionCarrera />} />
+                <Route path="carreras/:id/clasificacion/completa" element={<ClasificacionTiempoReal />} />
+                <Route path="carreras/:id/clasificacion/:corredorId" element={<ModClasifCorredor />} />
 
                 {/*Administracion*/}
                 <Route path='configuraciones'>
