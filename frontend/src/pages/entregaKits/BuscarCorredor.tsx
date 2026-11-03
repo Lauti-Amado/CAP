@@ -1,31 +1,70 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Search, PackageCheck, Flag } from 'lucide-react'
-import { Container, Card, Button, Form, Badge } from 'react-bootstrap'
+import { Container, Card, Button, Form, Badge, Spinner } from 'react-bootstrap'
+
 import './BuscarCorredor.css'
 import CorredorNoEncontrado from './CorredorNoEncontrado'
-import type { CorredorDetalle } from '../../types/entregaKits'
-
-// MOCK TEMPORAL
-// Borrar cuando el backend esté conectado.
+import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
+import { ApiError } from '../../services/apiService'
 import {
-  carreraActivaMock,
-  corredoresMock,
-  ultimasEntregasMock,
-} from './entregaKitsMock'
+  buscarCorredorPorDni,
+  obtenerEntregasRecientes,
+} from '../../services/entregaKitService'
+import type { EntregaRecienteDTO } from '../../types/entregaKits'
 
 function BuscarCorredor() {
   const [dni, setDni] = useState('')
   const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null)
+  const [errorEntregas, setErrorEntregas] = useState<string | null>(null)
   const [mostrarNoEncontrado, setMostrarNoEncontrado] = useState(false)
-  
-  const carreraActiva = carreraActivaMock
-  const ultimasEntregas = ultimasEntregasMock
-  const navigate = useNavigate()
-  const { nombreCarrera } = useParams();
+  const [buscando, setBuscando] = useState(false)
+  const [cargandoEntregas, setCargandoEntregas] = useState(true)
+  const [ultimasEntregas, setUltimasEntregas] = useState<EntregaRecienteDTO[]>([])
 
-  const buscarCorredor = () => {
+  const navigate = useNavigate()
+  const { nombreCarrera } = useParams()
+  const { carreraSeleccionada } = useSeleccionarCarrera()
+
+  useEffect(() => {
+    if (!carreraSeleccionada) return
+
+    let cancelado = false
+
+    async function cargarEntregas() {
+      setCargandoEntregas(true)
+      setErrorEntregas(null)
+
+      try {
+        const entregas = await obtenerEntregasRecientes(
+          carreraSeleccionada!.id,
+          3
+        )
+
+        if (!cancelado) {
+          setUltimasEntregas(entregas)
+        }
+      } catch (error) {
+        console.error('Error al obtener las últimas entregas:', error)
+
+        if (!cancelado) {
+          setErrorEntregas('No se pudieron cargar las últimas entregas.')
+        }
+      } finally {
+        if (!cancelado) {
+          setCargandoEntregas(false)
+        }
+      }
+    }
+
+    void cargarEntregas()
+
+    return () => {
+      cancelado = true
+    }
+  }, [carreraSeleccionada])
+
+  const buscarCorredor = async () => {
     const dniIngresado = dni.trim()
 
     if (dniIngresado === '') {
@@ -33,20 +72,32 @@ function BuscarCorredor() {
       return
     }
 
-    setErrorBusqueda(null)
-
-    // MOCK TEMPORAL:
-    // TODO BACKEND: GET /api/corredores/{dni}
-    const corredor: CorredorDetalle | undefined = corredoresMock.find(
-      (corredor) => corredor.dni === dniIngresado
-    )
-
-    if (corredor) {
-      navigate(`/clasificador/entrega-kits/${nombreCarrera}/${corredor.dni}`)
+    if (!carreraSeleccionada) {
+      setErrorBusqueda('No hay una carrera seleccionada.')
       return
     }
 
-    setMostrarNoEncontrado(true)
+    setErrorBusqueda(null)
+    setMostrarNoEncontrado(false)
+    setBuscando(true)
+
+    try {
+      await buscarCorredorPorDni(carreraSeleccionada.id, dniIngresado)
+
+      navigate(
+        `/clasificador/entrega-kits/${nombreCarrera}/${encodeURIComponent(dniIngresado)}`
+      )
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        setMostrarNoEncontrado(true)
+        return
+      }
+
+      console.error('Error al buscar el corredor:', error)
+      setErrorBusqueda('No se pudo consultar el corredor. Intente nuevamente.')
+    } finally {
+      setBuscando(false)
+    }
   }
 
   return (
@@ -57,18 +108,27 @@ function BuscarCorredor() {
         </div>
 
         <div className="buscar-corredor__info-carrera">
-          {carreraActiva && (
+          {carreraSeleccionada && (
             <>
               <div className="buscar-corredor__carrera-nombre">
-                <span>{carreraActiva.nombre}</span>
-                <span>{carreraActiva.distancias.join(' / ')}</span>
+                <span>{carreraSeleccionada.nombre}</span>
+
+                <span>
+                  {carreraSeleccionada.distancias
+                    .map((distancia) => `${distancia.kilometraje}K`)
+                    .join(' / ')}
+                </span>
 
                 <Badge bg="success" className="buscar-corredor__estado">
-                  <span>●</span> {carreraActiva.estado}
+                  <span>●</span> {carreraSeleccionada.estado}
                 </Badge>
               </div>
 
-              <small>Edición {carreraActiva.edicion}</small>
+              <small>
+                {new Date(
+                  carreraSeleccionada.fechaHoraCarrera
+                ).toLocaleDateString('es-AR')}
+              </small>
             </>
           )}
         </div>
@@ -76,7 +136,11 @@ function BuscarCorredor() {
         <Button
           type="button"
           variant="success"
-          onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)}
+          onClick={() =>
+            navigate(
+              `/clasificador/entrega-kits/${nombreCarrera}/inscripciones`
+            )
+          }
         >
           Ingresar a lista de inscripciones
         </Button>
@@ -97,7 +161,10 @@ function BuscarCorredor() {
           className="buscar-corredor__busqueda"
           onSubmit={(event) => {
             event.preventDefault()
-            buscarCorredor()
+
+            if (!buscando) {
+              void buscarCorredor()
+            }
           }}
         >
           <Form.Control
@@ -106,18 +173,21 @@ function BuscarCorredor() {
             onChange={(event) => {
               setDni(event.target.value)
               setErrorBusqueda(null)
+              setMostrarNoEncontrado(false)
             }}
             placeholder="Ej. 35123456"
             aria-label="DNI del corredor"
             isInvalid={Boolean(errorBusqueda)}
+            disabled={buscando}
           />
 
           <Button
             type="submit"
             variant="success"
             aria-label="Buscar corredor"
+            disabled={buscando}
           >
-            <Search size={18} />
+            {buscando ? <Spinner size="sm" /> : <Search size={18} />}
           </Button>
         </Form>
 
@@ -145,21 +215,39 @@ function BuscarCorredor() {
         />
       )}
 
-      {ultimasEntregas.length > 0 && (
-        <section className="buscar-corredor__ultimas">
-          <span>Últimas entregas</span>
+      <section className="buscar-corredor__ultimas">
+        <span>Últimas entregas</span>
 
-          {ultimasEntregas.map((entrega) => (
+        {cargandoEntregas ? (
+          <div className="text-center">
+            <Spinner animation="border" size="sm" />
+          </div>
+        ) : errorEntregas ? (
+          <p className="buscar-corredor__error">{errorEntregas}</p>
+        ) : ultimasEntregas.length === 0 ? (
+          <p>No hay entregas registradas todavía.</p>
+        ) : (
+          ultimasEntregas.map((entrega) => (
             <Card key={entrega.id} className="buscar-corredor__entrega">
-              <strong>{entrega.nombreCorredor}</strong>
+              <strong>
+                {entrega.corredor.nombre} {entrega.corredor.apellido}
+              </strong>
 
               <small>
-                Kit #{entrega.numeroKit} · {entrega.distancia}
+                Kit #{entrega.dorsal.numero} ·{' '}
+                {entrega.distancia.kilometraje}K
+              </small>
+
+              <small>
+                {new Date(entrega.fechaHoraEntrega).toLocaleTimeString(
+                  'es-AR',
+                  { hour: '2-digit', minute: '2-digit' }
+                )}
               </small>
             </Card>
-          ))}
-        </section>
-      )}
+          ))
+        )}
+      </section>
     </Container>
   )
 }

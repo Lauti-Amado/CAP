@@ -1,7 +1,7 @@
 //backend/src/controllers/entregaKit.controller.ts
 import type { Request, Response } from "express";
 import * as entregaKitService from "../services/entregaKit.service";
-import { limiteQuerySchema } from "../validations/dorsal.validations";
+import { dniQuerySchema, limiteQuerySchema } from "../validations/dorsal.validations";
 
 export async function entregar(req: Request, res: Response) {
     return res.status(201).json(await entregaKitService.entregarKit(req.params.id as string, req.body));
@@ -19,4 +19,15 @@ export async function deshacer(req: Request, res: Response) {
 export async function recientes(req: Request, res: Response) {
     const { limite } = limiteQuerySchema.parse(req.query);
     return res.json(await entregaKitService.entregasRecientes(req.params.id as string, limite));
+}
+
+export async function buscarCorredor(req: Request, res: Response) {
+    const { dni } = dniQuerySchema.parse(req.query);
+
+    return res.json(
+        await entregaKitService.buscarCorredorPorDni(
+            req.params.id as string,
+            dni
+        )
+    );
 }

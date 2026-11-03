@@ -1,23 +1,155 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PackageCheck, Info, CircleCheck } from 'lucide-react'
-import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap'
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Spinner,
+} from 'react-bootstrap'
+
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import '../../components/corredor/DetalleCorredor.css'
 
-// MOCK TEMPORAL
-// Reemplazar por GET /api/corredores/{dni} al conectar el backend.
-import { corredoresMock } from './entregaKitsMock'
+import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
+import { ApiError } from '../../services/apiService'
+import {
+  buscarCorredorPorDni,
+  registrarEntregaKit,
+} from '../../services/entregaKitService'
+
+import type { CorredorEntregaKitDTO } from '../../types/entregaKits'
 
 function DetalleCorredor() {
-  const { dni } = useParams<{ dni: string }>()
+  const { dni, nombreCarrera } = useParams<{
+    dni: string
+    nombreCarrera: string
+  }>()
+
   const navigate = useNavigate()
+  const { carreraSeleccionada } = useSeleccionarCarrera()
+
+  const [corredor, setCorredor] = useState<CorredorEntregaKitDTO | null>(null)
   const [dorsal, setDorsal] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [entregando, setEntregando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [entregaConfirmada, setEntregaConfirmada] = useState(false)
 
-  const corredor = corredoresMock.find(
-    (corredor) => corredor.dni === dni
-  )
+  useEffect(() => {
+    if (!dni || !carreraSeleccionada) return
+
+    let cancelado = false
+
+    async function cargarCorredor() {
+      setCargando(true)
+      setError(null)
+
+      try {
+        const resultado = await buscarCorredorPorDni(
+          carreraSeleccionada!.id,
+          dni!
+        )
+
+        if (!cancelado) {
+          setCorredor(resultado)
+        }
+      } catch (error) {
+        if (cancelado) return
+
+        if (error instanceof ApiError && error.status === 404) {
+          setCorredor(null)
+        } else {
+          console.error('Error al consultar el corredor:', error)
+          setError('No se pudieron cargar los datos del corredor.')
+        }
+      } finally {
+        if (!cancelado) setCargando(false)
+      }
+    }
+
+    void cargarCorredor()
+
+    return () => {
+      cancelado = true
+    }
+  }, [dni, carreraSeleccionada])
+
+  const volverAlBuscador = () => {
+    navigate(`/clasificador/entrega-kits/${nombreCarrera}`)
+  }
+
+  const puedeEntregar =
+    Boolean(corredor?.habilitadoParaRetirarKit) &&
+    /^\d+$/.test(dorsal.trim()) &&
+    Number(dorsal) > 0 &&
+    !entregando
+
+  async function entregarKit() {
+    if (!corredor || !puedeEntregar) return
+
+    setEntregando(true)
+    setError(null)
+
+    try {
+      const entrega = await registrarEntregaKit(
+        corredor.inscripcionId,
+        dorsal.trim()
+      )
+
+      setCorredor((actual) =>
+        actual
+          ? {
+              ...actual,
+              habilitadoParaRetirarKit: false,
+              inscripcion: {
+                ...actual.inscripcion,
+                estado: 'Confirmada',
+              },
+              entregaKit: entrega,
+            }
+          : actual
+      )
+
+      setEntregaConfirmada(true)
+    } catch (error) {
+      console.error('Error al registrar la entrega:', error)
+
+      setError(
+        error instanceof ApiError
+          ? error.message
+          : 'No se pudo registrar la entrega del kit.'
+      )
+    } finally {
+      setEntregando(false)
+    }
+  }
+
+  if (cargando) {
+    return (
+      <Container fluid className="detalle-corredor">
+        <div className="text-center py-5">
+          <Spinner animation="border" />
+          <p className="mt-3">Buscando corredor...</p>
+        </div>
+      </Container>
+    )
+  }
+
+  if (error && !corredor) {
+    return (
+      <Container fluid className="detalle-corredor">
+        <p className="buscar-corredor__error">{error}</p>
+        <Button variant="link" onClick={volverAlBuscador}>
+          ← Volver al buscador
+        </Button>
+      </Container>
+    )
+  }
 
   if (!corredor) {
     return (
@@ -28,7 +160,7 @@ function DetalleCorredor() {
             type="button"
             variant="link"
             className="detalle-corredor__volver"
-            onClick={() => navigate('/clasificador/entrega-kits')}
+            onClick={volverAlBuscador}
           >
             ← Volver al buscador
           </Button>
@@ -37,29 +169,14 @@ function DetalleCorredor() {
     )
   }
 
-  const puedeEntregar =
-    corredor.habilitadoParaRetirarKit &&
-    /^\d+$/.test(dorsal.trim()) &&
-    Number(dorsal) > 0 &&
-    !entregaConfirmada
+  const nombreCompleto =
+    `${corredor.corredor.nombre} ${corredor.corredor.apellido}`
 
-  const entregarKit = () => {
-    if (!puedeEntregar) return
-
-    // MOCK TEMPORAL:
-    // Simula la confirmación visual de la entrega.
-    // TODO BACKEND: registrar la entrega y su fecha/hora.
-    console.log('Entregar kit', {
-      dni: corredor.dni,
-      dorsal: dorsal.trim(),
-    })
-
-    setEntregaConfirmada(true)
-  }
+  const estadoAptoMedico =
+    corredor.aptoMedico?.aprobado ? 'verificado' : 'pendiente'
 
   return (
     <Container fluid as="main" className="detalle-corredor">
-      {/* ENCABEZADO */}
       <header className="detalle-corredor__encabezado">
         <div>
           <h1>Detalle de Corredor</h1>
@@ -70,29 +187,28 @@ function DetalleCorredor() {
           type="button"
           variant="link"
           className="detalle-corredor__volver"
-          onClick={() => navigate('/clasificador/entrega-kits')}
+          onClick={volverAlBuscador}
         >
           ← Volver al buscador
         </Button>
       </header>
 
-      {/* CONTENIDO */}
       <Row className="detalle-corredor__contenido g-3">
-        {/* COLUMNA IZQUIERDA */}
         <Col xs={12} md={5} lg={4} xl={3}>
           <TarjetasCorredor
-            nombre={corredor.nombre}
-            dni={corredor.dni}
-            categoria={corredor.categoria}
-            distancia={corredor.distancia}
-            talleRemera={corredor.talleRemera}
-            clubTeam={corredor.clubTeam}
-            estadoInscripcion={corredor.inscripcion.estado}
-            estadoAptoMedico={corredor.aptoMedico?.estado}
+            nombre={nombreCompleto}
+            dni={corredor.corredor.dni}
+            categoria="—"
+            distancia={`${corredor.distancia.kilometraje}K`}
+            talleRemera={corredor.talleRemera ?? undefined}
+            clubTeam={corredor.equipo?.nombre ?? undefined}
+            estadoInscripcion={
+              corredor.inscripcion.pagada ? 'pagado' : 'pendiente'
+            }
+            estadoAptoMedico={estadoAptoMedico}
           />
         </Col>
 
-        {/* COLUMNA DERECHA */}
         <Col xs={12} md={7} lg={8} xl={9}>
           <Card className="detalle-corredor__kit">
             <div
@@ -117,85 +233,89 @@ function DetalleCorredor() {
                 DATOS DEL KIT ASIGNADO
               </span>
 
-              <div className="detalle-corredor__kit-datos">
-                {/* DORSAL */}
-                <div className="detalle-corredor__kit-dato">
-                  <Form.Label htmlFor="dorsal">
-                    DORSAL A ASIGNAR
-                  </Form.Label>
-
-                  <div className="detalle-corredor__dorsal">
-                    <span aria-hidden="true">#</span>
-
-                    <Form.Control
-                      id="dorsal"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      value={dorsal}
-                      onChange={(event) => {
-                        setDorsal(
-                          event.target.value.replace(/\D/g, '')
-                        )
-                        setEntregaConfirmada(false)
-                      }}
-                      placeholder="125"
-                      disabled={
-                        !corredor.habilitadoParaRetirarKit ||
-                        entregaConfirmada
-                      }
-                      aria-label="Número de dorsal a asignar"
-                      className="detalle-corredor__dorsal-input"
-                    />
-                  </div>
-                </div>
-
-                {/* CHIP RFID */}
-                <div className="detalle-corredor__kit-dato">
-                  <Form.Label>CHIP RFID</Form.Label>
-                  <strong className="detalle-corredor__chip">
-                    —
-                  </strong>
-                  {/*
-                    TODO: obtener el chip RFID correspondiente
-                    al dorsal desde el backend.
-                  */}
-                </div>
-              </div>
-
-              {/* AVISO */}
-              <div className="detalle-corredor__aviso">
-                <Info size={19} />
-
-                <p>
-                  Asegúrese de verificar que el número de dorsal
-                  físico coincida con el número mostrado en pantalla
-                  antes de confirmar la entrega. El sistema registrará
-                  la fecha y hora exacta de esta acción.
-                </p>
-              </div>
-
-              {entregaConfirmada && (
-                <div
-                  className="detalle-corredor__confirmacion"
-                  role="status"
-                >
+              {corredor.entregaKit ? (
+                <div className="detalle-corredor__confirmacion">
                   <CircleCheck size={17} />
-                  Entrega simulada correctamente para el dorsal #
-                  {dorsal}.
+                  Kit entregado. Dorsal #{corredor.entregaKit.dorsal.numero}
+                  {corredor.entregaKit.dorsal.chip && (
+                    <> · Chip #{corredor.entregaKit.dorsal.chip.numero}</>
+                  )}
                 </div>
+              ) : (
+                <>
+                  <div className="detalle-corredor__kit-datos">
+                    <div className="detalle-corredor__kit-dato">
+                      <Form.Label htmlFor="dorsal">
+                        DORSAL A ASIGNAR
+                      </Form.Label>
+
+                      <div className="detalle-corredor__dorsal">
+                        <span aria-hidden="true">#</span>
+                        <Form.Control
+                          id="dorsal"
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={dorsal}
+                          onChange={(event) => {
+                            setDorsal(event.target.value.replace(/\D/g, ''))
+                            setEntregaConfirmada(false)
+                          }}
+                          placeholder="125"
+                          disabled={
+                            !corredor.habilitadoParaRetirarKit || entregando
+                          }
+                          aria-label="Número de dorsal a asignar"
+                          className="detalle-corredor__dorsal-input"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="detalle-corredor__kit-dato">
+                      <Form.Label>CHIP RFID</Form.Label>
+                      <strong className="detalle-corredor__chip">—</strong>
+                    </div>
+                  </div>
+
+                  <div className="detalle-corredor__aviso">
+                    <Info size={19} />
+                    <p>
+                      Verifique que el número de dorsal físico coincida con
+                      el ingresado. El sistema registrará la fecha y hora
+                      de la entrega.
+                    </p>
+                  </div>
+                </>
               )}
 
-              {/* ENTREGAR KIT */}
+              {!corredor.habilitadoParaRetirarKit &&
+                corredor.motivosNoHabilitado.length > 0 && (
+                  <ul>
+                    {corredor.motivosNoHabilitado.map((motivo) => (
+                      <li key={motivo}>{motivo}</li>
+                    ))}
+                  </ul>
+                )}
+
+              {error && (
+                <p className="buscar-corredor__error" role="alert">
+                  {error}
+                </p>
+              )}
+
               <Button
                 type="button"
                 variant="success"
                 className="detalle-corredor__entregar"
                 disabled={!puedeEntregar}
-                onClick={entregarKit}
+                onClick={() => void entregarKit()}
               >
                 <PackageCheck size={17} />
-                {entregaConfirmada ? 'Kit entregado' : 'Entregar kit'}
+                {entregando
+                  ? 'Registrando entrega...'
+                  : entregaConfirmada
+                    ? 'Kit entregado'
+                    : 'Entregar kit'}
               </Button>
             </Card.Body>
           </Card>

@@ -22,4 +22,10 @@ router.delete("/inscripciones/:id/entrega-kit",
 router.get("/carreras/:id/entregas-recientes",
     ...protegido, validateParams(idParamSchema), entregaKitController.recientes);
 
+ router.get(
+    "/carreras/:id/corredores",
+    ...protegido,
+    validateParams(idParamSchema),
+    entregaKitController.buscarCorredor
+); 
 export default router;

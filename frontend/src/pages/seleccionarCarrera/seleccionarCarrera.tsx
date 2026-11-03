@@ -8,7 +8,7 @@ import { useSeleccionarCarrera } from "../../context/SeleccionarCarreraContext";
 
 import CarreraSeleccionCard from "./components/CarreraSeleccionCard";
 import CarreraFiltros from "./components/CarreraFiltros";
-import { ESTADOS_ORDENADOS, type EstadoCarrera } from "./components/carreraEstadoBadge";
+import { ESTADOS_ORDENADOS, type EstadoCarrera } from "./components/CarreraEstadoBadge";
 
 import "./seleccionarCarrera.css";
 
