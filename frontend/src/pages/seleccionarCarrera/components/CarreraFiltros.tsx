@@ -1,7 +1,7 @@
 import { Form, InputGroup, Stack } from "react-bootstrap";
 import { Search } from "lucide-react";
 
-import { ESTADOS, type EstadoCarrera } from "./carreraEstadoBadge"
+import { ESTADOS, type EstadoCarrera } from "./CarreraEstadoBadge"
 
 interface Props {
   busqueda: string;

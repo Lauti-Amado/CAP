@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Calculator, ChevronLeft, ChevronRight, Download, FileSpreadsheet, FileText, Filter, Pencil, Plus, Search, Settings, Table as TableIcon, Trash2, Trophy } from 'lucide-react'
+import { Calculator, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, Filter, Pencil, Plus, Search, Settings, Table as TableIcon, Trash2, Trophy } from 'lucide-react'
 import { grandPrixStandings, initialGrandPrixCircuits, type GrandPrixCircuit } from './grandPrixData'
 import './GrandPrix.css'
 import * as XLSX from 'xlsx'

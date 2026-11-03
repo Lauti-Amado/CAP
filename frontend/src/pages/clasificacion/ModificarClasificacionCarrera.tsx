@@ -2,7 +2,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { Alert, Button, Card, Col, Row } from 'react-bootstrap'
 import { ArrowLeft, CalendarDays, ListOrdered, MapPin, Ruler } from 'lucide-react'
-import './DashboardClasificacion.css'
 import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge'
 import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion'
@@ -10,6 +9,8 @@ import { participantesMock } from './participanteMock'
 
 // Borrar cuando se conecte con el backend
 import { carrerasDetalleMock } from '../carreras/detalleCarreraMock'
+
+const estiloPagina = { minHeight: '100vh', backgroundColor: '#f8f9ff' }
 
 function ModificarClasificacionCarrera() {
   const { id } = useParams<{ id: string }>()
@@ -22,7 +23,7 @@ function ModificarClasificacionCarrera() {
 
   if (!carrera) {
     return (
-      <main className="dc-pagina p-4">
+      <main className="p-4" style={estiloPagina}>
         <Alert variant="warning">No se encontró la carrera.</Alert>
         <Button variant="outline-secondary" onClick={() => navigate('/administrador/carreras')}>
           Volver al listado de carreras
@@ -33,7 +34,7 @@ function ModificarClasificacionCarrera() {
 
   if (carrera.estado !== 'Finalizada') {
     return (
-      <main className="dc-pagina p-4">
+      <main className="p-4" style={estiloPagina}>
         <Alert variant="info">Solo se puede modificar la clasificación de carreras finalizadas.</Alert>
         <Button variant="outline-secondary" onClick={volverAlDetalle}>
           Volver al detalle
@@ -55,7 +56,7 @@ function ModificarClasificacionCarrera() {
   const progreso = participantes === 0 ? 0 : Math.round((llegados / participantes) * 100)
 
   return (
-    <main className="dc-pagina p-4">
+    <main className="p-4" style={estiloPagina}>
       <Button
         variant="link"
         className="p-0 mb-2 d-inline-flex align-items-center gap-1 text-decoration-none"
@@ -66,8 +67,8 @@ function ModificarClasificacionCarrera() {
       </Button>
 
       <header className="mb-3">
-        <h1 className="dc-titulo mb-2">Dashboard de Clasificación</h1>
-        <p className="dc-subtitulo mb-0">
+        <h1 className="mb-2 text-dark" style={{ fontSize: '2rem', fontWeight: 800 }}>Dashboard de Clasificación</h1>
+        <p className="mb-0 d-flex flex-wrap align-items-center gap-2 text-muted" style={{ fontSize: '0.85rem' }}>
           <strong>{carrera.nombre}</strong>
           <span aria-hidden="true">•</span>
           <span className="d-inline-flex align-items-center gap-1">
@@ -85,7 +86,7 @@ function ModificarClasificacionCarrera() {
       </header>
 
       {/* La carrera ya terminó: solo se muestra el estado, sin cronómetro ni botones de iniciar/detener */}
-      <Card className="dc-timer dc-timer--finalizada mb-3">
+      <Card className="mb-4 shadow-sm" style={{ borderLeft: '4px solid #92400e', borderRadius: '8px' }}>
         <Card.Body>
           <EstadoCarreraBadge estado="finalizada" />
           <p className="small text-secondary mt-2 mb-0">
@@ -113,20 +114,27 @@ function ModificarClasificacionCarrera() {
         </Col>
 
         <Col xs={12} lg={4}>
-          <Card className="h-100">
-            <Card.Body className="d-flex flex-column">
-              <h3 className="dc-etiqueta mb-3">ACCIONES RÁPIDAS</h3>
+          <Card className="h-100 shadow-sm border" style={{ borderRadius: '8px' }}>
+            <Card.Body className="d-flex flex-column p-4">
+              <h3 className="text-uppercase text-muted fw-bold mb-3" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
+                ACCIONES RÁPIDAS
+              </h3>
 
               <Button
-                variant="success"
-                className="dc-accion-principal dc-accion-principal--tile flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2"
-                onClick={() => navigate(`/administrador/carreras/${carrera.id}/clasificacion/completa`)}   // ← antes tiempo-real; sin el TODO
+                className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
+                style={{ backgroundColor: '#16a34a', borderRadius: '8px', minHeight: '180px' }}
+                onClick={() => navigate(`/administrador/carreras/${carrera.id}/clasificacion/completa`)}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#15803d')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#16a34a')}
               >
-                <span className="dc-accion-icono">
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                  style={{ width: '64px', height: '64px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                >
                   <ListOrdered size={28} aria-hidden="true" />
                 </span>
                 <strong className="fs-5">Ver clasificación completa</strong>
-                <span className="dc-accion-sub">Revisar y modificar posiciones</span>
+                <span className="text-white-50" style={{ fontSize: '0.85rem' }}>Revisar y modificar posiciones</span>
               </Button>
             </Card.Body>
           </Card>
