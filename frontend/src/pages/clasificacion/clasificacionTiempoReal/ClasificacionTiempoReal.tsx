@@ -1,7 +1,8 @@
 //frontend/src/pages/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal.tsx
 import React, { useState } from 'react';
 import './ClasificacionTiempoReal.css';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion';
 import { Alert, Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
 import { Layers, Pencil, Search, UserX, Wifi } from 'lucide-react';
 import { Tabla, type Columna } from '../../../components/tabla/Tabla';
@@ -11,6 +12,7 @@ import DescalificarCorredorModal from '../modales/DescalificarCorredorModal';
 import { llegadasMock } from '../llegadasMock';
 import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera';
 import type { LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
+import { carrerasDetalleMock } from '../../carreras/detalleCarreraMock';   // Borrar cuando se conecte con el backend
 
 const aResumen = (llegada: LlegadaAtleta): ResumenCorredor => ({
   id: llegada.id,
@@ -28,7 +30,12 @@ const resumenMock = { llegadas: 452, pendientes: 1048 };
 
 const ClasificacionTiempoReal: React.FC = () => {
   const navigate = useNavigate();
-  const { nombreCarrera } = useParams();
+  const rutas = useRutasClasificacion();
+
+  // En Carreras la carrera ya terminó: sin cronómetro, antenas ni carga manual
+  const finalizada = rutas.enCarreras;
+  // TODO BACKEND: GET /api/carreras/{id}
+  const carrera = finalizada ? carrerasDetalleMock.find((c) => c.id === rutas.carreraId) : undefined;
   const { estado, transcurrido } = useCronometroCarrera();
 
   const [llegadas, setLlegadas] = useState<LlegadaAtleta[]>(llegadasMock);
@@ -51,7 +58,7 @@ const ClasificacionTiempoReal: React.FC = () => {
     if (seleccion.length === 0) return;
     const [primero, ...resto] = seleccion;
     const cola = resto.length > 0 ? `?siguientes=${resto.map((llegada) => llegada.id).join(',')}` : '';
-    navigate(`/clasificador/clasificaciones/${nombreCarrera}/${primero.id}${cola}`);
+    navigate(rutas.corredor(primero.id, cola));
   };
 
   const handleDescalificar = () => setCorredoresADescalificar(descalificables.map(aResumen));
@@ -120,7 +127,9 @@ const ClasificacionTiempoReal: React.FC = () => {
     },
   ];
 
-  const progreso = Math.round((resumenMock.llegadas / (resumenMock.llegadas + resumenMock.pendientes)) * 100);
+  const llegadasTotales = carrera ? carrera.cantidadClasificados : resumenMock.llegadas;
+  const pendientesTotales = carrera ? carrera.cantidadInscriptos - carrera.cantidadClasificados : resumenMock.pendientes;
+  const progreso = Math.round((llegadasTotales / (llegadasTotales + pendientesTotales)) * 100);
 
   return (
     <div className="rt-container">
@@ -134,26 +143,30 @@ const ClasificacionTiempoReal: React.FC = () => {
         {/* Cabecera */}
         <header className="mb-3">
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-            <h1 className="rt-titulo">Clasificación de la carrera Tres Ciudades</h1>
-            <Button variant="outline-secondary" size="sm" onClick={() => navigate(`/clasificador/clasificaciones/${nombreCarrera}`)}>
+            <h1 className="rt-titulo">
+              {carrera ? `Clasificación de ${carrera.nombre}` : 'Clasificación de la carrera Tres Ciudades'}
+            </h1>
+            <Button variant="outline-secondary" size="sm" onClick={() => navigate(rutas.dashboard)}>
               Volver a Dashboard de Clasificación
             </Button>
           </div>
 
           <div className="d-flex align-items-center gap-3 mb-3">
-            <EstadoCarreraBadge estado={estado} />
-            <span className="rt-reloj">{transcurrido}</span>
+            <EstadoCarreraBadge estado={finalizada ? 'finalizada' : estado} />
+            {!finalizada && <span className="rt-reloj">{transcurrido}</span>}
           </div>
 
           <div className="d-flex flex-wrap align-items-center gap-2">
-            <Button
-              variant="outline-secondary"
-              className="d-inline-flex align-items-center gap-2"
-              onClick={() => setMostrarCargaManual(true)}
-            >
-              <Pencil size={15} aria-hidden="true" />
-              Cargar tiempo manual
-            </Button>
+            {!finalizada && (
+              <Button
+                variant="outline-secondary"
+                className="d-inline-flex align-items-center gap-2"
+                onClick={() => setMostrarCargaManual(true)}
+              >
+                <Pencil size={15} aria-hidden="true" />
+                Cargar tiempo manual
+              </Button>
+            )}
 
             <Button
               variant="outline-secondary"
@@ -185,7 +198,7 @@ const ClasificacionTiempoReal: React.FC = () => {
         <Card className="mb-4">
           <Card.Body>
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              <h2 className="h6 fw-bold mb-0">Llegadas Recientes</h2>
+              <h2 className="h6 fw-bold mb-0">{finalizada ? 'Clasificación final' : 'Llegadas Recientes'}</h2>
               <InputGroup size="sm" className="rt-buscador">
                 <InputGroup.Text className="bg-white">
                   <Search size={14} aria-hidden="true" />
@@ -215,7 +228,7 @@ const ClasificacionTiempoReal: React.FC = () => {
 
         {/* Participantes y estado del sistema */}
         <Row className="g-3">
-          <Col xs={12} md={6}>
+          <Col xs={12} md={finalizada ? 12 : 6}>
             <Card className="h-100">
               <Card.Body>
                 <h3 className="h6 fw-bold mb-3">Participantes</h3>
@@ -223,11 +236,11 @@ const ClasificacionTiempoReal: React.FC = () => {
                 <div className="d-flex gap-4 mb-3">
                   <div>
                     <span className="rt-stat-label d-block">Llegadas</span>
-                    <span className="rt-stat-val">{resumenMock.llegadas}</span>
+                    <span className="rt-stat-val">{llegadasTotales.toLocaleString('es-AR')}</span>
                   </div>
                   <div>
                     <span className="rt-stat-label d-block">Pendientes</span>
-                    <span className="rt-stat-val">{resumenMock.pendientes.toLocaleString('es-AR')}</span>
+                    <span className="rt-stat-val">{pendientesTotales.toLocaleString('es-AR')}</span>
                   </div>
                 </div>
 
@@ -240,6 +253,7 @@ const ClasificacionTiempoReal: React.FC = () => {
             </Card>
           </Col>
 
+        {!finalizada && (
           <Col xs={12} md={6}>
             <Card className="h-100">
               <Card.Body>
@@ -271,6 +285,7 @@ const ClasificacionTiempoReal: React.FC = () => {
               </Card.Body>
             </Card>
           </Col>
+        )}
         </Row>
       </div>
 
@@ -281,6 +296,8 @@ const ClasificacionTiempoReal: React.FC = () => {
         onConfirmar={confirmarDescalificacion}
         onCancelar={() => setCorredoresADescalificar([])}
       />
+
+            {!finalizada && <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />}
     </div>
   );
 };

@@ -36,3 +36,7 @@ prisma/*.db-journal
 
 dist/
 dist-electron/
+
+# Bases SQLite locales
+*.db
+*.db-journal
