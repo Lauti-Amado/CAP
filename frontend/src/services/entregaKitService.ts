@@ -13,7 +13,8 @@ export function obtenerEntregasRecientes(
   limite = 3
 ): Promise<EntregaRecienteDTO[]> {
   return apiFetch<EntregaRecienteDTO[]>(
-    `/api/carreras/${carreraId}/entregas-recientes?limite=${limite}`
+    `/carreras/${carreraId}/entregas-recientes?limite=${limite}`
+
   )
 }
 
@@ -27,8 +28,7 @@ export function buscarCorredorPorDni(
   const params = new URLSearchParams({ dni })
 
   return apiFetch<CorredorEntregaKitDTO>(
-    `/api/carreras/${carreraId}/corredores?${params.toString()}`
-  )
+    `/carreras/${carreraId}/corredores?${params.toString()}`  )
 }
 
 /**
@@ -39,7 +39,7 @@ export function registrarEntregaKit(
   numeroDorsal: string
 ): Promise<EntregaKitDTO> {
   return apiFetch<EntregaKitDTO>(
-    `/api/inscripciones/${inscripcionId}/entrega-kit`,
+    `/inscripciones/${inscripcionId}/entrega-kit`,
     {
       method: 'POST',
       body: JSON.stringify({ numero: numeroDorsal }),
