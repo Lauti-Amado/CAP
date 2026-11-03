@@ -45,7 +45,7 @@ export function crearVentanaPrincipal(): void {
         ventanaPrincipal.loadURL('http://localhost:5173');
         //ventanaPrincipal.webContents.openDevTools();      <-- para debuggear
     } else {
-        ventanaPrincipal.loadFile(path.join(__dirname, '../frontend/dist/index.html'));
+        ventanaPrincipal.loadURL('http://127.0.0.1:3000');
     }
 
     ventanaPrincipal.once('ready-to-show', () => {

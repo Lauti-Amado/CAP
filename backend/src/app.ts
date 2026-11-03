@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { z } from "zod";
+import path from "path";
 
 import usuarioRoutes from "./routes/usuario.routes"
 import certificadosRoutes from './routes/certificados.routes' 
@@ -9,6 +10,9 @@ import dorsalRoutes from './routes/dorsal.routes'
 import carreraRoutes from "./routes/carrera.routes";
 
 import { errorHandler } from "./middlewares/errorHandler.middleware";
+
+
+const isProduction = process.env.NODE_ENV === "production" || process.env.IS_PACKAGED === "true";
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 const allowedOrigins = [
@@ -33,7 +37,24 @@ app.use('/api', certificadosRoutes)
 app.use('/api', dorsalRoutes)
 app.use("/api/carreras", carreraRoutes);
 
-app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
+
+//EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.
+if (isProduction) {
+  const frontendPath = path.join(__dirname, "../../frontend/dist");
+  app.use(express.static(frontendPath));
+  
+  //Servir el frontend cuando la app ingresa a una URL que no comienza con "/api"
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith('/api')) res.sendFile(path.join(frontendPath, "index.html"));
+    else res.status(404).json({ error: "Ruta API no encontrada" });
+  });
+}
+//EN DEVELOPMENT: Simplemente se encarga de responder los endpoints de la API
+else {
+  app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
+}
+
+
 app.use(errorHandler);
 
 export default app
