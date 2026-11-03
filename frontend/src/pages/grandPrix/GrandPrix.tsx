@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Calculator, ChevronLeft, ChevronRight, Download, Filter, Pencil, Plus, Search, Settings, Trash2, Trophy } from 'lucide-react'
+import { Calculator, ChevronLeft, ChevronRight, Download, FileSpreadsheet, FileText, Filter, Pencil, Plus, Search, Settings, Table as TableIcon, Trash2, Trophy } from 'lucide-react'
 import { grandPrixStandings, initialGrandPrixCircuits, type GrandPrixCircuit } from './grandPrixData'
 import './GrandPrix.css'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 type View = 'standings' | 'manage'
 
@@ -27,12 +30,126 @@ export default function GrandPrix() {
     setFormCircuit(null)
   }
 
+  // ==========================
+  // FUNCIONES DE EXPORTACIÓN
+  // ==========================
+
+  // 1. Exportar a CSV (JavaScript Nativo)
+  const handleExportCSV = () => {
+    if (filtered.length === 0) return
+
+    const headers = ['PUESTO', 'CORREDOR', 'DNI', 'CARRERAS', 'PUNTOS TOTALES']
+    const rows = filtered.map(r => [
+      r.position,
+      `"${r.name}"`,
+      `"${r.dni}"`,
+      `"${r.racesCompleted} / ${r.totalRaces}"`,
+      r.points
+    ])
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n")
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `grand_prix_${year}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // 2. Exportar a Excel (.xlsx usando SheetJS / xlsx)
+  const handleExportExcel = () => {
+    if (filtered.length === 0) return
+
+    const datosParaExcel = filtered.map(r => ({
+      Puesto: r.position,
+      Corredor: r.name,
+      DNI: r.dni,
+      'Carreras Completadas': `${r.racesCompleted} / ${r.totalRaces}`,
+      'Puntos Totales': r.points
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(datosParaExcel)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Clasificación Grand Prix")
+    
+    XLSX.writeFile(workbook, `grand_prix_${year}.xlsx`)
+  }
+
+  // 3. Exportar a PDF (Usando jsPDF y jspdf-autotable)
+  const handleExportPDF = () => {
+    if (filtered.length === 0) return
+
+    const doc = new jsPDF()
+
+    doc.setFontSize(16)
+    doc.text(`Clasificación General - Grand Prix ${year}`, 14, 20)
+    
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(`Filtros: Categoría (${category}) | Sexo (${gender}) | Generado el: ${new Date().toLocaleDateString()}`, 14, 28)
+
+    const columnas = ['Puesto', 'Corredor', 'DNI', 'Carreras', 'Puntos Totales']
+    const filas = filtered.map(r => [
+      r.position,
+      r.name,
+      r.dni,
+      `${r.racesCompleted} / ${r.totalRaces}`,
+      r.points.toLocaleString('es-AR')
+    ])
+
+    autoTable(doc, {
+      head: [columnas],
+      body: filas,
+      startY: 35,
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74] }, // Color verde institucional (#16a34a)
+      styles: { fontSize: 9 },
+    })
+
+    doc.save(`grand_prix_${year}.pdf`)
+  }
+
   return (
     <div className="grand-prix-page">
       <div className="gp-titlebar">
-        <div><h1>{view === 'standings' ? `Grand Prix ${year}` : 'Gestión de Grand Prix'}</h1><p>{view === 'standings' ? 'Clasificación general acumulada del circuito anual.' : 'Creación y administración de circuitos, reglas y temporadas.'}</p></div>
+        <div>
+          <h1>{view === 'standings' ? `Grand Prix ${year}` : 'Gestión de Grand Prix'}</h1>
+          <p>{view === 'standings' ? 'Clasificación general acumulada del circuito anual.' : 'Creación y administración de circuitos, reglas y temporadas.'}</p>
+        </div>
         <div className="gp-title-actions">
-          {view === 'standings' ? <><button type="button"><Download size={14} /> Exportar</button><button type="button" className="gp-secondary" onClick={() => setView('manage')}><Settings size={14} /> Gestionar</button><button className="gp-primary" type="button"><Calculator size={14} /> Recalcular Puntos</button></> : <><button type="button" onClick={() => setView('standings')}><ChevronLeft size={14} /> Clasificación</button><button className="gp-primary" type="button" onClick={startCreate}><Plus size={14} /> Nuevo Grand Prix</button></>}
+          {view === 'standings' ? (
+            <>
+              {/* Botones de Exportación independientes */}
+              <button type="button" onClick={handleExportPDF} title="Exportar a PDF">
+                <FileText size={14} className="text-success" /> PDF
+              </button>
+              <button type="button" onClick={handleExportExcel} title="Exportar a Excel">
+                <FileSpreadsheet size={14} className="text-success" /> Excel
+              </button>
+              <button type="button" onClick={handleExportCSV} title="Exportar a CSV">
+                <TableIcon size={14} className="text-success" /> CSV
+              </button>
+              
+              <button type="button" className="gp-secondary" onClick={() => setView('manage')}>
+                <Settings size={14} /> Gestionar
+              </button>
+              <button className="gp-primary" type="button">
+                <Calculator size={14} /> Recalcular Puntos
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => setView('standings')}>
+                <ChevronLeft size={14} /> Clasificación
+              </button>
+              <button className="gp-primary" type="button" onClick={startCreate}>
+                <Plus size={14} /> Nuevo Grand Prix
+              </button>
+            </>
+          )}
         </div>
       </div>
 

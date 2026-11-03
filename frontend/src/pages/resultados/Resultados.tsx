@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Award, FileSpreadsheet, FileText, Search, Send, Table as TableIcon } from 'lucide-react';
 import { Tabla, type Columna } from '../../components/tabla/Tabla';
 import { enviarCertificados } from '../../services/certificadosService';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ResultadoAtleta {
   id: number;
@@ -131,10 +134,94 @@ const Resultados: React.FC = () => {
     { titulo: 'T. OFICIAL', key: 'tiempoOficial', render: (atleta) => <strong className="text-end d-block">{atleta.tiempoOficial}</strong> },
   ];
 
-  // Funciones para exportación (mock)
-  const handleExportPDF = () => console.log('Exportando a PDF...');
-  const handleExportExcel = () => console.log('Exportando a Excel...');
-  const handleExportCSV = () => console.log('Exportando a CSV...');
+  // FUNCIONES DE EXPORTACION
+  // Exportar a PDF 
+  const handleExportPDF = () => {
+    if (datosTabla.length === 0) return;
+
+    const doc = new jsPDF();
+
+    // Título del PDF
+    doc.setFontSize(16);
+    doc.text("Resultados Finales - Maratón de la Ciudad", 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Distancia: ${distancia} | Generado el: ${new Date().toLocaleDateString()}`, 14, 28);
+
+    // Configuración de la tabla en el PDF
+    const columnas = ['Puesto', 'Dorsal', 'Corredor', 'DNI', 'Categoría', 'T. Neto', 'T. Oficial'];
+    const filas = datosTabla.map(a => [
+      a.puesto,
+      a.dorsal,
+      a.nombre,
+      a.dni,
+      a.categoria,
+      a.tiempoNeto,
+      a.tiempoOficial
+    ]);
+
+    // Generar tabla llamando a la función autoTable y pasándole 'doc'
+    autoTable(doc, {
+      head: [columnas],
+      body: filas,
+      startY: 35,
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74] }, // Color verde institucional (#16a34a)
+      styles: { fontSize: 9 },
+    });
+
+    // Guardar el archivo PDF
+    doc.save("resultados_maraton.pdf");
+  };
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    if (datosTabla.length === 0) return;
+
+    // Mapeamos los datos para darles un formato limpio en el Excel
+    const datosParaExcel = datosTabla.map(a => ({
+      Puesto: a.puesto,
+      Dorsal: a.dorsal,
+      Corredor: a.nombre,
+      DNI: a.dni,
+      Categoría: a.categoria,
+      'Tiempo Neto': a.tiempoNeto,
+      'Tiempo Oficial': a.tiempoOficial
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(datosParaExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Resultados Finales");
+    
+    // Descarga el archivo excel directamente en la PC
+    XLSX.writeFile(workbook, "resultados_maraton.xlsx");
+  };
+  // Exportar a CSV
+  const handleExportCSV = () => {
+    if (datosTabla.length === 0) return;
+
+    const headers = ['PUESTO', 'DORSAL', 'CORREDOR', 'DNI', 'CATEGORÍA', 'T. NETO', 'T. OFICIAL'];
+    const rows = datosTabla.map(a => [
+      a.puesto, 
+      `"${a.dorsal}"`, 
+      `"${a.nombre}"`, 
+      `"${a.dni}"`, 
+      `"${a.categoria}"`, 
+      `"${a.tiempoNeto}"`, 
+      `"${a.tiempoOficial}"`
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "resultados_maraton.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleEnviarCertificados = async () => {
     setMostrarConfirmacion(false);
