@@ -1,10 +1,11 @@
 //backend/src/services/dorsal.service.ts
 import { prisma } from "../config/prisma";
-import type { Chip, Prisma } from "../generated/prisma/client";
+import { Prisma } from "../generated/prisma";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
-import { toDorsalDto, toDorsalEnCarreraDto, type DorsalDTO, type DorsalEnCarreraDTO,} from "../dtos/dorsal.dto";
-import type { CrearDorsal, ItemInventario } from "../validations/dorsal.validations";
+import type { InscripcionEntregaKit, CarreraEntregaKits, ConsultaDorsal, EntregaReciente } from "../dtos/dorsal.dto";
+import type { EstadoCarrera, Sexo } from "../generated/prisma";
+import type { AsignarDorsal, ItemInventario } from "../validations/dorsal.validations";
 
 type Tx = Prisma.TransactionClient;
 
