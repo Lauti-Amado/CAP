@@ -1,3 +1,4 @@
+import { Button, Card, ProgressBar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { 
   Archive, BarChart3, CalendarDays, CloudCheck, Footprints, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, 
@@ -102,7 +103,7 @@ function Dashboard() {
             RESUMEN
         ========================= */}
         <section className="summary-grid" aria-label="Resumen">
-          <article className="summary-card race-card d-flex flex-column">
+          <Card as="article" className="summary-card race-card">
             <div className="card-topline">
               <span className="summary-icon">
                 <CalendarDays size={18} aria-hidden="true" />
@@ -125,9 +126,9 @@ function Dashboard() {
             ) : (
               <p className="empty-note">No hay carreras programadas</p>
             )}
-          </article>
+          </Card>
 
-          <article className="summary-card registrations-card">
+          <Card as="article" className="summary-card registrations-card">
             <div className="card-topline">
               <span className="summary-icon">
                 <UsersRound size={18} aria-hidden="true" />
@@ -139,17 +140,15 @@ function Dashboard() {
               <strong>{registrations.confirmed.toLocaleString('es-AR')}</strong>
               <span>/ {registrations.capacity.toLocaleString('es-AR')}</span>
             </div>
-            <div
-              className="progress-track"
-              role="progressbar"
-              aria-label="Cupo ocupado"
-              aria-valuenow={registrations.confirmed}
-              aria-valuemin={0}
-              aria-valuemax={Math.max(1, registrations.capacity)}
-            >
-              <span style={{ width: `${fillPercent}%` }} />
-            </div>
-          </article>
+            <ProgressBar className="progress-track">
+              <ProgressBar
+                now={registrations.confirmed}
+                max={Math.max(1, registrations.capacity)}
+                style={{ width: `${fillPercent}%` }}
+                aria-label="Cupo ocupado"
+              />
+            </ProgressBar>
+          </Card>
         </section>
 
         {/* =========================
@@ -157,7 +156,7 @@ function Dashboard() {
         ========================= */}
         <section className="details-grid" aria-label="Estado y actividad">
           <div className="details-main">
-          <article className="panel rfid-panel">
+          <Card as="article" className="panel rfid-panel">
             <div className="panel-heading rfid-heading">
               <h2>
                 Estado RFID:{' '}
@@ -175,13 +174,13 @@ function Dashboard() {
                 ))}
               </div>
               {/* TODO: navegar a la configuración de chips cuando exista la ruta */}
-              <button className="primary-button" type="button">
+              <Button variant="" className="primary-button" type="button">
                 Ir a Configuración de chips
-              </button>
+              </Button>
             </div>
-          </article>
+          </Card>
 
-          <article className="panel sync-panel">
+          <Card as="article" className="panel sync-panel">
             <div className="sync-body">
               <div className="sync-info">
                 <h2>Estado de Sincronización</h2>
@@ -192,15 +191,15 @@ function Dashboard() {
                 {estadoSync.texto}
               </span>
             </div>
-          </article>
+          </Card>
         </div>    
 
-          <article className="panel activity-panel">
+          <Card as="article" className="panel activity-panel">
             <div className="panel-heading activity-heading">
               <h2>Actividad Reciente</h2>
-              <button className="more-button" type="button" aria-label="Más opciones de actividad">
+              <Button variant="" className="more-button" type="button" aria-label="Más opciones de actividad">
                 <MoreHorizontal size={17} aria-hidden="true" />
-              </button>
+              </Button>
             </div>
             <ul className="activity-list">
               {activities.map((activity) => (
@@ -209,10 +208,10 @@ function Dashboard() {
               {activities.length === 0 && <li className="empty-note">Todavía no hay actividad.</li>}
             </ul>
             {/* TODO: navegar al historial completo cuando exista la ruta */}
-            <button className="view-all-button" type="button">
+            <Button variant="" className="view-all-button" type="button">
               VER TODO
-            </button>
-          </article>
+            </Button>
+          </Card>
         </section>
 
         {/* =========================
@@ -222,7 +221,7 @@ function Dashboard() {
           <h2>Acciones Rápidas</h2>
           <div className="quick-action-grid">
             {quickActions.map(({ label, icon: Icon, path }) => (
-              <button
+              <Button variant=""
                 className="quick-action"
                 type="button"
                 key={label}
@@ -230,7 +229,7 @@ function Dashboard() {
               >
                 <Icon size={17} aria-hidden="true" />
                 <span>{label}</span>
-              </button>
+              </Button>
             ))}
           </div>
         </section>

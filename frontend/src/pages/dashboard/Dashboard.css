@@ -1,3 +1,14 @@
+.dashboard-content .btn {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-border-width: 0;
+  --bs-btn-border-radius: 0;
+  --bs-btn-font-weight: inherit;
+  --bs-btn-line-height: inherit;
+  --bs-btn-focus-box-shadow: none;
+  vertical-align: baseline;
+}
+
 .dashboard-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -24,9 +35,10 @@
 .summary-card,
 .panel {
   min-width: 0;
-  background: #fff;
-  border: 1px solid #e6e9f3;
-  border-radius: 9px;
+  --bs-card-bg: #fff;
+  --bs-card-border-color: #e6e9f3;
+  --bs-card-border-radius: 9px;
+  --bs-card-color: inherit;
   box-shadow: 0 5px 13px rgba(24, 38, 65, 0.05);
 }
 
@@ -112,17 +124,15 @@
 }
 
 .progress-track {
-  height: 5px;
-  overflow: hidden;
-  border-radius: 9px;
-  background: #e3e9ff;
+  --bs-progress-height: 5px;
+  --bs-progress-border-radius: 9px;
+  --bs-progress-bg: #e3e9ff;
+  --bs-progress-bar-bg: #006b35;
 }
 
-.progress-track span {
-  display: block;
-  height: 100%;
+.progress-track .progress-bar {
   border-radius: inherit;
-  background: #006b35;
+  transition: none;
 }
 
 .details-grid {
