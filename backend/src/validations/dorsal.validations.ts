@@ -55,6 +55,10 @@ export const limiteQuerySchema = z.object({
     limite: z.coerce.number().int().min(1).max(50).default(5),
 });
 
+export const dniQuerySchema = z.object({
+    dni: z.string().trim().min(1, "Ingresá un DNI").max(20),
+});
+
 export type CrearDorsal = z.infer<typeof crearDorsalSchema>;
 export type EntregarKit = z.infer<typeof entregarKitSchema>;
 export type ItemInventario = CrearDorsal;

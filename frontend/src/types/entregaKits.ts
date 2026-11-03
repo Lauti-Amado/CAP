@@ -1,47 +1,80 @@
-export type CarreraActiva = {
-  id: number
-  nombre: string
-  edicion: number
-  estado: 'Activa'
-  distancias: string[]
+export type EstadoInscripcion =
+  | 'En_proceso'
+  | 'Pagada'
+  | 'Confirmada'
+  | 'Anulada'
+
+export type ChipDTO = {
+  id: string
+  numero: number
 }
 
+export type DorsalDTO = {
+  id: string
+  numero: string
+  chip: ChipDTO | null
+}
+
+export type EntregaKitDTO = {
+  id: string
+  inscripcionId: string
+  fechaHoraEntrega: string
+  dorsal: DorsalDTO
+}
+
+export type EntregaRecienteDTO = EntregaKitDTO & {
+  corredor: {
+    nombre: string
+    apellido: string
+  }
+  distancia: {
+    kilometraje: number
+    tipoDistancia: 'Participativa' | 'Competitiva'
+  }
+}
+
+export type CorredorEntregaKitDTO = {
+  inscripcionId: string
+
+  corredor: {
+    id: string
+    nombre: string
+    apellido: string
+    dni: string
+    fechaNacimiento: string
+    sexo: 'Masculino' | 'Femenino'
+  }
+
+  distancia: {
+    kilometraje: number
+    tipoDistancia: 'Participativa' | 'Competitiva'
+  }
+
+  talleRemera: string | null
+  equipo: {
+    nombre: string
+    codigoEquipo: string | null
+  } | null
+
+  inscripcion: {
+    estado: EstadoInscripcion
+    pagada: boolean
+  }
+
+  aptoMedico: {
+    aprobado: boolean
+    fechaVencimiento: string
+  } | null
+
+  habilitadoParaRetirarKit: boolean
+  motivosNoHabilitado: string[]
+
+  entregaKit: EntregaKitDTO | null
+}
+
+// Tipo de presentación utilizado por componentes existentes.
+// No representa los estados que devuelve el backend.
 export type EstadoVerificacion =
   | 'pagado'
   | 'verificado'
   | 'pendiente'
-
-export type CorredorDetalle = {
-  id: number
-  nombre: string
-  dni: string
-  categoria: string
-  distancia: string
-  talleRemera: string
-  clubTeam: string
-
-  inscripcion: {
-    estado: EstadoVerificacion
-  }
-
-  aptoMedico?: {
-    estado: EstadoVerificacion
-  }
-
-  habilitadoParaRetirarKit: boolean
-    // Estado de la entrega física del kit
-  kitEntregado: boolean
-   
-  // Solo existen cuando el kit fue entregado
-  dorsal?: string
-  chipRfid?: string
-  fechaEntregaKit?: string
-}
-
-export type UltimaEntrega = {
-  id: number
-  nombreCorredor: string
-  numeroKit: number
-  distancia: string
-  minutosDesdeEntrega: number
-}
