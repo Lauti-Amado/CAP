@@ -11,7 +11,7 @@ import dorsalRoutes from './routes/dorsal.routes'
 import entregaKitRoutes from './routes/entregaKit.routes'
 import carreraRoutes from "./routes/carrera.routes";
 import clasificacionRoutes from './routes/clasificacion.routes'
-
+import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 
 
@@ -41,7 +41,7 @@ app.use('/api', dorsalRoutes)
 app.use('/api', entregaKitRoutes)
 app.use("/api/carreras", carreraRoutes);
 app.use('/api', clasificacionRoutes)
-
+app.use("/api/categorias", categoriaRoutes);
 
 //EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.
 if (isProduction) {

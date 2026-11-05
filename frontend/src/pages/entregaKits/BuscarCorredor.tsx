@@ -111,11 +111,18 @@ function BuscarCorredor() {
           {carreraSeleccionada && (
             <>
               <div className="buscar-corredor__carrera-nombre">
-                <span>{carreraSeleccionada.nombre}</span>
+                <span>{carreraSeleccionada.nombre} </span>
 
                 <span>
-                  {carreraSeleccionada.distancias
-                    .map((distancia) => `${distancia.kilometraje}K`)
+                  {[...new Map(
+                    carreraSeleccionada.distancias.map((distancia) => [
+                      `${distancia.kilometraje}-${distancia.tipoDistancia}`,
+                      distancia,
+                    ])
+                  ).values()]
+                    .map((distancia) =>
+                      `${distancia.kilometraje}K ${distancia.tipoDistancia}`
+                    )
                     .join(' / ')}
                 </span>
 
