@@ -24,4 +24,7 @@ router.get("/contactos-emergencia", ...protegido, inscripcionController.buscarCo
 router.post("/carreras/:id/inscripciones",
     ...protegido, validateParams(idParamSchema), validate(crearInscripcionSchema), inscripcionController.crear);
 
+router.delete("/inscripciones/:id",
+    ...protegido, validateParams(idParamSchema), inscripcionController.anular);
+
 export default router;

@@ -25,3 +25,8 @@ export async function crear(req: Request, res: Response) {
     const resultado = await inscripcionService.crear(req.params.id as string, req.body, req.usuario!.id);
     return res.status(201).json(resultado);
 }
+
+export async function anular(req: Request, res: Response) {
+    await inscripcionService.anular(req.params.id as string);
+    return res.status(204).end();
+}

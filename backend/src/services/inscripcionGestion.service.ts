@@ -111,7 +111,7 @@ export async function buscarContactoEmergencia(dni: string): Promise<ContactoEme
     return { dni: persona.dni, nombre: persona.nombre, apellido: persona.apellido, telefono: persona.telefono };
 }
 
-// ---------- Alta presencial ----------
+// Alta presencial
 
 type Tx = Prisma.TransactionClient;
 
@@ -251,4 +251,36 @@ export async function crear(
     });
 
     return obtener(inscripcionId);
+}
+
+// Baja lógica
+
+export async function anular(id: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+        const inscripcion = await tx.inscripcion.findUnique({
+            where: { id },
+            include: {
+                entregaKit: true,
+                clasificacion: true,
+                compra: { include: { detallesProductos: true } },
+            },
+        });
+        if (!inscripcion) throw new ErrorNoEncontrado("Inscripción no encontrada.");
+        if (inscripcion.estado === "Anulada") throw new ErrorReglaDeNegocio("La inscripción ya está anulada.");
+        if (inscripcion.entregaKit || inscripcion.clasificacion) {
+            throw new ErrorReglaDeNegocio(
+                "No se puede eliminar la inscripción porque el corredor tiene un dorsal o tiempos registrados en la carrera."
+            );
+        }
+
+        // Los productos de la compra vuelven al stock
+        for (const detalle of inscripcion.compra.detallesProductos) {
+            await tx.productoVariante.update({
+                where: { id: detalle.productoId },
+                data: { stock: { increment: detalle.cantidad } },
+            });
+        }
+
+        await tx.inscripcion.update({ where: { id }, data: { estado: "Anulada" } });
+    });
 }
