@@ -3,16 +3,27 @@ import { prisma } from "../config/prisma";
 import { Prisma } from "../generated/prisma";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
-import type { InscripcionEntregaKit, CarreraEntregaKits, ConsultaDorsal, EntregaReciente } from "../dtos/dorsal.dto";
-import type { EstadoCarrera, Sexo } from "../generated/prisma";
-import type { AsignarDorsal, ItemInventario } from "../validations/dorsal.validations";
+import type {
+    DorsalDTO,
+    DorsalEnCarreraDTO,
+} from "../dtos/dorsal.dto";
+import {
+    toDorsalDto,
+    toDorsalEnCarreraDto,
+} from "../dtos/dorsal.dto";
+import type {
+    CrearDorsal,
+    ItemInventario,
+} from "../validations/dorsal.validations";
 
 type Tx = Prisma.TransactionClient;
 
-type DorsalConChip = { id: string; chip: Chip | null };
-
-const conChip = { chip: true } satisfies Prisma.DorsalInclude;
-
+type DorsalConChip = Prisma.DorsalGetPayload<{
+    include: { chip: true };
+}>;
+const conChip = {
+    chip: true,
+} satisfies Prisma.DorsalInclude;
 // El dorsal con su entrega en la carrera indicada (a lo sumo una: no se repite en la misma carrera)
 const enCarrera = (carreraId: string) => ({
     chip: true,
