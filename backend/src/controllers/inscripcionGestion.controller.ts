@@ -20,3 +20,8 @@ export async function buscarContacto(req: Request, res: Response) {
     const { dni } = contactoQuerySchema.parse(req.query);
     return res.json(await inscripcionService.buscarContactoEmergencia(dni));
 }
+
+export async function crear(req: Request, res: Response) {
+    const resultado = await inscripcionService.crear(req.params.id as string, req.body, req.usuario!.id);
+    return res.status(201).json(resultado);
+}

@@ -2,8 +2,9 @@
 import { Router } from "express";
 import * as inscripcionController from "../controllers/inscripcionGestion.controller";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
-import { validateParams } from "../middlewares/validate.middleware";
+import { validate, validateParams } from "../middlewares/validate.middleware";
 import { idParamSchema } from "../validations/id.validations";
+import { crearInscripcionSchema } from "../validations/inscripcionGestion.validations";
 
 const router = Router();
 
@@ -19,5 +20,8 @@ router.get("/carreras/:id/inscripciones/opciones",
     ...protegido, validateParams(idParamSchema), inscripcionController.opciones);
 
 router.get("/contactos-emergencia", ...protegido, inscripcionController.buscarContacto);
+
+router.post("/carreras/:id/inscripciones",
+    ...protegido, validateParams(idParamSchema), validate(crearInscripcionSchema), inscripcionController.crear);
 
 export default router;
