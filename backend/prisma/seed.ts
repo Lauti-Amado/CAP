@@ -129,7 +129,60 @@ const productos = [
     }
 ];
 
+async function seedCategorias() {
+  // Categoría de rangos de edad
+  const edadExistente = await prisma.categoria.findFirst({
+    where: { nombre: "Edad CAP" },
+  });
+
+  if (!edadExistente) {
+    await prisma.categoria.create({
+      data: {
+        nombre: "Edad CAP",
+        descripcion: "Clasificación por rango de edad (cada 5 años).",
+        criterios: {
+          create: [
+            { nombre: "edad", valor: "18 a 24" },
+            { nombre: "edad", valor: "25 a 29" },
+          ],
+        },
+      },
+    });
+  }
+
+  // Categoría de discapacidades
+  const discapacidadesExistente = await prisma.categoria.findFirst({
+    where: { nombre: "Discapacidades" },
+  });
+
+  if (!discapacidadesExistente) {
+    await prisma.categoria.create({
+      data: {
+        nombre: "Discapacidades",
+        descripcion: "Clasificación por tipo de discapacidad.",
+        criterios: {
+          create: [
+            {
+              nombre: "Discapacidad general",
+              valor: "Discapacidad_general",
+            },
+            {
+              nombre: "Discapacidad visual",
+              valor: "Discapacidad_visual",
+            },
+            {
+              nombre: "Discapacidad silla",
+              valor: "Discapacidad_silla",
+            },
+          ],
+        },
+      },
+    });
+  }
+}
+
 async function main() {
+    await seedCategorias();
 
     //Roles administrativos
     const rolesEnum = [Rol.Administrador, Rol.Tesorero, Rol.Clasificador];
