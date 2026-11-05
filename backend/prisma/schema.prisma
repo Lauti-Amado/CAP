@@ -244,6 +244,8 @@ model DistanciaCarrera { //Tabla intermedia explicita entre Carrera y Distancia
     idDistancia     String
     distancia       Distancia @relation(fields: [idDistancia], references: [id])
 
+    @@unique([idCarrera, idDistancia])
+
     inscripciones   Inscripcion[]
 }
 
