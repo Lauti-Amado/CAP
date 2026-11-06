@@ -396,7 +396,7 @@ model Clasificacion {
 model Resultado {
     id                    String @id @default(uuid())
 
-    tiempoLlegada         Int //Se almacena en milisegundos
+    tiempoLlegada         Int? //Se almacena en milisegundos
     puestoGeneral         Int
     estado                EstadoResultado
 
