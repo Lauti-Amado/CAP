@@ -10,6 +10,8 @@ const customNames: Record<string, string> = {
   'entrega-kits': 'Entrega de Kits',
 };
 
+const rutasFijasClasificacion = ['dashboard-clasificaciones', 'tiempo-real', 'manual'];
+
 const formatearNombreRuta = (segment: string) => {
   const decodedSegment = decodeURIComponent(segment);
 
@@ -52,7 +54,24 @@ export default function Breadcrumbs() {
           isClickable = true;
         }
 
-        const nombreMostrado = formatearNombreRuta(segment);
+        // Segmentos dinámicos (id de la llegada) que no deberían mostrarse como número
+        const esModificarCorredorClasificador =
+          pathSegments[0] === 'clasificador' &&
+          pathSegments[1] === 'clasificaciones' &&
+          index === 3 &&
+          !rutasFijasClasificacion.includes(segment);
+
+        const esModificarCorredorAdmin =
+          pathSegments[0] === 'administrador' &&
+          pathSegments[1] === 'carreras' &&
+          pathSegments[3] === 'clasificacion' &&
+          index === 4 &&
+          segment !== 'completa';
+
+        const nombreMostrado =
+          esModificarCorredorClasificador || esModificarCorredorAdmin
+            ? 'Modificar clasificación'
+            : formatearNombreRuta(segment);
 
         return (
           <li
