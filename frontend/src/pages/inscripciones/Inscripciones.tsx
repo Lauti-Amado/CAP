@@ -140,7 +140,10 @@ function Inscripciones() {
             className="inscripciones__dar-kit"
             size="sm"
             onClick={() =>
-              navigate(`/clasificador/entrega-kits/${nombreCarrera}/corredor/${inscripcion.dni}`)
+              navigate(
+                `/clasificador/entrega-kits/${nombreCarrera}/${encodeURIComponent(inscripcion.dni)}`,
+                { state: { desde: 'inscripciones' } }
+              )
             }
           >
             Dar Kit

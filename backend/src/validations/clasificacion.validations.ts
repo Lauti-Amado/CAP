@@ -23,12 +23,14 @@ export const cambiarEstadoClasificacionSchema = z.object({
 }).strict();
 
 // PUT /api/clasificaciones/:id/resultado
-// - tiempoLlegada (en milisegundos) es opcional: si se omite al crear el resultado,
-//   se calcula desde la largada de la carrera (sólo si está En_curso).
+// - tiempoLlegada (en milisegundos):
+//     · omitido: al crear el resultado se calcula desde la largada (solo si la carrera está En_curso);
+//       al corregir se conserva el que tenía.
+//     · null: se registra el resultado sin tiempo (se completa después).
 // - estado es opcional: por defecto "Oficial" (o el que ya tuviera el resultado).
 export const registrarResultadoSchema = z.object({
     puestoGeneral: z.number().int().positive().max(INT_MAX),
-    tiempoLlegada: z.number().int().positive().max(INT_MAX).optional(),
+    tiempoLlegada: z.number().int().positive().max(INT_MAX).nullable().optional(),
     estado: z.enum(EstadoResultado).optional(),
 }).strict();
 
