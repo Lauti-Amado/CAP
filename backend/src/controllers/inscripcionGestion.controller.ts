@@ -30,3 +30,7 @@ export async function anular(req: Request, res: Response) {
     await inscripcionService.anular(req.params.id as string);
     return res.status(204).end();
 }
+
+export async function modificar(req: Request, res: Response) {
+    return res.json(await inscripcionService.modificar(req.params.id as string, req.body));
+}

@@ -24,6 +24,7 @@ export type ListadoInscripciones = z.infer<typeof listadoQuerySchema>;
 
 const texto = z.string().trim().min(1, "Campo obligatorio").max(100);
 const telefono = z.string().trim().min(6, "Teléfono inválido").max(30, "Teléfono inválido");
+const fechaNacimiento = z.coerce.date().refine((f) => f <= new Date(), "La fecha de nacimiento no puede ser futura");
 
 const personaSchema = z.object({ dni, nombre: texto, apellido: texto, telefono });
 
@@ -85,3 +86,21 @@ export const crearInscripcionSchema = z.object({
 });
 
 export type CrearInscripcion = z.infer<typeof crearInscripcionSchema>;
+
+// El DNI del corredor no se envía: es un dato bloqueado
+export const modificarInscripcionSchema = z.object({
+    corredor: z.object({
+        nombre: texto,
+        apellido: texto,
+        telefono,
+        sexo: z.enum(Sexo),
+        fechaNacimiento,
+        discapacidad: z.enum(Discapacidad).nullable(),
+    }),
+    contactoEmergencia: personaSchema,
+    distancia: distanciaSchema,
+    equipo: equipoSchema.nullable(),
+    aptoMedico: aptoMedicoSchema.optional(),
+});
+
+export type ModificarInscripcion = z.infer<typeof modificarInscripcionSchema>;
