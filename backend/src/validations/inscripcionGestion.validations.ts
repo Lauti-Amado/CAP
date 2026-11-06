@@ -50,11 +50,17 @@ const productoSchema = z.object({
     cantidad: z.number().int().min(1).max(10),
 });
 
+const equipoSchema = z.object({
+    nombre: texto,
+    codigoEquipo: z.string().trim().min(1).max(50).optional(),
+});
+
 export const crearInscripcionSchema = z.object({
     corredor: corredorSchema,
     contactoEmergencia: personaSchema,
     aptoMedico: aptoMedicoSchema.optional(),
     distancia: distanciaSchema,
+    equipo: equipoSchema.optional(),
     productos: z.array(productoSchema).max(10).default([]),
 }).superRefine((datos, ctx) => {
     if (datos.corredor.dni === datos.contactoEmergencia.dni) {

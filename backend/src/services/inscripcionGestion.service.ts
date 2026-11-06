@@ -111,6 +111,12 @@ export async function buscarContactoEmergencia(dni: string): Promise<ContactoEme
     return { dni: persona.dni, nombre: persona.nombre, apellido: persona.apellido, telefono: persona.telefono };
 }
 
+async function obtenerOCrearEquipo(tx: Tx, equipo: { nombre: string; codigoEquipo?: string }) {
+    const codigoEquipo = equipo.codigoEquipo ?? null;
+    const existente = await tx.equipo.findFirst({ where: { nombre: equipo.nombre, codigoEquipo } });
+    return existente ?? tx.equipo.create({ data: { nombre: equipo.nombre, codigoEquipo } });
+}
+
 // Alta presencial
 
 type Tx = Prisma.TransactionClient;
@@ -228,12 +234,14 @@ export async function crear(
             },
         });
 
+        const equipo = datos.equipo ? await obtenerOCrearEquipo(tx, datos.equipo) : null;
         const inscripcion = await tx.inscripcion.create({
             data: {
                 estado: "Pagada",
                 idCompra: compra.id,
                 idCorredor: corredor.id,
                 idDistanciaCarrera: distanciaCarrera.id,
+                equipoId: equipo?.id,
             },
         });
 
