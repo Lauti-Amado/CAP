@@ -18,7 +18,7 @@ type DatosCategoria = {
 };
 
 // Categorías predeterminadas que no pueden modificarse ni eliminarse.
-const CATEGORIAS_PROTEGIDAS = ["Edad CAP", "Discapacidades"];
+const CATEGORIAS_PROTEGIDAS = ["Edad CAP", "Discapacidades", "Sexo"];
 
 function esCategoriaProtegida(nombre: string): boolean {
     return CATEGORIAS_PROTEGIDAS.some(
