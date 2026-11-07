@@ -82,7 +82,7 @@ export type DistanciaClasificacionDTO = {
 
 export type ResultadoDTO = {
     id: string;
-    tiempoLlegada: number; //milisegundos
+    tiempoLlegada: number | null; //milisegundos, null si todavía no se cargó
     puestoGeneral: number;
     estado: EstadoResultado;
     categorias: ResultadoCategoriaDTO[];
