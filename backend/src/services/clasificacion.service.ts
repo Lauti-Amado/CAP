@@ -9,9 +9,13 @@ import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import { clasificacionInclude, toClasificacionDto, type ClasificacionDTO, type ClasificacionTiempoRealDTO} from "../dtos/clasificacion.dto";
 import type { FiltrosClasificacion, RegistrarResultado } from "../validations/clasificacion.validations";
 import * as reglas from "./clasificacion.reglas";
+import { notificarClasificacionActualizada } from "../events/clasificacion.events";
 
 const deCarrera = (carreraId: string) =>
     ({ inscripcion: { distanciaCarrera: { idCarrera: carreraId } } }) satisfies Prisma.ClasificacionWhereInput;
+
+const deDistanciaCarrera = (idDistanciaCarrera: string) =>
+    ({ inscripcion: { idDistanciaCarrera } }) satisfies Prisma.ClasificacionWhereInput;
 
 async function obtenerCarrera(carreraId: string) {
     const carrera = await prisma.carrera.findUnique({
@@ -124,18 +128,18 @@ export async function obtenerPorId(id: string): Promise<ClasificacionDTO> {
 
 // Cambio manual de estado (por ejemplo, descalificar a un corredor)
 export async function cambiarEstado(id: string, nuevoEstado: EstadoClasificacion): Promise<ClasificacionDTO> {
-    return prisma.$transaction(async (tx) => {
+    const { dto, carreraId } = await prisma.$transaction(async (tx) => {
         const clasificacion = await tx.clasificacion.findUnique({
             where: { id },
             include: {
                 resultado: { select: { id: true } },
-                inscripcion: { select: { distanciaCarrera: { select: { carrera: { select: { estado: true } } } } } },
+                inscripcion: { select: { distanciaCarrera: { select: { carrera: { select: { id: true, estado: true } } } } } },
             },
         });
         if (!clasificacion) throw new ErrorNoEncontrado("Clasificación no encontrada.");
 
-        const estadoCarrera = clasificacion.inscripcion.distanciaCarrera.carrera.estado;
-        if (!reglas.carreraAdmiteClasificacion(estadoCarrera)) {
+        const carrera = clasificacion.inscripcion.distanciaCarrera.carrera;
+        if (!reglas.carreraAdmiteClasificacion(carrera.estado)) {
             throw new ErrorReglaDeNegocio("La carrera no está en curso ni finalizada.");
         }
 
@@ -147,8 +151,11 @@ export async function cambiarEstado(id: string, nuevoEstado: EstadoClasificacion
         }
 
         const actualizada = await tx.clasificacion.findUniqueOrThrow({ where: { id }, include: clasificacionInclude });
-        return toClasificacionDto(actualizada);
+        return { dto: toClasificacionDto(actualizada), carreraId: carrera.id };
     });
+
+    notificarClasificacionActualizada({ carreraId });
+    return dto;
 }
 
 // Registra (o corrige) el resultado de un corredor. Deja la clasificación en "Finalizo".
@@ -158,7 +165,7 @@ export async function registrarResultado(
     datos: RegistrarResultado,
     ahora: Date = new Date()
 ): Promise<ClasificacionDTO> {
-    return prisma.$transaction(async (tx) => {
+        const { dto, carreraId } = await prisma.$transaction(async (tx) => {
         const clasificacion = await tx.clasificacion.findUnique({
             where: { id },
             include: {
@@ -166,6 +173,7 @@ export async function registrarResultado(
                 inscripcion: {
                     select: {
                         estado: true,
+                        idDistanciaCarrera: true,
                         entregaKit: { select: { id: true } },
                         distanciaCarrera: { select: { carrera: { select: { id: true, estado: true, fechaHoraCarrera: true } } } },
                     },
@@ -187,40 +195,47 @@ export async function registrarResultado(
             throw new ErrorReglaDeNegocio("El corredor está descalificado: no se le puede registrar un resultado.");
         }
 
-        // Tiempo: el informado, el que ya tenía, o el que transcurrió desde la largada
-        let tiempoLlegada = datos.tiempoLlegada ?? clasificacion.resultado?.tiempoLlegada;
-        if (tiempoLlegada === undefined) {
-            if (carrera.estado !== "En_curso") {
-                throw new ErrorReglaDeNegocio("La carrera ya finalizó: informá el tiempo de llegada.");
-            }
+        // Tiempo: el informado (o null explícito), el que ya tenía, o el que transcurrió desde la largada
+        let tiempoLlegada: number | null;
+        if (datos.tiempoLlegada !== undefined) {
+            tiempoLlegada = datos.tiempoLlegada;
+        } else if (clasificacion.resultado) {
+            tiempoLlegada = clasificacion.resultado.tiempoLlegada;
+        } else if (carrera.estado === "En_curso") {
             tiempoLlegada = reglas.calcularTiempoDesdeLargada(ahora, carrera.fechaHoraCarrera);
             if (tiempoLlegada <= 0) {
-                throw new ErrorReglaDeNegocio("No se pudo calcular el tiempo: la carrera todavía no largó. Informá el tiempo de llegada.");
+                throw new ErrorReglaDeNegocio("No se pudo calcular el tiempo: la carrera todavía no largó. Informá el tiempo de llegada o enviá null.");
             }
+        } else {
+            throw new ErrorReglaDeNegocio("La carrera ya finalizó: informá el tiempo de llegada o enviá null para registrarlo sin tiempo.");
         }
 
-        const totalParticipantes = await tx.clasificacion.count({ where: deCarrera(carrera.id) });
+        const totalParticipantes = await tx.clasificacion.count({
+            where: deDistanciaCarrera(inscripcion.idDistanciaCarrera),
+        });
         if (!reglas.puestoEnRango(datos.puestoGeneral, totalParticipantes)) {
-            throw new ErrorReglaDeNegocio(`El puesto debe estar entre 1 y ${totalParticipantes}.`);
+            throw new ErrorReglaDeNegocio(`El puesto debe estar entre 1 y ${totalParticipantes} para esta distancia.`);
         }
 
-        // Puesto y tiempo únicos dentro de la carrera
+        // Puesto y tiempo únicos dentro de la misma distancia y tipo
         const otrosResultados = {
             clasificacionId: { not: id },
-            clasificacion: deCarrera(carrera.id),
+            clasificacion: deDistanciaCarrera(inscripcion.idDistanciaCarrera),
         } satisfies Prisma.ResultadoWhereInput;
 
         const puestoTomado = await tx.resultado.findFirst({
             where: { ...otrosResultados, puestoGeneral: datos.puestoGeneral },
             select: { id: true },
         });
-        if (puestoTomado) throw new ErrorReglaDeNegocio(`El puesto ${datos.puestoGeneral} ya fue asignado a otro corredor.`);
+                if (puestoTomado) throw new ErrorReglaDeNegocio(`El puesto ${datos.puestoGeneral} ya fue asignado a otro corredor de esta distancia.`);
 
-        const tiempoTomado = await tx.resultado.findFirst({
-            where: { ...otrosResultados, tiempoLlegada },
-            select: { id: true },
-        });
-        if (tiempoTomado) throw new ErrorReglaDeNegocio("Ese tiempo ya fue asignado a otro corredor.");
+        if (tiempoLlegada !== null) {
+            const tiempoTomado = await tx.resultado.findFirst({
+                where: { ...otrosResultados, tiempoLlegada },
+                select: { id: true },
+            });
+            if (tiempoTomado) throw new ErrorReglaDeNegocio("Ese tiempo ya fue asignado a otro corredor.");
+        }
 
         const estadoResultado = datos.estado ?? clasificacion.resultado?.estado ?? "Oficial";
 
@@ -232,6 +247,9 @@ export async function registrarResultado(
         await tx.clasificacion.update({ where: { id }, data: { estado: "Finalizo" } });
 
         const actualizada = await tx.clasificacion.findUniqueOrThrow({ where: { id }, include: clasificacionInclude });
-        return toClasificacionDto(actualizada);
+        return { dto: toClasificacionDto(actualizada), carreraId: carrera.id };
     });
+
+    notificarClasificacionActualizada({ carreraId });
+    return dto;
 }
