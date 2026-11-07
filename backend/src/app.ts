@@ -15,6 +15,7 @@ import clasificacionRoutes from './routes/clasificacion.routes'
 import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
+import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
 
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.IS_PACKAGED === "true";
@@ -65,5 +66,7 @@ else {
 
 
 app.use(errorHandler);
+
+registrarListenerResultadosCategoria();
 
 export default app
