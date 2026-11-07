@@ -13,6 +13,9 @@ import * as reglas from "./clasificacion.reglas";
 const deCarrera = (carreraId: string) =>
     ({ inscripcion: { distanciaCarrera: { idCarrera: carreraId } } }) satisfies Prisma.ClasificacionWhereInput;
 
+const deDistanciaCarrera = (idDistanciaCarrera: string) =>
+    ({ inscripcion: { idDistanciaCarrera } }) satisfies Prisma.ClasificacionWhereInput;
+
 async function obtenerCarrera(carreraId: string) {
     const carrera = await prisma.carrera.findUnique({
         where: { id: carreraId },
@@ -166,6 +169,7 @@ export async function registrarResultado(
                 inscripcion: {
                     select: {
                         estado: true,
+                        idDistanciaCarrera: true,
                         entregaKit: { select: { id: true } },
                         distanciaCarrera: { select: { carrera: { select: { id: true, estado: true, fechaHoraCarrera: true } } } },
                     },
@@ -187,40 +191,47 @@ export async function registrarResultado(
             throw new ErrorReglaDeNegocio("El corredor está descalificado: no se le puede registrar un resultado.");
         }
 
-        // Tiempo: el informado, el que ya tenía, o el que transcurrió desde la largada
-        let tiempoLlegada = datos.tiempoLlegada ?? clasificacion.resultado?.tiempoLlegada;
-        if (tiempoLlegada === undefined) {
-            if (carrera.estado !== "En_curso") {
-                throw new ErrorReglaDeNegocio("La carrera ya finalizó: informá el tiempo de llegada.");
-            }
+        // Tiempo: el informado (o null explícito), el que ya tenía, o el que transcurrió desde la largada
+        let tiempoLlegada: number | null;
+        if (datos.tiempoLlegada !== undefined) {
+            tiempoLlegada = datos.tiempoLlegada;
+        } else if (clasificacion.resultado) {
+            tiempoLlegada = clasificacion.resultado.tiempoLlegada;
+        } else if (carrera.estado === "En_curso") {
             tiempoLlegada = reglas.calcularTiempoDesdeLargada(ahora, carrera.fechaHoraCarrera);
             if (tiempoLlegada <= 0) {
-                throw new ErrorReglaDeNegocio("No se pudo calcular el tiempo: la carrera todavía no largó. Informá el tiempo de llegada.");
+                throw new ErrorReglaDeNegocio("No se pudo calcular el tiempo: la carrera todavía no largó. Informá el tiempo de llegada o enviá null.");
             }
+        } else {
+            throw new ErrorReglaDeNegocio("La carrera ya finalizó: informá el tiempo de llegada o enviá null para registrarlo sin tiempo.");
         }
 
-        const totalParticipantes = await tx.clasificacion.count({ where: deCarrera(carrera.id) });
+        const totalParticipantes = await tx.clasificacion.count({
+            where: deDistanciaCarrera(inscripcion.idDistanciaCarrera),
+        });
         if (!reglas.puestoEnRango(datos.puestoGeneral, totalParticipantes)) {
-            throw new ErrorReglaDeNegocio(`El puesto debe estar entre 1 y ${totalParticipantes}.`);
+            throw new ErrorReglaDeNegocio(`El puesto debe estar entre 1 y ${totalParticipantes} para esta distancia.`);
         }
 
-        // Puesto y tiempo únicos dentro de la carrera
+        // Puesto y tiempo únicos dentro de la misma distancia y tipo
         const otrosResultados = {
             clasificacionId: { not: id },
-            clasificacion: deCarrera(carrera.id),
+            clasificacion: deDistanciaCarrera(inscripcion.idDistanciaCarrera),
         } satisfies Prisma.ResultadoWhereInput;
 
         const puestoTomado = await tx.resultado.findFirst({
             where: { ...otrosResultados, puestoGeneral: datos.puestoGeneral },
             select: { id: true },
         });
-        if (puestoTomado) throw new ErrorReglaDeNegocio(`El puesto ${datos.puestoGeneral} ya fue asignado a otro corredor.`);
+                if (puestoTomado) throw new ErrorReglaDeNegocio(`El puesto ${datos.puestoGeneral} ya fue asignado a otro corredor de esta distancia.`);
 
-        const tiempoTomado = await tx.resultado.findFirst({
-            where: { ...otrosResultados, tiempoLlegada },
-            select: { id: true },
-        });
-        if (tiempoTomado) throw new ErrorReglaDeNegocio("Ese tiempo ya fue asignado a otro corredor.");
+        if (tiempoLlegada !== null) {
+            const tiempoTomado = await tx.resultado.findFirst({
+                where: { ...otrosResultados, tiempoLlegada },
+                select: { id: true },
+            });
+            if (tiempoTomado) throw new ErrorReglaDeNegocio("Ese tiempo ya fue asignado a otro corredor.");
+        }
 
         const estadoResultado = datos.estado ?? clasificacion.resultado?.estado ?? "Oficial";
 

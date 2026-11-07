@@ -9,10 +9,12 @@ import usuarioRoutes from "./routes/usuario.routes"
 import certificadosRoutes from './routes/certificados.routes' 
 import dorsalRoutes from './routes/dorsal.routes'
 import entregaKitRoutes from './routes/entregaKit.routes'
+import inscripcionRoutes from './routes/inscripcionGestion.routes'
 import carreraRoutes from "./routes/carrera.routes";
 import clasificacionRoutes from './routes/clasificacion.routes'
 import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
+import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
 
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.IS_PACKAGED === "true";
@@ -39,8 +41,10 @@ app.use("/api/auth", usuarioRoutes);
 app.use('/api', certificadosRoutes)
 app.use('/api', dorsalRoutes)
 app.use('/api', entregaKitRoutes)
+app.use('/api', inscripcionRoutes)
 app.use("/api/carreras", carreraRoutes);
 app.use('/api', clasificacionRoutes)
+app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
 
 //EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.

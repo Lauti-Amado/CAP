@@ -59,11 +59,22 @@ export function evaluarCambioEstado(
     return { permitido: false, motivo: `El estado ${nuevo} no se puede asignar manualmente.` };
 }
 
-// Orden de la tabla: primero los que tienen resultado (por puesto), luego el resto por apellido y nombre
-export function compararPorPuesto(
-    a: { resultado: { puestoGeneral: number } | null; corredor: { apellido: string; nombre: string } },
-    b: { resultado: { puestoGeneral: number } | null; corredor: { apellido: string; nombre: string } }
-): number {
+type FilaOrdenable = {
+    resultado: { puestoGeneral: number } | null;
+    corredor: { apellido: string; nombre: string };
+    distancia: { kilometraje: number; tipoDistancia: string };
+};
+
+// Orden de la tabla: por distancia y tipo (cada una tiene su clasificación); dentro de cada una,
+// primero los que tienen resultado (por puesto) y luego el resto por apellido y nombre
+export function compararPorPuesto(a: FilaOrdenable, b: FilaOrdenable): number {
+    if (a.distancia.kilometraje !== b.distancia.kilometraje) {
+        return a.distancia.kilometraje - b.distancia.kilometraje;
+    }
+    if (a.distancia.tipoDistancia !== b.distancia.tipoDistancia) {
+        return a.distancia.tipoDistancia.localeCompare(b.distancia.tipoDistancia);
+    }
+
     if (a.resultado && b.resultado) return a.resultado.puestoGeneral - b.resultado.puestoGeneral;
     if (a.resultado) return -1;
     if (b.resultado) return 1;

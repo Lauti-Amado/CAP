@@ -1,16 +1,8 @@
-
+//frontend/src/pages/entregaKits/DetalleCorredor.tsx
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { PackageCheck, Info, CircleCheck } from 'lucide-react'
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Form,
-  Button,
-  Spinner,
-} from 'react-bootstrap'
+import { Container, Row, Col, Card, Form, Button, Spinner,} from 'react-bootstrap'
 
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import '../../components/corredor/DetalleCorredor.css'
@@ -31,6 +23,12 @@ function DetalleCorredor() {
   }>()
 
   const navigate = useNavigate()
+  const location = useLocation()
+  const vieneDeInscripciones =
+    (location.state as { desde?: string } | null)?.desde === 'inscripciones'
+  const textoVolver = vieneDeInscripciones
+    ? '← Volver a inscripciones'
+    : '← Volver al buscador'
   const { carreraSeleccionada } = useSeleccionarCarrera()
 
   const [corredor, setCorredor] = useState<CorredorEntregaKitDTO | null>(null)
@@ -79,9 +77,13 @@ function DetalleCorredor() {
     }
   }, [dni, carreraSeleccionada])
 
-  const volverAlBuscador = () => {
-    navigate(`/clasificador/entrega-kits/${nombreCarrera}`)
-  }
+    const volverAlBuscador = () => {
+      navigate(
+        vieneDeInscripciones
+          ? `/clasificador/entrega-kits/${nombreCarrera}/inscripciones`
+          : `/clasificador/entrega-kits/${nombreCarrera}`
+      )
+    }
 
   const puedeEntregar =
     Boolean(corredor?.habilitadoParaRetirarKit) &&
@@ -145,7 +147,7 @@ function DetalleCorredor() {
       <Container fluid className="detalle-corredor">
         <p className="buscar-corredor__error">{error}</p>
         <Button variant="link" onClick={volverAlBuscador}>
-          ← Volver al buscador
+          {textoVolver}
         </Button>
       </Container>
     )
@@ -162,7 +164,7 @@ function DetalleCorredor() {
             className="detalle-corredor__volver"
             onClick={volverAlBuscador}
           >
-            ← Volver al buscador
+            {textoVolver}
           </Button>
         </div>
       </Container>
@@ -189,7 +191,7 @@ function DetalleCorredor() {
           className="detalle-corredor__volver"
           onClick={volverAlBuscador}
         >
-          ← Volver al buscador
+          {textoVolver}
         </Button>
       </header>
 
