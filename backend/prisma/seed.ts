@@ -377,13 +377,13 @@ async function main() {
         },
         },
         include: {
-        compra: true,
+        detalleCompra: true,
         },
     });
 
     if (inscripcionExistente) {
         await prisma.compra.update({
-        where: { id: inscripcionExistente.idCompra },
+        where: { id: inscripcionExistente.detalleCompra.idCompra },
         data: { isPagado: true },
         });
 
@@ -395,16 +395,26 @@ async function main() {
         const compra = await prisma.compra.create({
         data: {
             montoTotal: distanciaCarrera.precioDistancia,
-            isPagado: true,
+            metodoPago: "Pago_virtual",
             usuarioId: usuarioAdmin.id,
-        },
+        }, include: { detallesCompra: true }
         });
+
+        const detalleCompra = await prisma.detalleCompra.create({
+            data: {
+                descripcion: "Inscripcion",
+                monto: distanciaCarrera.precioDistancia,
+                cantidad: 1,
+                idCompra: compra.id
+            }
+        })
 
         await prisma.inscripcion.create({
         data: {
-            idCompra: compra.id,
+            idDetalleCompra: detalleCompra.id,
             idCorredor: corredor.id,
-            idDistanciaCarrera: distanciaCarrera.id,
+            idCarrera: distanciaCarrera.idCarrera,
+            idDistancia: distanciaCarrera.idDistancia,
             estado: EstadoInscripcion.Pagada,
         },
         });
@@ -456,12 +466,12 @@ async function main() {
                 idCorredor: corredorLucas.id,
                 distanciaCarrera: { idCarrera: carrera.id },
             },
-            include: { compra: true },
+            include: { detalleCompra: true },
         });
 
         if (inscripcionLucas) {
             await prisma.compra.update({
-                where: { id: inscripcionLucas.idCompra },
+                where: { id: inscripcionLucas.detalleCompra.idCompra },
                 data: { isPagado: true },
             });
 
@@ -473,16 +483,27 @@ async function main() {
             const compraLucas = await prisma.compra.create({
                 data: {
                     montoTotal: distanciaCarrera.precioDistancia,
-                    isPagado: true,
+                    estado: "Pagada",
                     usuarioId: usuarioAdmin.id,
-                },
+                    metodoPago: "Pago_virtual"
+                }, include: { detallesCompra: true }
             });
+
+            const detalleCompraLucas = await prisma.detalleCompra.create({
+            data: {
+                descripcion: "Inscripcion",
+                monto: distanciaCarrera.precioDistancia,
+                cantidad: 1,
+                idCompra: compraLucas.id
+                }
+            })
 
             await prisma.inscripcion.create({
                 data: {
-                    idCompra: compraLucas.id,
+                    idDetalleCompra: detalleCompraLucas.id,
                     idCorredor: corredorLucas.id,
-                    idDistanciaCarrera: distanciaCarrera.id,
+                    idCarrera: distanciaCarrera.idCarrera,
+                    idDistancia: distanciaCarrera.idDistancia,
                     estado: EstadoInscripcion.Pagada,
                 },
             });
@@ -531,12 +552,12 @@ async function main() {
             where: {
                 idCorredor: corredorMartina.id,
                 distanciaCarrera: { idCarrera: carrera.id },
-            },
+            }, include: { detalleCompra: true }
         });
 
         if (inscripcionMartina) {
             await prisma.compra.update({
-                where: { id: inscripcionMartina.idCompra },
+                where: { id: inscripcionMartina.detalleCompra.id },
                 data: { isPagado: false },
             });
 
@@ -548,16 +569,26 @@ async function main() {
             const compraMartina = await prisma.compra.create({
                 data: {
                     montoTotal: distanciaCarrera.precioDistancia,
-                    isPagado: false,
                     usuarioId: usuarioAdmin.id,
+                    metodoPago: "Pago_virtual"
                 },
             });
 
+            const detalleCompraMartina = await prisma.detalleCompra.create({
+            data: {
+                descripcion: "Inscripcion",
+                monto: distanciaCarrera.precioDistancia,
+                cantidad: 1,
+                idCompra: compraMartina.id
+                }
+            })
+
             await prisma.inscripcion.create({
                 data: {
-                    idCompra: compraMartina.id,
+                    idDetalleCompra: detalleCompraMartina.id,
                     idCorredor: corredorMartina.id,
-                    idDistanciaCarrera: distanciaCarrera.id,
+                    idCarrera: distanciaCarrera.idCarrera,
+                    idDistancia: distanciaCarrera.idDistancia,
                     estado: EstadoInscripcion.En_proceso,
                 },
             });
