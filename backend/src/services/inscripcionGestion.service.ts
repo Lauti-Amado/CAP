@@ -5,7 +5,7 @@ import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import { toInscripcionDetalleDto, toInscripcionListadoDto, toOpcionesInscripcionDto, type ContactoEmergenciaDTO, type InscripcionDetalleDTO, type InscripcionListadoDTO, type OpcionesInscripcionDTO,} from "../dtos/inscripcionGestion.dto";
 import { toPaginaDto, type PaginaDTO } from "../dtos/pagina.dto";
-import type { CrearInscripcion, ListadoInscripciones } from "../validations/inscripcionGestion.validations";
+import type { CrearInscripcion, ListadoInscripciones, ModificarInscripcion } from "../validations/inscripcionGestion.validations";
 
 // Etapas de la carrera en las que se aceptan inscripciones presenciales
 const ESTADOS_INSCRIPCION: readonly EstadoCarrera[] = ["Activa", "Entrega_kits"];
@@ -291,4 +291,106 @@ export async function anular(id: string): Promise<void> {
 
         await tx.inscripcion.update({ where: { id }, data: { estado: "Anulada" } });
     });
+}
+
+// Modificación: el DNI queda bloqueado. Distancia y equipo solo se cambian antes de entregar el kit.
+export async function modificar(id: string, datos: ModificarInscripcion): Promise<InscripcionDetalleDTO> {
+    await prisma.$transaction(async (tx) => {
+        const inscripcion = await tx.inscripcion.findUnique({
+            where: { id },
+            include: {
+                compra: true,
+                equipo: true,
+                entregaKit: true,
+                corredor: { include: { persona: true } },
+                distanciaCarrera: { include: { distancia: true, carrera: true } },
+            },
+        });
+        if (!inscripcion) throw new ErrorNoEncontrado("Inscripción no encontrada.");
+        if (inscripcion.estado === "Anulada") throw new ErrorReglaDeNegocio("La inscripción está anulada.");
+
+        const { carrera, distancia } = inscripcion.distanciaCarrera;
+        if (!ESTADOS_INSCRIPCION.includes(carrera.estado)) {
+            throw new ErrorReglaDeNegocio("La carrera no admite modificaciones en este momento.");
+        }
+        if (datos.contactoEmergencia.dni === inscripcion.corredor.persona.dni) {
+            throw new ErrorReglaDeNegocio("El contacto de emergencia no puede ser el mismo corredor.");
+        }
+
+        const cambiaDistancia =
+            datos.distancia.kilometraje !== distancia.kilometraje ||
+            datos.distancia.tipoDistancia !== distancia.tipoDistancia;
+        const cambiaEquipo =
+            (datos.equipo?.nombre ?? null) !== (inscripcion.equipo?.nombre ?? null) ||
+            (datos.equipo?.codigoEquipo ?? null) !== (inscripcion.equipo?.codigoEquipo ?? null);
+
+        if ((cambiaDistancia || cambiaEquipo) && inscripcion.entregaKit) {
+            throw new ErrorReglaDeNegocio("No se puede cambiar la distancia ni el equipo: el kit ya fue entregado.");
+        }
+
+        let idDistanciaCarrera = inscripcion.idDistanciaCarrera;
+        let montoTotal = inscripcion.compra.montoTotal;
+
+        if (cambiaDistancia) {
+            // El pago virtual lo gestiona el sistema web: acá no se puede alterar el monto cobrado
+            if (inscripcion.compra.metodoPago === "Pago_virtual") {
+                throw new ErrorReglaDeNegocio("No se puede cambiar la distancia de una inscripción pagada por la web.");
+            }
+            const nueva = await tx.distanciaCarrera.findFirst({
+                where: {
+                    idCarrera: carrera.id,
+                    distancia: { kilometraje: datos.distancia.kilometraje, tipoDistancia: datos.distancia.tipoDistancia },
+                },
+            });
+            if (!nueva) throw new ErrorReglaDeNegocio("La carrera no tiene esa distancia.");
+
+            idDistanciaCarrera = nueva.id;
+            montoTotal = montoTotal - inscripcion.distanciaCarrera.precioDistancia + nueva.precioDistancia;
+        }
+
+        const equipo = datos.equipo ? await obtenerOCrearEquipo(tx, datos.equipo) : null;
+
+        // Datos personales
+        await tx.persona.update({
+            where: { id: inscripcion.corredor.personaId },
+            data: {
+                nombre: datos.corredor.nombre,
+                apellido: datos.corredor.apellido,
+                telefono: datos.corredor.telefono,
+            },
+        });
+
+        const contacto = await tx.persona.upsert({
+            where: { dni: datos.contactoEmergencia.dni },
+            update: {},
+            create: datos.contactoEmergencia,
+        });
+
+        await tx.corredor.update({
+            where: { id: inscripcion.idCorredor },
+            data: {
+                fechaNacimiento: datos.corredor.fechaNacimiento,
+                sexo: datos.corredor.sexo,
+                discapacidad: datos.corredor.discapacidad,
+                contactoEmergenciaId: contacto.id,
+            },
+        });
+
+        if (datos.aptoMedico) {
+            await tx.aptoMedico.create({
+                data: { aprobado: true, fechaVencimiento: datos.aptoMedico.fechaVencimiento, corredorId: inscripcion.idCorredor },
+            });
+        }
+
+        await tx.inscripcion.update({
+            where: { id },
+            data: { idDistanciaCarrera, equipoId: equipo?.id ?? null },
+        });
+
+        if (montoTotal !== inscripcion.compra.montoTotal) {
+            await tx.compra.update({ where: { id: inscripcion.idCompra }, data: { montoTotal } });
+        }
+    });
+
+    return obtener(id);
 }
