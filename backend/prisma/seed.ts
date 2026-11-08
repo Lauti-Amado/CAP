@@ -1,11 +1,5 @@
 import { prisma } from "../src/config/prisma";
-import {
-  Rol,
-  Sexo,
-  TipoDistancia,
-  EstadoCarrera,
-  EstadoInscripcion,
-} from "../src/generated/prisma/client";
+import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion,} from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
 
 const usuarios = [
@@ -129,10 +123,17 @@ const productos = [
     }
 ];
 
+// Ajustar a la realidad del CAP
+const rangosEdad = [
+  "14 a 17", "18 a 24", "25 a 29", "30 a 34", "35 a 39", "40 a 44",
+  "45 a 49", "50 a 54", "55 a 59", "60 a 64", "65 a 69", "70 a 99",
+];
+
 async function seedCategorias() {
-  // Categoría de rangos de edad
+   // Categoría de rangos de edad (si ya existe, solo se agregan los rangos que falten)
   const edadExistente = await prisma.categoria.findFirst({
     where: { nombre: "Edad CAP" },
+    include: { criterios: true },
   });
 
   if (!edadExistente) {
@@ -140,10 +141,31 @@ async function seedCategorias() {
       data: {
         nombre: "Edad CAP",
         descripcion: "Clasificación por rango de edad (cada 5 años).",
+        criterios: { create: rangosEdad.map((valor) => ({ nombre: "edad", valor })) },
+      },
+    });
+  } else {
+    const cargados = new Set(edadExistente.criterios.map((c) => c.valor));
+    const faltantes = rangosEdad.filter((valor) => !cargados.has(valor));
+    if (faltantes.length > 0) {
+      await prisma.criterioCategoria.createMany({
+        data: faltantes.map((valor) => ({ nombre: "edad", valor, categoriaId: edadExistente.id })),
+      });
+    }
+  }
+
+    // Categoría de sexo: la "general" separada en masculino y femenino
+  const sexoExistente = await prisma.categoria.findFirst({ where: { nombre: "Sexo" } });
+
+  if (!sexoExistente) {
+    await prisma.categoria.create({
+      data: {
+        nombre: "Sexo",
+        descripcion: "Clasificación general separada por sexo.",
         criterios: {
           create: [
-            { nombre: "edad", valor: "18 a 24" },
-            { nombre: "edad", valor: "25 a 29" },
+            { nombre: "sexo", valor: Sexo.Masculino },
+            { nombre: "sexo", valor: Sexo.Femenino },
           ],
         },
       },

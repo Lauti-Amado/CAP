@@ -67,25 +67,32 @@ export function cumpleCondicion(condicion: CondicionGrupo, corredor: DatosCorred
     return true;
 }
 
-// Ubica a cada participante en el primer subgrupo que cumple y numera los puestos por orden de llegada general.
-// Los que no encajan en ningún subgrupo quedan en `sinGrupo`.
+// Ubica a cada participante en su subgrupo (uno solo por categoría) y numera los puestos por orden de llegada general.
+// sinGrupo: no encajan en ninguno. conflictos: encajan en más de uno (criterios que se superponen).
 export function asignarPuestosPorGrupo(participantes: Participante[], grupos: Grupo[], fechaCarrera: Date) {
     const ordenados = [...participantes].sort((a, b) => a.puestoGeneral - b.puestoGeneral);
     const contadores = new Map<string, number>();
     const asignaciones: AsignacionCategoria[] = [];
     const sinGrupo: string[] = [];
+    const conflictos: string[] = [];
 
     for (const participante of ordenados) {
-        const grupo = grupos.find((g) => cumpleCondicion(g.condicion, participante, fechaCarrera));
-        if (!grupo) {
+        const coincidencias = grupos.filter((g) => cumpleCondicion(g.condicion, participante, fechaCarrera));
+
+        if (coincidencias.length === 0) {
             sinGrupo.push(participante.resultadoId);
             continue;
         }
+        if (coincidencias.length > 1) {
+            conflictos.push(participante.resultadoId);
+            continue;
+        }
 
+        const [grupo] = coincidencias;
         const puesto = (contadores.get(grupo.criterioId) ?? 0) + 1;
         contadores.set(grupo.criterioId, puesto);
         asignaciones.push({ resultadoId: participante.resultadoId, criterioId: grupo.criterioId, puesto });
     }
 
-    return { asignaciones, sinGrupo };
+    return { asignaciones, sinGrupo, conflictos };
 }
