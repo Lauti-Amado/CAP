@@ -289,15 +289,13 @@ const ClasificacionTiempoReal: React.FC = () => {
         </Row>
       </div>
 
-      <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />
-
       <DescalificarCorredorModal
         corredores={corredoresADescalificar}
         onConfirmar={confirmarDescalificacion}
         onCancelar={() => setCorredoresADescalificar([])}
       />
 
-            {!finalizada && <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />}
+      {!finalizada && <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />}
     </div>
   );
 };
