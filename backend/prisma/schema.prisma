@@ -63,7 +63,6 @@ model Persona {
     fechaHoraModificacion           DateTime @updatedAt
 }
 
-//DIFIERE: compras
 model Usuario {
     id                    String @id @default(uuid())
 
@@ -74,6 +73,8 @@ model Usuario {
     personaId             String @unique //La persona a la que pertenece
     persona               Persona @relation(fields: [personaId], references: [id])
     roles                 UsuarioRol[] //Los roles administrativos que tiene (si tiene alguno)
+
+    compras Compra[]
 
     fechaHoraCreacion     DateTime @default(now())
     fechaHoraModificacion DateTime @updatedAt
@@ -102,26 +103,44 @@ model UsuarioRol { //Se crea una tabla explícita para no hacer conflicto con Po
 
             //###COMPRA###
 
-//DIFIERE: afiliacion, usuario, metodoPago (default con pago presencial)
 model Compra {
-    id                    String @id @default(uuid())
+    id String @id @default(uuid())
 
-    montoTotal            Float
-    isPagado              Boolean @default(false)
-    metodoPago            MetodoPago @default(Pago_presencial) //A fines de este sistema, cualquier compra creada es siempre presencial por defecto.
+    montoTotal Float
+    estado     EstadoCompra @default(En_proceso)
+    metodoPago MetodoPago
 
     //A quién pertenece la compra
-    usuarioId             String
+    usuarioId String
+    usuario   Usuario @relation(fields: [usuarioId], references: [id])
 
     //Contenidos de la compra
-    detallesProductos     DetalleProducto[] //Como el array puede estar vacio, no necesariamente la compra tiene productos
-    inscripcion           Inscripcion?
+    detallesCompra  DetalleCompra[]
 
-    comprobante           Comprobante?
+    comprobante Comprobante?
 
-    fechaHoraCreacion     DateTime              @default(now())
-    fechaHoraModificacion DateTime              @updatedAt
-    //usuarioModificacion
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+}
+
+//DIFIERE: afiliacion
+model DetalleCompra {
+    id String @id @default(uuid())
+
+    descripcion String
+    monto       Float
+    cantidad    Int
+
+    idCompra    String //La compra a la cual está detallando
+    compra      Compra @relation(fields: [idCompra], references: [id])
+
+    //Contenidos de un detalle de compra (siempre un detalleCompra referencia un sólo ítem de estos)
+    detalleProducto    ProductoVariante? @relation(fields: [idDetalleProducto], references: [id])
+    idDetalleProducto  String?
+    detalleInscripcion Inscripcion?
+
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
 }
 
 model Comprobante {
@@ -172,19 +191,7 @@ model ProductoVariante {
     idProducto      String
     producto        Producto @relation(fields: [idProducto], references: [id], onDelete: Cascade)
 
-    detallesCompra  DetalleProducto[]
-}
-
-model DetalleProducto {
-    id                  String @id @default(uuid())
-    cantidad            Int
-    fechaHoraCreacion   DateTime @default(now())
-
-    productoId          String
-    producto            ProductoVariante @relation(fields: [productoId], references: [id])
-
-    compraId            String
-    compra              Compra @relation(fields: [compraId], references: [id], onDelete: Cascade)
+    detallesCompra  DetalleCompra[]
 }
 
 
@@ -275,14 +282,16 @@ model Inscripcion {
 
     estado                EstadoInscripcion @default(En_proceso)
 
-    idCompra              String @unique
-    compra                Compra @relation(fields: [idCompra], references: [id])
+    idDetalleCompra       String @unique
+    detalleCompra         DetalleCompra @relation(fields: [idDetalleCompra], references: [id])
 
-    idCorredor            String
+    idCorredor String
     corredor              Corredor @relation(fields: [idCorredor], references: [id])
 
-    idDistanciaCarrera    String //La carrera y la distancia a la que se anotó el corredor
-    distanciaCarrera      DistanciaCarrera @relation(fields: [idDistanciaCarrera], references: [id])
+    idCarrera             String //La carrera a la que se anotó el corredor
+    idDistancia           String //La distancia a la que se anotó el corredor
+    distanciaCarrera      DistanciaCarrera @relation(fields: [idCarrera, idDistancia], references: [idCarrera, idDistancia])
+    @@unique([idCorredor, idCarrera]) //Obliga a que el corredor pueda tener una sola inscripción a una carrera
 
     equipoId              String?
     equipo                Equipo? @relation(fields: [equipoId], references: [id])
@@ -479,11 +488,19 @@ enum EstadoUsuario {
     Inactivo //Se hizo un borrado lógico del usuario
 }
 
+enum EstadoCompra {
+    En_proceso //Se acaba de crear la compra. Estado inicial
+    Pagada //Se pagó la compra y se registró un Comprobanmte
+    Expirada //Pasó el tiempo máximo de validez en el que la compra podía ser pagada
+    Anulada //El usuario canceló la compra
+    Reembolsada //Se le reembolsó la compra al usuario
+}
+
 enum EstadoInscripcion {
-    En_proceso //El usuario crea una inscripción en la web pero no la paga
+    En_proceso //El usuario registra inicialmente la inscripción en la web y debe pagarla. Estado inicial
     Pagada //El usuario paga la inscripción en la web
+    Anulada //El usuario no pagó la inscripción y se agotó el tiempo en el que podía realizar el pago. Se puede pasar de "Anulada" a "En_proceso"
     Confirmada //El corredor retira su kit y se le instancia una EntregaKit a su Inscripcion
-    Anulada
 }
 
 enum EstadoClasificacion {
