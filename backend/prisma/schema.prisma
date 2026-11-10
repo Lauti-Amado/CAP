@@ -127,6 +127,7 @@ model Compra {
 model DetalleCompra {
     id String @id @default(uuid())
 
+    tipo        TipoDetalle
     descripcion String
     monto       Float
     cantidad    Int
@@ -486,6 +487,12 @@ enum EstadoCarrera {
 enum EstadoUsuario {
     Activo
     Inactivo //Se hizo un borrado lógico del usuario
+}
+
+enum TipoDetalle {
+    Inscripcion
+    Producto
+    Afiliacion
 }
 
 enum EstadoCompra {
