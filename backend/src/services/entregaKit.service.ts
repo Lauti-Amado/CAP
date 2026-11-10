@@ -3,38 +3,34 @@ import { prisma } from "../config/prisma";
 import type { EstadoCarrera, Prisma } from "../generated/prisma/client";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
-import {
-    toEntregaKitDto,
-    toEntregaRecienteDto,
-    toCorredorEntregaKitDto,
-    type EntregaKitDTO,
-    type EntregaRecienteDTO,
-    type CorredorEntregaKitDTO,
-} from "../dtos/dorsal.dto";
+import { toEntregaKitDto, toEntregaRecienteDto, toCorredorEntregaKitDto, type EntregaKitDTO, type EntregaRecienteDTO, type CorredorEntregaKitDTO,} from "../dtos/dorsal.dto";
 import { asociarChip, obtenerOCrearDorsal } from "./dorsal.service";
 import type { EntregarKit } from "../validations/dorsal.validations";
+import { requiereAptoMedico, vencimientoVigente } from "../rules/aptoMedico.rules";
+import { estaPagada } from "../rules/compra.rules";
 
 // Estados de la carrera en los que se puede entregar (o deshacer) un kit
 const ESTADOS_ENTREGA_KITS: readonly EstadoCarrera[] = ["Entrega_kits"];
 
+const vencimientoApto = (i: InscripcionParaEntrega) =>
+    vencimientoVigente(i.corredor.aptosMedicos, i.distanciaCarrera.carrera.fechaHoraCarrera);
+
 const conDorsal = { dorsal: { include: { chip: true } } } satisfies Prisma.EntregaKitInclude;
 
 export const inscripcionParaEntregaInclude = {
-    compra: true,
+    detalleCompra: { include: { compra: true } },
     corredor: { include: { aptosMedicos: true } },
     distanciaCarrera: { include: { distancia: true, carrera: true } },
     entregaKit: true,
 } satisfies Prisma.InscripcionInclude;
 
 const inscripcionParaBusquedaInclude = {
-    compra: {
+        detalleCompra: {
         include: {
-            detallesProductos: {
+            compra: {
                 include: {
-                    producto: {
-                        include: {
-                            producto: true,
-                        },
+                    detallesCompra: {
+                        include: { detalleProducto: { include: { producto: true } } },
                     },
                 },
             },
@@ -70,19 +66,6 @@ export type InscripcionParaEntrega = Prisma.InscripcionGetPayload<{
 
 // Reglas de negocio
 
-export function requiereAptoMedico(kilometraje: number, tipo: string): boolean {
-    return kilometraje > 10 && tipo === "Competitiva";
-}
-
-export function vencimientoAptoVigente(i: InscripcionParaEntrega): Date | null {
-    const fechaCarrera = i.distanciaCarrera.carrera.fechaHoraCarrera;
-    const vigentes = i.corredor.aptosMedicos
-        .filter((a) => a.aprobado && a.fechaVencimiento >= fechaCarrera)
-        .map((a) => a.fechaVencimiento);
-    if (vigentes.length === 0) return null;
-    return new Date(Math.max(...vigentes.map((f) => f.getTime())));
-}
-
 export function motivosNoHabilitado(i: InscripcionParaEntrega): string[] {
     const motivos: string[] = [];
     const { carrera, distancia } = i.distanciaCarrera;
@@ -91,8 +74,8 @@ export function motivosNoHabilitado(i: InscripcionParaEntrega): string[] {
         motivos.push("La carrera no está en etapa de entrega de kits.");
     }
     if (i.estado === "Anulada") motivos.push("La inscripción está anulada.");
-    if (!i.compra.isPagado) motivos.push("La inscripción no está paga.");
-    if (requiereAptoMedico(distancia.kilometraje, distancia.tipoDistancia) && !vencimientoAptoVigente(i)) {
+    if (!estaPagada(i.detalleCompra.compra)) motivos.push("La inscripción no está paga.");
+    if (requiereAptoMedico(distancia.kilometraje, distancia.tipoDistancia) && !vencimientoApto(i)) {
         motivos.push("Falta un apto médico vigente para esta carrera.");
     }
     return motivos;
@@ -192,14 +175,9 @@ export async function buscarCorredorPorDni(
 ): Promise<CorredorEntregaKitDTO> {
     const inscripcion = await prisma.inscripcion.findFirst({
         where: {
-            corredor: {
-                persona: {
-                    dni,
-                },
-            },
-            distanciaCarrera: {
-                idCarrera: carreraId,
-            },
+            estado: { not: "Anulada" },
+            corredor: { persona: { dni } },
+            distanciaCarrera: { idCarrera: carreraId },
         },
         include: inscripcionParaBusquedaInclude,
     });
@@ -210,12 +188,11 @@ export async function buscarCorredorPorDni(
         );
     }
 
-    const vencimientoApto = vencimientoAptoVigente(inscripcion);
     const motivos = motivosNoHabilitado(inscripcion);
 
     return toCorredorEntregaKitDto(
         inscripcion,
-        vencimientoApto,
+        vencimientoApto(inscripcion),
         motivos.length === 0,
         motivos
     );

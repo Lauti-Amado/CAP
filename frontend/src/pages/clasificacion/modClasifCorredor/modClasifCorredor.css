@@ -4,18 +4,8 @@
   flex-direction: column;
   width: 100%;
   background-color: #F8FAFC;
-  min-height: 100vh;
+  min-height: 100%;
   box-sizing: border-box;
-}
-
-/* Topbar */
-.mod-topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 32px;
-  background-color: white;
-  border-bottom: 1px solid #E5E7EB;
 }
 
 .mod-content {
