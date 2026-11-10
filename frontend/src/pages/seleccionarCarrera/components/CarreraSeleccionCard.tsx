@@ -20,7 +20,7 @@ interface Props {
   onContinuar: (carrera: Carrera) => void;
 }
 
-const formatearFecha = (fecha: Date) =>
+const formatearFecha = (fecha: string) =>
   new Date(fecha).toLocaleDateString("es-AR", {
     day: "numeric",
     month: "long",

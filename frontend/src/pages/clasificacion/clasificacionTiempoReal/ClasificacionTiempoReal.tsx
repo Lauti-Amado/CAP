@@ -42,7 +42,7 @@ const ClasificacionTiempoReal: React.FC = () => {
 
   const [llegadas, setLlegadas] = useState<LlegadaAtleta[]>(llegadasMock);
   const [busqueda, setBusqueda] = useState('');
-  const [seleccionados, setSeleccionados] = useState<number[]>([]);
+  const [seleccionados, setSeleccionados] = useState<string[]>([]);
   const [mostrarCargaManual, setMostrarCargaManual] = useState(false);
   const [corredoresADescalificar, setCorredoresADescalificar] = useState<ResumenCorredor[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -50,7 +50,7 @@ const ClasificacionTiempoReal: React.FC = () => {
   const seleccion = llegadas.filter((llegada) => seleccionados.includes(llegada.id));
   const descalificables = seleccion.filter((llegada) => llegada.estado !== 'DESCALIFICADO');
 
-  const alternarSeleccion = (id: number) =>
+  const alternarSeleccion = (id: string) =>
     setSeleccionados((actuales) =>
       actuales.includes(id) ? actuales.filter((actual) => actual !== id) : [...actuales, id]
     );

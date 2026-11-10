@@ -27,7 +27,7 @@ function DetalleInscripcion() {
   // TODO BACKEND: reemplazar por GET /api/inscripciones/{id}
   const inscripcion: InscripcionDetalle | undefined =
     inscripcionDetalleMock.find(
-      (inscripcion) => inscripcion.id === Number(id),
+      (inscripcion) => inscripcion.id === id,
     )
 
   const volverAInscripciones = () => {

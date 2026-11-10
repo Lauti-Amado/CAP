@@ -13,7 +13,7 @@ function RolesPermisos() {
 
   // MOCK TEMPORAL
   // TODO BACKEND: GET /api/usuarios/{id}
-  const usuario = usuariosMock.find((u) => u.id === Number(id))
+  const usuario = usuariosMock.find((u) => u.id === id)
 
   const [rolSeleccionado, setRolSeleccionado] = useState<RolUsuario | null>(
     usuario?.rol ?? null
