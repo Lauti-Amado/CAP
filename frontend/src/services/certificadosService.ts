@@ -5,7 +5,7 @@ import type { ResultadoEnvioCertificados } from '../types/certificado'
 // TODO BACKEND: poner en false cuando el endpoint esté implementado.
 const USAR_MOCK = true
 
-export async function enviarCertificados(carreraId: number): Promise<ResultadoEnvioCertificados> {
+export async function enviarCertificados(carreraId: string): Promise<ResultadoEnvioCertificados> {
   if (USAR_MOCK) {
     await new Promise((resolver) => setTimeout(resolver, 1200))
     return { enviados: 5, fallidos: 0 }
