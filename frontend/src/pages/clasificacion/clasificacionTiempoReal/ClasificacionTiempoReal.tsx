@@ -12,7 +12,8 @@ import DescalificarCorredorModal from '../modales/DescalificarCorredorModal';
 import { llegadasMock } from '../llegadasMock';
 import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera';
 import type { LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
-import { carrerasDetalleMock } from '../../carreras/detalleCarreraMock';   // Borrar cuando se conecte con el backend
+import { useDetalleCarrera } from '../../../hooks/useDetalleCarrera';
+import { useCarreraActual } from '../../../hooks/useCarreraActual';
 
 const aResumen = (llegada: LlegadaAtleta): ResumenCorredor => ({
   id: llegada.id,
@@ -34,9 +35,10 @@ const ClasificacionTiempoReal: React.FC = () => {
 
   // En Carreras la carrera ya terminó: sin cronómetro, antenas ni carga manual
   const finalizada = rutas.enCarreras;
-  // TODO BACKEND: GET /api/carreras/{id}
-  const carrera = finalizada ? carrerasDetalleMock.find((c) => c.id === rutas.carreraId) : undefined;
-  const { estado, transcurrido } = useCronometroCarrera();
+  // Solo en Carreras (carrera finalizada) se consulta el detalle
+  const { carrera } = useDetalleCarrera(finalizada ? rutas.carreraId : undefined);
+  const carreraActual = useCarreraActual();
+  const { estado, transcurrido } = useCronometroCarrera(carreraActual);
 
   const [llegadas, setLlegadas] = useState<LlegadaAtleta[]>(llegadasMock);
   const [busqueda, setBusqueda] = useState('');

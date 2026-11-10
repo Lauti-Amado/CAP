@@ -6,9 +6,7 @@ import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge'
 import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion'
 import { participantesMock } from './participanteMock'
-
-// Borrar cuando se conecte con el backend
-import { carrerasDetalleMock } from '../carreras/detalleCarreraMock'
+import { useDetalleCarrera } from '../../hooks/useDetalleCarrera'
 
 const estiloPagina = { minHeight: '100vh', backgroundColor: '#f8f9ff' }
 
@@ -17,14 +15,22 @@ function ModificarClasificacionCarrera() {
   const navigate = useNavigate()
 
   // TODO BACKEND: GET /api/carreras/{id} (incluye cantidadInscriptos y cantidadClasificados)
-  const carrera = carrerasDetalleMock.find((c) => c.id === id)
+  const { carrera, cargando, error } = useDetalleCarrera(id)
 
   const volverAlDetalle = () => navigate(`/administrador/carreras/${id}`)
+
+  if (cargando) {
+    return (
+      <main className="p-4" style={estiloPagina}>
+        <p className="text-secondary">Cargando carrera...</p>
+      </main>
+    )
+  }
 
   if (!carrera) {
     return (
       <main className="p-4" style={estiloPagina}>
-        <Alert variant="warning">No se encontró la carrera.</Alert>
+        <Alert variant="warning">{error ?? 'No se encontró la carrera.'}</Alert>
         <Button variant="outline-secondary" onClick={() => navigate('/administrador/carreras')}>
           Volver al listado de carreras
         </Button>

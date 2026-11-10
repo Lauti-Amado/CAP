@@ -14,8 +14,8 @@ import { notificarClasificacionActualizada } from "../events/clasificacion.event
 const deCarrera = (carreraId: string) =>
     ({ inscripcion: { distanciaCarrera: { idCarrera: carreraId } } }) satisfies Prisma.ClasificacionWhereInput;
 
-const deDistanciaCarrera = (idDistanciaCarrera: string) =>
-    ({ inscripcion: { idDistanciaCarrera } }) satisfies Prisma.ClasificacionWhereInput;
+const deDistancia = (idCarrera: string, idDistancia: string) =>
+    ({ inscripcion: { idCarrera, idDistancia } }) satisfies Prisma.ClasificacionWhereInput;
 
 async function obtenerCarrera(carreraId: string) {
     const carrera = await prisma.carrera.findUnique({
@@ -173,7 +173,8 @@ export async function registrarResultado(
                 inscripcion: {
                     select: {
                         estado: true,
-                        idDistanciaCarrera: true,
+                        idCarrera: true,
+                        idDistancia: true,
                         entregaKit: { select: { id: true } },
                         distanciaCarrera: { select: { carrera: { select: { id: true, estado: true, fechaHoraCarrera: true } } } },
                     },
@@ -211,7 +212,7 @@ export async function registrarResultado(
         }
 
         const totalParticipantes = await tx.clasificacion.count({
-            where: deDistanciaCarrera(inscripcion.idDistanciaCarrera),
+            where: deDistancia(inscripcion.idCarrera, inscripcion.idDistancia),
         });
         if (!reglas.puestoEnRango(datos.puestoGeneral, totalParticipantes)) {
             throw new ErrorReglaDeNegocio(`El puesto debe estar entre 1 y ${totalParticipantes} para esta distancia.`);
@@ -220,7 +221,7 @@ export async function registrarResultado(
         // Puesto y tiempo únicos dentro de la misma distancia y tipo
         const otrosResultados = {
             clasificacionId: { not: id },
-            clasificacion: deDistanciaCarrera(inscripcion.idDistanciaCarrera),
+            clasificacion: deDistancia(inscripcion.idCarrera, inscripcion.idDistancia),
         } satisfies Prisma.ResultadoWhereInput;
 
         const puestoTomado = await tx.resultado.findFirst({

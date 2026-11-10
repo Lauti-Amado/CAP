@@ -1,12 +1,6 @@
-
+//frontend/src/components/carreras/CarreraCard.tsx
 import { useNavigate } from 'react-router-dom'
-import {
-  Eye,
-  BarChart3,
-  CalendarDays,
-  MapPin,
-  Route,
-} from 'lucide-react'
+import { Eye, BarChart3, CalendarDays, MapPin, Route,} from 'lucide-react'
 import { Card, Badge } from 'react-bootstrap'
 import type { Carrera } from '../../types/carrera'
 import './CarreraCard.css'
@@ -36,7 +30,7 @@ function CarreraCard({ carrera }: CarreraCardProps) {
   }
 
   const handleVerResultados = () => {
-    navigate(`/resultados?carreraId=${carrera.id}`)
+    navigate(`/administrador/carreras/${carrera.id}/clasificacion/completa`)
   }
 
   return (

@@ -17,6 +17,7 @@ export type Carrera = {
   nombre: string;
   fechaHoraCarrera: string;
   fechaHoraEntregaKits: string;
+  fechaHoraModificacion: Date;
   imagenUrl: string;
   descripcion: string;
   participantesMax: number;
@@ -33,4 +34,11 @@ export type Distancia = {
 export type Lugar = {
   nombre: string;
   localidad: string;
+};
+
+// Detalle de una carrera: la carrera + los conteos que calcula el backend
+export type CarreraDetalle = Carrera & {
+  cantidadInscriptos: number;
+  cantidadKitsEntregados: number;
+  cantidadClasificados: number;
 };
