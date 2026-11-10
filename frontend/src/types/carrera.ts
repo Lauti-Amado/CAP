@@ -26,3 +26,10 @@ export type Lugar = {
   nombre: string;
   localidad: string;
 }
+
+// Detalle de una carrera: la carrera + los conteos que calcula el backend
+export type CarreraDetalle = Carrera & {
+  cantidadInscriptos: number
+  cantidadKitsEntregados: number
+  cantidadClasificados: number
+}
