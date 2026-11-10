@@ -11,6 +11,7 @@ import dorsalRoutes from './routes/dorsal.routes'
 import entregaKitRoutes from './routes/entregaKit.routes'
 import inscripcionRoutes from './routes/inscripcionGestion.routes'
 import carreraRoutes from "./routes/carrera.routes";
+import carreraEstadoRoutes from "./routes/carreraEstado.routes"; 
 import clasificacionRoutes from './routes/clasificacion.routes'
 import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
@@ -44,6 +45,7 @@ app.use('/api', dorsalRoutes)
 app.use('/api', entregaKitRoutes)
 app.use('/api', inscripcionRoutes)
 app.use("/api/carreras", carreraRoutes);
+app.use('/api', carreraEstadoRoutes)
 app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
