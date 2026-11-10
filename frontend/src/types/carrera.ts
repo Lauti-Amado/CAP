@@ -1,3 +1,4 @@
+//frontend/src/types/carrera.ts
 type EstadoCarrera = "Creada" | "Publicada" | "Activa" | "Entrega_kits" | "En_curso" | "Finalizada" | "Cancelada"
 type TipoDistancia = "Participativa" | "Competitiva"
 
@@ -14,6 +15,7 @@ export type Carrera = {
   lugar: Lugar;
 
   distancias: Distancia[]
+    fechaHoraModificacion: Date;   // Al finalizar la carrera es la hora de fin
 }
 
 export type Distancia = {

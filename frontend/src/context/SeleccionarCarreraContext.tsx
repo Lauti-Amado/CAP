@@ -1,6 +1,8 @@
+//frontend/src/context/SeleccionarCarreracontext.tsx
+
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-
+import { slugCarrera } from "../utils/carrera";
 import type { Carrera } from "../types/carrera";
 
 import { useCarrera } from "./CarreraContext";
@@ -64,7 +66,7 @@ export function SeleccionarCarreraProvider() {
         if (location.pathname === basePath || location.pathname === `${basePath}/`) {
             // Si ya habias seleccionado carrera, te redirecciono a ella dentro de la seccion que clickeaste
             if (carreraListaParaUsar) {
-                const nombreUrl = carreraListaParaUsar.nombre.toLowerCase().replace(/ /g, '-');
+                const nombreUrl = slugCarrera(carreraListaParaUsar.nombre);
                 navigate(`${basePath}/${nombreUrl}`, { replace: true });
             // Sino, te redirecciono a seleccionar una carrera
             } else {
