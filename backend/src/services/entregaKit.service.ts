@@ -7,6 +7,7 @@ import { toEntregaKitDto, toEntregaRecienteDto, toCorredorEntregaKitDto, type En
 import { asociarChip, obtenerOCrearDorsal } from "./dorsal.service";
 import type { EntregarKit } from "../validations/dorsal.validations";
 import { requiereAptoMedico, vencimientoVigente } from "../rules/aptoMedico.rules";
+import { estaPagada } from "../rules/compra.rules";
 
 // Estados de la carrera en los que se puede entregar (o deshacer) un kit
 const ESTADOS_ENTREGA_KITS: readonly EstadoCarrera[] = ["Entrega_kits"];
@@ -17,21 +18,19 @@ const vencimientoApto = (i: InscripcionParaEntrega) =>
 const conDorsal = { dorsal: { include: { chip: true } } } satisfies Prisma.EntregaKitInclude;
 
 export const inscripcionParaEntregaInclude = {
-    compra: true,
+    detalleCompra: { include: { compra: true } },
     corredor: { include: { aptosMedicos: true } },
     distanciaCarrera: { include: { distancia: true, carrera: true } },
     entregaKit: true,
 } satisfies Prisma.InscripcionInclude;
 
 const inscripcionParaBusquedaInclude = {
-    compra: {
+        detalleCompra: {
         include: {
-            detallesProductos: {
+            compra: {
                 include: {
-                    producto: {
-                        include: {
-                            producto: true,
-                        },
+                    detallesCompra: {
+                        include: { detalleProducto: { include: { producto: true } } },
                     },
                 },
             },
@@ -75,7 +74,7 @@ export function motivosNoHabilitado(i: InscripcionParaEntrega): string[] {
         motivos.push("La carrera no está en etapa de entrega de kits.");
     }
     if (i.estado === "Anulada") motivos.push("La inscripción está anulada.");
-    if (!i.compra.isPagado) motivos.push("La inscripción no está paga.");
+    if (!estaPagada(i.detalleCompra.compra)) motivos.push("La inscripción no está paga.");
     if (requiereAptoMedico(distancia.kilometraje, distancia.tipoDistancia) && !vencimientoApto(i)) {
         motivos.push("Falta un apto médico vigente para esta carrera.");
     }
@@ -176,14 +175,9 @@ export async function buscarCorredorPorDni(
 ): Promise<CorredorEntregaKitDTO> {
     const inscripcion = await prisma.inscripcion.findFirst({
         where: {
-            corredor: {
-                persona: {
-                    dni,
-                },
-            },
-            distanciaCarrera: {
-                idCarrera: carreraId,
-            },
+            estado: { not: "Anulada" },
+            corredor: { persona: { dni } },
+            distanciaCarrera: { idCarrera: carreraId },
         },
         include: inscripcionParaBusquedaInclude,
     });
