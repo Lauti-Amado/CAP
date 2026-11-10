@@ -1,3 +1,4 @@
+//backend/src/dtos/carrera.dto.ts
 import { EstadoCarrera, TipoDistancia } from "../generated/prisma/client";
 import { Prisma } from "../generated/prisma/client";
 
@@ -19,7 +20,8 @@ export function toCarreraDto(carrera: CarreraPrisma): CarreraDTO {
             kilometraje: dc.distancia.kilometraje,
             tipoDistancia: dc.distancia.tipoDistancia,
             precio: dc.precioDistancia
-        }))
+        })),
+        fechaHoraModificacion: carrera.fechaHoraModificacion
     }
 }
 
@@ -44,6 +46,7 @@ export type CarreraDTO = {
     lugar: LugarDTO;
 
     distancias: DistanciaDTO[]
+    fechaHoraModificacion: Date; // Al finalizar la carrera es la hora de fin
 }
 
 export type DistanciaDTO = {
