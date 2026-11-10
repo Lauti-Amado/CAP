@@ -13,6 +13,7 @@ import { llegadasMock } from '../llegadasMock';
 import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera';
 import type { LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
 import { useDetalleCarrera } from '../../../hooks/useDetalleCarrera';
+import { useCarreraActual } from '../../../hooks/useCarreraActual';
 
 const aResumen = (llegada: LlegadaAtleta): ResumenCorredor => ({
   id: llegada.id,
@@ -36,7 +37,8 @@ const ClasificacionTiempoReal: React.FC = () => {
   const finalizada = rutas.enCarreras;
   // Solo en Carreras (carrera finalizada) se consulta el detalle
   const { carrera } = useDetalleCarrera(finalizada ? rutas.carreraId : undefined);
-  const { estado, transcurrido } = useCronometroCarrera();
+  const carreraActual = useCarreraActual();
+  const { estado, transcurrido } = useCronometroCarrera(carreraActual);
 
   const [llegadas, setLlegadas] = useState<LlegadaAtleta[]>(llegadasMock);
   const [busqueda, setBusqueda] = useState('');
