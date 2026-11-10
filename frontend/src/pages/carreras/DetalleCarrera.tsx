@@ -1,73 +1,14 @@
-
-import { useEffect, useState } from 'react'
+//frontend/src/pages/carreras/DetalleCarrera.tsx
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from 'react-bootstrap'
-import {
-  ArrowLeft,
-  UsersRound,
-  PackageCheck,
-  Timer,
-} from 'lucide-react'
-
-import type { Carrera } from '../../types/carrera'
+import { ArrowLeft, UsersRound, PackageCheck, Timer,} from 'lucide-react'
+import { useDetalleCarrera } from '../../hooks/useDetalleCarrera'
 import './DetalleCarrera.css'
 
-// Borrar cuando se conecte con el backend
-import { carrerasDetalleMock } from './detalleCarreraMock'
-
-// Este tipo extiende Carrera para incluir los datos calculados
-type CarreraDetalle = Carrera & {
-  cantidadInscriptos: number
-  cantidadKitsEntregados: number
-  cantidadClasificados: number
-}
-
 function DetalleCarrera() {
-  const [carrera, setCarrera] = useState<CarreraDetalle | null>(null)
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const obtenerCarrera = async () => {
-      try {
-        setCargando(true)
-
-        if (!id) {
-          throw new Error('No se recibió el ID de la carrera')
-        }
-
-        // MOCK: borrar cuando se conecte con el backend
-        const carreraMock = carrerasDetalleMock.find((c) => c.id === id)
-
-        if (carreraMock) {
-          setCarrera(carreraMock)
-          setError(null)
-        } else {
-          throw new Error('Carrera no encontrada')
-        }
-
-        // Cuando se defina el endpoint del backend:
-        // const respuesta = await fetch(`/api/carreras/${id}`)
-        //
-        // if (!respuesta.ok) {
-        //   throw new Error('No se pudo obtener la carrera')
-        // }
-        //
-        // const datos: CarreraDetalle = await respuesta.json()
-        // setCarrera(datos)
-      } catch (error) {
-        console.error(error)
-        setError('No se pudo cargar la carrera')
-      } finally {
-        setCargando(false)
-      }
-    }
-
-    obtenerCarrera()
-  }, [id])
+  const { carrera, cargando, error } = useDetalleCarrera(id)
 
   if (cargando) {
     return <p>Cargando carrera...</p>

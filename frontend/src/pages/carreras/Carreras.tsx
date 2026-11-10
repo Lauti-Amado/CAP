@@ -1,21 +1,14 @@
-
+//frontend/src/pages/carreras/Carreras.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Form } from 'react-bootstrap'
 import CarreraCard from '../../components/carreras/CarreraCard'
 import { Tabla } from '../../components/tabla/Tabla'
-import type { Carrera } from '../../types/carrera'
+import { useCarrera } from '../../context/CarreraContext'
 import './Carreras.css'
-
-// Borrar cuando se conecte con el backend
-import { carrerasMock } from './carrerasMock'
 
 function Carreras() {
   const navigate = useNavigate()
-
-  const [carreras, setCarreras] = useState<Carrera[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const [busqueda, setBusqueda] = useState('')
   const [filtroAnio, setFiltroAnio] = useState('todos')
@@ -26,34 +19,8 @@ function Carreras() {
 
   const carrerasPorPagina = 3
 
-  useEffect(() => {
-    const obtenerCarreras = async () => {
-      try {
-        setCargando(true)
-
-        // MOCK: borrar cuando se conecte con el backend
-        setCarreras(carrerasMock)
-        setError(null)
-
-        // Cuando se defina el endpoint:
-        // const respuesta = await fetch('/api/carreras')
-        //
-        // if (!respuesta.ok) {
-        //   throw new Error('No se pudieron obtener las carreras')
-        // }
-        //
-        // const datos: Carrera[] = await respuesta.json()
-        // setCarreras(datos)
-      } catch (error) {
-        console.error(error)
-        setError('No se pudieron cargar las carreras')
-      } finally {
-        setCargando(false)
-      }
-    }
-
-    obtenerCarreras()
-  }, [])
+   // Las carreras las trae el CarreraProvider (ya no hay mock ni fetch propio)
+  const { carreras, cargando, error } = useCarrera()
 
     const aniosDisponibles = useMemo(() => {
     const anios = carreras.map((carrera) =>
@@ -114,7 +81,7 @@ function Carreras() {
   }
 
   const verRanking = (id: string) => {
-    navigate(`/resultados?carreraId=${id}`)
+     navigate(`/administrador/carreras/${id}/clasificacion/completa`) 
   }
 
   return (
