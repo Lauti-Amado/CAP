@@ -1,6 +1,6 @@
 //backend/src/services/dorsal.service.ts
 import { prisma } from "../config/prisma";
-import { Prisma } from "../generated/prisma";
+import { Prisma } from "../generated/prisma/client";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import type {

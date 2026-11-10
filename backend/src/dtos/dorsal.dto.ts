@@ -1,11 +1,6 @@
 //backend/src/dtos/dorsal.dto.ts
-import type {
-    EntregaKit,
-    Prisma,
-    TipoDistancia,
-    EstadoInscripcion,
-    Sexo,
-} from "../generated/prisma/client";
+import { estaPagada } from "../rules/compra.rules";
+import type { EntregaKit, Prisma, TipoDistancia, EstadoInscripcion, Sexo,} from "../generated/prisma/client";
 
 // Un dorsal es un número físico que puede (o no) tener un chip RFID integrado
 export type ChipDTO = {
@@ -95,41 +90,21 @@ type EntregaRecientePrisma = Prisma.EntregaKitGetPayload<{
 
 type InscripcionParaBusquedaPrisma = Prisma.InscripcionGetPayload<{
     include: {
-        compra: {
+        detalleCompra: {
             include: {
-                detallesProductos: {
+                compra: {
                     include: {
-                        producto: {
-                            include: {
-                                producto: true;
-                            };
+                        detallesCompra: {
+                            include: { detalleProducto: { include: { producto: true } } };
                         };
                     };
                 };
             };
         };
-        corredor: {
-            include: {
-                persona: true;
-                aptosMedicos: true;
-            };
-        };
-        distanciaCarrera: {
-            include: {
-                distancia: true;
-                carrera: true;
-            };
-        };
+        corredor: { include: { persona: true; aptosMedicos: true } };
+        distanciaCarrera: { include: { distancia: true; carrera: true } };
         equipo: true;
-        entregaKit: {
-            include: {
-                dorsal: {
-                    include: {
-                        chip: true;
-                    };
-                };
-            };
-        };
+        entregaKit: { include: { dorsal: { include: { chip: true } } } };
     };
 }>;
 
@@ -176,9 +151,11 @@ export function toCorredorEntregaKitDto(
     habilitadoParaRetirarKit: boolean,
     motivosNoHabilitado: string[]
 ): CorredorEntregaKitDTO {
-    const detalleRemera = inscripcion.compra.detallesProductos.find(
-        ({ producto }) =>
-            /remera|camiseta/i.test(producto.producto.nombreProducto)
+    const compra = inscripcion.detalleCompra.compra;
+
+    const detalleRemera = compra.detallesCompra.find(
+        ({ detalleProducto }) =>
+            detalleProducto && /remera|camiseta/i.test(detalleProducto.producto.nombreProducto)
     );
 
     const persona = inscripcion.corredor.persona;
@@ -197,7 +174,7 @@ export function toCorredorEntregaKitDto(
             kilometraje: inscripcion.distanciaCarrera.distancia.kilometraje,
             tipoDistancia: inscripcion.distanciaCarrera.distancia.tipoDistancia,
         },
-        talleRemera: detalleRemera?.producto.nombreVariante ?? null,
+        talleRemera: detalleRemera?.detalleProducto?.nombreVariante ?? null,
         equipo: inscripcion.equipo
             ? {
                 nombre: inscripcion.equipo.nombre,
@@ -206,7 +183,7 @@ export function toCorredorEntregaKitDto(
             : null,
         inscripcion: {
             estado: inscripcion.estado,
-            pagada: inscripcion.compra.isPagado,
+            pagada: estaPagada(compra),
         },
         aptoMedico: vencimientoAptoVigente
             ? {

@@ -8,7 +8,7 @@ import '../Administracion.css'
 import './Categorias.css'
 
 const esCategoriaProtegida = (nombre: string) =>
-  ['Edad CAP', 'Discapacidades'].some(
+  ['Edad CAP', 'Discapacidades', 'Sexo'].some(
     (nombreProtegido) =>
       nombreProtegido.toLowerCase() === nombre.trim().toLowerCase()
   )
