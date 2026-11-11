@@ -1,5 +1,5 @@
 import { prisma } from "../src/config/prisma";
-import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion, EstadoCompra, MetodoPago } from "../src/generated/prisma/client";
+import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion, EstadoCompra, MetodoPago, TipoDetalle } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
 
 const usuarios = [
@@ -225,7 +225,7 @@ async function sembrarInscripcionPrueba(o: {
         data: { montoTotal: o.precio, estado: estadoCompra, metodoPago: MetodoPago.Pago_virtual, usuarioId: o.usuarioId },
     });
     const detalle = await prisma.detalleCompra.create({
-        data: { descripcion: "Inscripcion", monto: o.precio, cantidad: 1, idCompra: compra.id },
+        data: {tipo: TipoDetalle.Inscripcion ,descripcion: "Inscripcion", monto: o.precio, cantidad: 1, idCompra: compra.id },
     });
     await prisma.inscripcion.create({
         data: {
