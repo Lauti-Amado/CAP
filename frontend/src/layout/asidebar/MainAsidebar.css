@@ -1,3 +1,5 @@
 .asidebar {
   background: #2d6045;
+  width: 100%;
+  overflow-x: hidden;
 }
