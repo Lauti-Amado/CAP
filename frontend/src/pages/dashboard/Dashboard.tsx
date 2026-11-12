@@ -100,13 +100,13 @@ function ActivityRow({ activity }: { activity: DashboardActivity }) {
           color: isKit ? '#657069' : '#217947',
         }}
       >
-        <Icon size={13} aria-hidden="true" />
+        <Icon size={20} aria-hidden="true" />
       </span>
       <span className="d-flex flex-column min-w-0">
-        <span style={{ fontSize: '10px', lineHeight: '13px', color: '#172033' }}>
+        <span style={{ fontSize: '13px', lineHeight: '13px', color: '#172033' }}>
           {activity.description}
         </span>
-        <span style={{ marginTop: '3px', color: '#828b84', fontSize: '9px' }}>
+        <span style={{ marginTop: '3px', color: '#828b84', fontSize: '10px' }}>
           {formatActivityTime(activity.occurredAt)}
         </span>
       </span>
@@ -217,7 +217,7 @@ function Dashboard() {
                     style={{
                       marginTop: '2px',
                       color: '#637069',
-                      fontSize: '9px',
+                      fontSize: '15px',
                       fontWeight: 600,
                       letterSpacing: '0.35px',
                     }}
@@ -292,7 +292,7 @@ function Dashboard() {
                     style={{
                       marginTop: '2px',
                       color: '#637069',
-                      fontSize: '9px',
+                      fontSize: '15px',
                       fontWeight: 600,
                       letterSpacing: '0.35px',
                     }}
@@ -474,7 +474,7 @@ function Dashboard() {
               <div className="flex-grow-1 p-3 pt-2">
                 <ul className="list-unstyled mb-0">
                   {activities.map((activity) => (
-                    <ActivityRow key={activity.id} activity={activity} />
+                    <ActivityRow  key={activity.id} activity={activity} />
                   ))}
                   {activities.length === 0 && (
                     <li style={{ color: '#65716b', fontSize: '12px' }}>
@@ -497,7 +497,7 @@ function Dashboard() {
                   borderRadius: '0 0 9px 9px',
                   backgroundColor: hoverVerTodo ? '#f0f8f2' : '#ffffff',
                   color: '#006c35',
-                  fontSize: '9px',
+                  fontSize: '10px',
                   fontWeight: 700,
                   transition: 'background-color 0.15s ease-in-out',
                 }}

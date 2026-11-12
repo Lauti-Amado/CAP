@@ -154,7 +154,7 @@ function Carreras() {
                   backgroundColor: '#F9F9FF',
                   borderColor: '#d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize:'0.9rem',
                   padding: '9px 14px',
                 }}
               />
@@ -170,7 +170,7 @@ function Carreras() {
                   backgroundColor: '#F9F9FF',
                   borderColor: '#d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: '0.9rem',
                   padding: '9px 12px',
                   cursor: 'pointer',
                 }}

@@ -1,5 +1,5 @@
 //frontend/src/pages/grandPrix/GrandPrix.tsx
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Badge,
   Button,
@@ -10,12 +10,10 @@ import {
   InputGroup,
   Modal,
   Row,
-  Table,
 } from 'react-bootstrap'
 import {
   Calculator,
   ChevronLeft,
-  ChevronRight,
   FileSpreadsheet,
   FileText,
   Filter,
@@ -31,7 +29,9 @@ import {
   grandPrixStandings,
   initialGrandPrixCircuits,
   type GrandPrixCircuit,
+  type GrandPrixStanding,
 } from './grandPrixData'
+import { Tabla, type Columna } from '../../components/tabla/Tabla'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -46,6 +46,9 @@ export default function GrandPrix() {
   const [search, setSearch] = useState('')
   const [circuits, setCircuits] = useState(initialGrandPrixCircuits)
   const [formCircuit, setFormCircuit] = useState<GrandPrixCircuit | null>(null)
+  const [paginaActual, setPaginaActual] = useState(1)
+
+  const itemsPorPagina = 10
 
   const filtered = useMemo(
     () =>
@@ -56,6 +59,123 @@ export default function GrandPrix() {
           `${runner.name} ${runner.dni}`.toLowerCase().includes(search.toLowerCase())
       ),
     [category, gender, search]
+  )
+
+  const totalPaginas = Math.max(1, Math.ceil(filtered.length / itemsPorPagina))
+
+  const datosPaginados = useMemo(() => {
+    const inicio = (paginaActual - 1) * itemsPorPagina
+    return filtered.slice(inicio, inicio + itemsPorPagina)
+  }, [filtered, paginaActual])
+
+  useEffect(() => {
+    setPaginaActual(1)
+  }, [category, gender, year, search])
+
+  const columnas: Columna<GrandPrixStanding>[] = useMemo(
+    () => [
+      {
+        titulo: 'Puesto',
+        key: 'position',
+        render: (runner) => {
+          let positionStyle: React.CSSProperties = {
+            width: '24px',
+            height: '24px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '50%',
+            fontWeight: 700,
+          }
+
+          if (runner.position === 1) {
+            positionStyle = {
+              ...positionStyle,
+              border: '1px solid #eab300',
+              color: '#b88600',
+              backgroundColor: '#fff7d9',
+            }
+          } else if (runner.position === 2) {
+            positionStyle = {
+              ...positionStyle,
+              border: '1px solid #9ba7b3',
+              color: '#333333',
+              backgroundColor: '#f3f6fa',
+            }
+          } else if (runner.position === 3) {
+            positionStyle = {
+              ...positionStyle,
+              border: '1px solid #e18b4c',
+              color: '#b65c1e',
+              backgroundColor: '#fff3eb',
+            }
+          }
+
+          return <span style={positionStyle}>{runner.position}</span>
+        },
+      },
+      {
+        titulo: 'Corredor',
+        key: 'name',
+        render: (runner) => (
+          <div className="d-flex align-items-center gap-2">
+            <i
+              style={{
+                width: '23px',
+                height: '23px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                backgroundColor: '#dfe7f1',
+                color: '#526173',
+                fontSize: '8px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+              }}
+            >
+              {runner.initials}
+            </i>
+            <b style={{ fontSize: '11px' }}>{runner.name}</b>
+          </div>
+        ),
+      },
+      {
+        titulo: 'DNI',
+        key: 'dni',
+        render: (runner) => <span style={{ fontSize: '10px' }}>{runner.dni}</span>,
+      },
+      {
+        titulo: 'Carreras',
+        key: 'racesCompleted',
+        render: (runner) => (
+          <Badge
+            pill
+            style={{
+              padding: '4px 9px',
+              backgroundColor: '#d8f3e2',
+              color: '#08723c',
+              fontSize: '8px',
+              fontWeight: 600,
+            }}
+          >
+            {runner.racesCompleted} / {runner.totalRaces}
+          </Badge>
+        ),
+      },
+      {
+        titulo: 'Puntos Totales',
+        key: 'points',
+        render: (runner) => (
+          <div className="text-end">
+            <strong style={{ color: '#06763d', fontSize: '13px' }}>
+              {runner.points.toLocaleString('es-AR')}
+            </strong>
+          </div>
+        ),
+      },
+    ],
+    []
   )
 
   const startCreate = () =>
@@ -145,8 +265,8 @@ export default function GrandPrix() {
       28
     )
 
-    const columnas = ['Puesto', 'Corredor', 'DNI', 'Carreras', 'Puntos Totales']
-    const filas = filtered.map((r) => [
+    const columnasPDF = ['Puesto', 'Corredor', 'DNI', 'Carreras', 'Puntos Totales']
+    const filasPDF = filtered.map((r) => [
       r.position,
       r.name,
       r.dni,
@@ -155,8 +275,8 @@ export default function GrandPrix() {
     ])
 
     autoTable(doc, {
-      head: [columnas],
-      body: filas,
+      head: [columnasPDF],
+      body: filasPDF,
       startY: 35,
       theme: 'grid',
       headStyles: { fillColor: [22, 163, 74] }, // Color verde institucional (#16a34a)
@@ -502,187 +622,18 @@ export default function GrandPrix() {
             </Card.Body>
           </Card>
 
-          {/* Tarjeta de Tabla */}
-          <Card
-            as="section"
-            className="border shadow-none"
-            style={{
-              borderColor: '#ccd8d0',
-              borderRadius: '8px',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 4px 11px rgba(27,43,65,.04)',
-              overflow: 'hidden',
-            }}
-          >
-            <div className="table-responsive">
-              <Table hover className="align-middle mb-0" style={{ fontSize: '10px' }}>
-                <thead>
-                  <tr style={{ background: '#f2f4ff' }}>
-                    <th style={{ height: '34px', padding: '0 15px', background: '#f2f4ff', color: '#526058', fontSize: '8px', letterSpacing: '0.3px', borderTop: 'none' }}>
-                      Puesto
-                    </th>
-                    <th style={{ height: '34px', padding: '0 15px', background: '#f2f4ff', color: '#526058', fontSize: '8px', letterSpacing: '0.3px', borderTop: 'none' }}>
-                      Corredor
-                    </th>
-                    <th style={{ height: '34px', padding: '0 15px', background: '#f2f4ff', color: '#526058', fontSize: '8px', letterSpacing: '0.3px', borderTop: 'none' }}>
-                      DNI
-                    </th>
-                    <th style={{ height: '34px', padding: '0 15px', background: '#f2f4ff', color: '#526058', fontSize: '8px', letterSpacing: '0.3px', borderTop: 'none' }}>
-                      Carreras
-                    </th>
-                    <th className="text-end" style={{ height: '34px', padding: '0 15px', background: '#f2f4ff', color: '#526058', fontSize: '8px', letterSpacing: '0.3px', borderTop: 'none' }}>
-                      Puntos Totales
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((runner) => {
-                    const isWinner = runner.position === 1
-                    let positionStyle: React.CSSProperties = {
-                      width: '24px',
-                      height: '24px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '50%',
-                      fontWeight: 700,
-                    }
-
-                    if (runner.position === 1) {
-                      positionStyle = {
-                        ...positionStyle,
-                        border: '1px solid #eab300',
-                        color: '#b88600',
-                        backgroundColor: '#fff7d9',
-                      }
-                    } else if (runner.position === 2) {
-                      positionStyle = {
-                        ...positionStyle,
-                        border: '1px solid #9ba7b3',
-                        color: '#333333',
-                        backgroundColor: '#f3f6fa',
-                      }
-                    } else if (runner.position === 3) {
-                      positionStyle = {
-                        ...positionStyle,
-                        border: '1px solid #e18b4c',
-                        color: '#b65c1e',
-                        backgroundColor: '#fff3eb',
-                      }
-                    }
-
-                    return (
-                      <tr
-                        key={runner.id}
-                        style={{
-                          backgroundColor: isWinner ? '#fffbed' : 'transparent',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        <td style={{ height: '44px', padding: '0 15px', borderColor: '#e6ebe7' }}>
-                          <span style={positionStyle}>{runner.position}</span>
-                        </td>
-                        <td style={{ height: '44px', padding: '0 15px', borderColor: '#e6ebe7' }}>
-                          <div className="d-flex align-items-center gap-2">
-                            <i
-                              style={{
-                                width: '23px',
-                                height: '23px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderRadius: '50%',
-                                backgroundColor: '#dfe7f1',
-                                color: '#526173',
-                                fontSize: '8px',
-                                fontStyle: 'normal',
-                                fontWeight: 700,
-                              }}
-                            >
-                              {runner.initials}
-                            </i>
-                            <b style={{ fontSize: '11px' }}>{runner.name}</b>
-                          </div>
-                        </td>
-                        <td style={{ height: '44px', padding: '0 15px', borderColor: '#e6ebe7', fontSize: '10px' }}>
-                          {runner.dni}
-                        </td>
-                        <td style={{ height: '44px', padding: '0 15px', borderColor: '#e6ebe7' }}>
-                          <Badge
-                            pill
-                            style={{
-                              padding: '4px 9px',
-                              backgroundColor: '#d8f3e2',
-                              color: '#08723c',
-                              fontSize: '8px',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {runner.racesCompleted} / {runner.totalRaces}
-                          </Badge>
-                        </td>
-                        <td className="text-end" style={{ height: '44px', padding: '0 15px', borderColor: '#e6ebe7' }}>
-                          <strong style={{ color: '#06763d', fontSize: '13px' }}>
-                            {runner.points.toLocaleString('es-AR')}
-                          </strong>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </Table>
-            </div>
-
-            <Card.Footer
-              className="bg-white d-flex align-items-center justify-content-between px-3 py-2 border-top"
-              style={{
-                height: '42px',
-                borderColor: '#e6ebe7',
-                color: '#626e66',
-                fontSize: '9px',
-              }}
-            >
-              <span>Mostrando {filtered.length} de 2.450 corredores</span>
-              <div className="d-flex gap-1">
-                <Button
-                  type="button"
-                  variant="outline-secondary"
-                  size="sm"
-                  style={{
-                    minWidth: '24px',
-                    height: '24px',
-                    padding: 0,
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#5c6961',
-                    borderColor: '#c9d5cd',
-                  }}
-                >
-                  <ChevronLeft size={12} />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline-secondary"
-                  size="sm"
-                  style={{
-                    minWidth: '24px',
-                    height: '24px',
-                    padding: 0,
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#5c6961',
-                    borderColor: '#c9d5cd',
-                  }}
-                >
-                  <ChevronRight size={12} />
-                </Button>
-              </div>
-            </Card.Footer>
-          </Card>
+          {/* Tabla usando componente Tabla */}
+          <section className="mb-4">
+            <Tabla
+              columnas={columnas}
+              datos={datosPaginados}
+              paginaActual={paginaActual}
+              totalPaginas={totalPaginas}
+              onCambiarPagina={setPaginaActual}
+              textoPaginacion={`Mostrando ${filtered.length} de 2.450 corredores`}
+              mensajeVacio="No se encontraron corredores."
+            />
+          </section>
         </>
       ) : (
         <section>
