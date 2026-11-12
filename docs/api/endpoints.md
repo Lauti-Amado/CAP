@@ -5,8 +5,24 @@
 | Método | Ruta | Propósito |
 |---|---|---|
 | `POST` | `/api/auth/login` | Iniciar sesión |
+| `POST` | `/api/auth/contingencia` | Iniciar sesión con email y clave de respaldo de uso único |   <!-- NUEVA -->
 | `POST` | `/api/auth/logout` | Cerrar sesión |
 | `GET` | `/api/auth/yo` | Obtener el usuario autenticado |
+
+#### Usuarios (solo Administrador)
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/api/usuarios?pagina={n}` | Listar los usuarios del personal, paginados de a 10 |
+| `GET` | `/api/usuarios/{id}` | Consultar un usuario |
+| `PATCH` | `/api/usuarios/{id}` | Reemplazar sus roles. Body: `{ "roles": ["Administrador", "Clasificador"] }` |
+
+#### Claves de respaldo (solo Administrador)
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/api/claves-respaldo` | Consultar el lote vigente de claves |
+| `POST` | `/api/claves-respaldo/generar` | Anular las claves disponibles y generar un lote nuevo de 8 |
 
 #### Carreras
 | Método | Ruta | Propósito |
