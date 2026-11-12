@@ -13,6 +13,7 @@ import inscripcionRoutes from './routes/inscripcionGestion.routes'
 import carreraRoutes from "./routes/carrera.routes";
 import carreraEstadoRoutes from "./routes/carreraEstado.routes"; 
 import clasificacionRoutes from './routes/clasificacion.routes'
+import claveRespaldoRoutes from "./routes/claveRespaldo.routes"
 import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
@@ -49,6 +50,7 @@ app.use('/api', carreraEstadoRoutes)
 app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
+app.use("/api/claves-respaldo", claveRespaldoRoutes);
 
 //EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.
 if (isProduction) {

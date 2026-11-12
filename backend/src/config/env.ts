@@ -8,5 +8,6 @@ function obligatorio(nombre: string): string {
 }
 
 export const JWT_SECRET = obligatorio("JWT_SECRET");
+export const CLAVES_RESPALDO_SECRET = obligatorio("CLAVES_RESPALDO_SECRET");
 export const JWT_EXPIRES_IN: SignOptions["expiresIn"] = "2h";
 export const SALT_ROUNDS = 10;
