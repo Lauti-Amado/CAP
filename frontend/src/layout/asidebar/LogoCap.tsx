@@ -1,22 +1,16 @@
-import { Container, Row, Col } from 'react-bootstrap'
-
 import './LogoCap.css'
 
 export default function LogoCap() {
     return (
-        <Container className='p-3 mt-2'>
-            <Row className="g-0 align-items-center">
-                {/*Imagen*/}
-                <Col md={4} className="text-center">
-                    <img className="brand-logo img-fluid w-75" src={'./images/logo-cap.png'} alt="Logo de CAP"/>
-                </Col>
+        <div className="brand d-flex align-items-center gap-2 px-3 pt-3 pb-2">
+            {/*Imagen*/}
+            <img className="brand-logo" src={'./images/logo-cap.png'} alt="Logo de CAP"/>
 
-                {/*Texto*/}
-                <Col md={8} className="d-flex flex-column justify-content-center">
-                    <div className='brand-title'>Sistema CAP</div>
-                    <div className='brand-subtitle'>Clasificaciones</div>
-                </Col>
-            </Row>
-        </Container>
+            {/*Texto*/}
+            <div className="brand-copy d-flex flex-column min-w-0">
+                <div className='brand-title'>Sistema CAP</div>
+                <div className='brand-subtitle'>Clasificaciones</div>
+            </div>
+        </div>
     )
 }

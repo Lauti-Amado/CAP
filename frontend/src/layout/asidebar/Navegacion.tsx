@@ -38,11 +38,11 @@ export default function Navegacion() {
     ];
 
     return (
-        <Nav className="flex-column w-100 pb-4" aria-label="Secciones">
+        <Nav className="flex-column w-100 pb-3" aria-label="Secciones">
             {navigation.map((section, index) => (
                 <div className="nav-section" key={section.label}>
 
-                    <div className={`section-divider mb-2 ${index === 0 ? 'mt-2' : 'mt-2'}`}>
+                    <div className={`section-divider mb-1 ${index === 0 ? 'mt-1' : 'mt-3'}`}>
                         <span>{section.label}</span>
                     </div>
 
@@ -52,11 +52,11 @@ export default function Navegacion() {
                         return (
                             <Button
                                 variant="link"
-                                className={`nav-button w-100 d-flex align-items-center gap-3 rounded-0 ${isActive ? 'active' : ''}`}
+                                className={`nav-button w-100 d-flex align-items-center gap-2 rounded-0 ${isActive ? 'active' : ''}`}
                                 key={label}
                                 onClick={() => navigate(path)}
                             >
-                                <Icon size={19} strokeWidth={2} aria-hidden="true" />
+                                <Icon size={18} strokeWidth={2} aria-hidden="true" />
                                 <span>{label}</span>
                             </Button>
                         );

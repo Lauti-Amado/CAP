@@ -225,7 +225,7 @@ async function sembrarInscripcionPrueba(o: {
         data: { montoTotal: o.precio, estado: estadoCompra, metodoPago: MetodoPago.Pago_virtual, usuarioId: o.usuarioId },
     });
     const detalle = await prisma.detalleCompra.create({
-        data: { descripcion: "Inscripcion", monto: o.precio, cantidad: 1, idCompra: compra.id, tipo: TipoDetalle.Inscripcion },
+        data: {tipo: TipoDetalle.Inscripcion ,descripcion: "Inscripcion", monto: o.precio, cantidad: 1, idCompra: compra.id },
     });
     await prisma.inscripcion.create({
         data: {

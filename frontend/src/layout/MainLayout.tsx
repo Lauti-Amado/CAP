@@ -7,15 +7,15 @@ import { Col, Container, Row } from 'react-bootstrap';
 export default function MainLayout() {
   return (
       <Container fluid className='vh-100 overflow-hidden p-0'>
-        <Row className="h-100">
+        <Row className="h-100 g-0 flex-nowrap">
           
           {/*Asidebar izquierda*/}
-          <Col xs={12} md={2} className="p-0">
+          <Col xs="auto" className="p-0 h-100 flex-shrink-0" style={{ width: '220px', minWidth: '200px' }}>
             <MainAsidebar />
           </Col>
 
           {/*Contenido principal derecha*/}
-          <Col xs={12} md={10} className="p-0 d-flex flex-column h-100">
+          <Col className="p-0 d-flex flex-column h-100 flex-grow-1" style={{ minWidth: 0 }}>
 
             {/*Navbar*/}
             <Row className="flex-shrink-0 g-0">
