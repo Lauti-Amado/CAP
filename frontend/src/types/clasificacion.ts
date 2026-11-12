@@ -4,7 +4,7 @@ import type { EstadoVerificacion } from './entregaKits'
 // Estado utilizado para representar visualmente la clasificación en el frontend.
 //No coincide con el enum del backend
 // Es una representación de presentación que combina estados de clasificación y resultado.
-export type EstadoClasificacion = 'Oficial' | 'En revisión' | 'Descalificado'
+export type EstadoClasificacion = 'Oficial' | 'En revisión' | 'Descalificado' | 'No largó'
 
 // Datos mínimos de un corredor para mostrar en los modales
 export type ResumenCorredor = {
@@ -36,7 +36,7 @@ export type LlegadaAtleta = {
   categoria: string
   tiempo: string
   // Estados visuales de las llegadas en la tabla de clasificación.
-  estado: 'OFICIAL' | 'EN REVISIÓN' | 'DESCALIFICADO'
+  estado: 'OFICIAL' | 'EN REVISIÓN' | 'DESCALIFICADO' | 'NO LARGÓ'
   sexo: 'Masculino' | 'Femenino'
   club: string
   equipo: string

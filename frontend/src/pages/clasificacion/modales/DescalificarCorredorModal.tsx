@@ -14,6 +14,7 @@ const clasePill: Record<EstadoClasificacion, string> = {
   Oficial: 'modal-pill--verde',
   'En revisión': 'modal-pill--ambar',
   Descalificado: 'modal-pill--rojo',
+  'No largó': 'modal-pill--gris',
 }
 
 function DescalificarCorredorModal({ corredores, onConfirmar, onCancelar }: DescalificarCorredorModalProps) {

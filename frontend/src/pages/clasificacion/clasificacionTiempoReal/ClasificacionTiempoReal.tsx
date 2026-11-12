@@ -4,16 +4,24 @@ import './ClasificacionTiempoReal.css';
 import { useNavigate } from 'react-router-dom';
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion';
 import { Alert, Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
-import { Layers, Pencil, Search, UserX, Wifi } from 'lucide-react';
+import { Layers, Pencil, Search, UserMinus, UserX, Wifi } from 'lucide-react';
 import { Tabla, type Columna } from '../../../components/tabla/Tabla';
 import EstadoCarreraBadge from '../../../components/carrera/EstadoCarreraBadge';
 import CargaManualModal from '../modales/CargaManualModal';
 import DescalificarCorredorModal from '../modales/DescalificarCorredorModal';
+import NoLargoCorredorModal from '../modales/NoLargoCorredorModal';
 import { llegadasMock } from '../llegadasMock';
 import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera';
-import type { LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
+import type { EstadoClasificacion, LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
 import { useDetalleCarrera } from '../../../hooks/useDetalleCarrera';
 import { useCarreraActual } from '../../../hooks/useCarreraActual';
+
+const estadoResumen: Record<LlegadaAtleta['estado'], EstadoClasificacion> = {
+  OFICIAL: 'Oficial',
+  'EN REVISIÓN': 'En revisión',
+  DESCALIFICADO: 'Descalificado',
+  'NO LARGÓ': 'No largó',
+};
 
 const aResumen = (llegada: LlegadaAtleta): ResumenCorredor => ({
   id: llegada.id,
@@ -21,8 +29,7 @@ const aResumen = (llegada: LlegadaAtleta): ResumenCorredor => ({
   nombre: llegada.apellidosNombres,
   dni: llegada.dni,
   categoria: llegada.categoria,
-  estado:
-    llegada.estado === 'OFICIAL' ? 'Oficial' : llegada.estado === 'EN REVISIÓN' ? 'En revisión' : 'Descalificado',
+  estado: estadoResumen[llegada.estado],
 });
 
 // MOCK TEMPORAL
@@ -45,10 +52,16 @@ const ClasificacionTiempoReal: React.FC = () => {
   const [seleccionados, setSeleccionados] = useState<string[]>([]);
   const [mostrarCargaManual, setMostrarCargaManual] = useState(false);
   const [corredoresADescalificar, setCorredoresADescalificar] = useState<ResumenCorredor[]>([]);
+  const [corredoresANoLargo, setCorredoresANoLargo] = useState<ResumenCorredor[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
 
   const seleccion = llegadas.filter((llegada) => seleccionados.includes(llegada.id));
   const descalificables = seleccion.filter((llegada) => llegada.estado !== 'DESCALIFICADO');
+
+  // El backend rechaza marcar "No largó" a quien ya tiene resultado
+  const noLargables = seleccion.filter(
+    (llegada) => llegada.estado !== 'DESCALIFICADO' && llegada.estado !== 'NO LARGÓ'
+  );
 
   const alternarSeleccion = (id: string) =>
     setSeleccionados((actuales) =>
@@ -79,6 +92,24 @@ const ClasificacionTiempoReal: React.FC = () => {
         : `Se descalificaron ${ids.length} corredores.`
     );
     setCorredoresADescalificar([]);
+  };
+
+  const handleNoLargo = () => setCorredoresANoLargo(noLargables.map(aResumen));
+
+  const confirmarNoLargo = () => {
+  const ids = corredoresANoLargo.map((corredor) => corredor.id);
+
+    // TODO BACKEND: PATCH /api/clasificaciones/{id} con { estado: 'No_largo' } por cada corredor
+    setLlegadas((actuales) =>
+      actuales.map((llegada) => (ids.includes(llegada.id) ? { ...llegada, estado: 'NO LARGÓ' } : llegada))
+    );
+    setSeleccionados((actuales) => actuales.filter((id) => !ids.includes(id)));
+    setAviso(
+      ids.length === 1
+        ? `Se marcó como "No largó" a ${corredoresANoLargo[0].nombre}.`
+        : `Se marcaron ${ids.length} corredores como "No largó".`
+    );
+    setCorredoresANoLargo([]);
   };
 
   const llegadasFiltradas = llegadas.filter((llegada) => {
@@ -124,6 +155,7 @@ const ClasificacionTiempoReal: React.FC = () => {
       render: (atleta) => {
         if (atleta.estado === 'OFICIAL') return <span className="rt-badge-status status-oficial">OFICIAL</span>;
         if (atleta.estado === 'EN REVISIÓN') return <span className="rt-badge-status status-revision">EN REVISIÓN</span>;
+        if (atleta.estado === 'NO LARGÓ') return <span className="rt-badge-status status-no-largo">NO LARGÓ</span>;
         return <span className="rt-badge-status status-descalificado">DESCALIFICADO</span>;
       },
     },
@@ -181,6 +213,16 @@ const ClasificacionTiempoReal: React.FC = () => {
             </Button>
 
             <Button
+              variant="outline-secondary"
+              className="d-inline-flex align-items-center gap-2"
+              disabled={noLargables.length === 0}
+              onClick={handleNoLargo}
+            >
+              <UserMinus size={15} aria-hidden="true" />
+              No largó{noLargables.length > 0 && ` (${noLargables.length})`}
+            </Button>
+
+            <Button
               variant="outline-danger"
               className="d-inline-flex align-items-center gap-2"
               disabled={descalificables.length === 0}
@@ -191,7 +233,7 @@ const ClasificacionTiempoReal: React.FC = () => {
             </Button>
 
             {seleccion.length === 0 && (
-              <span className="small text-secondary">Tilde corredores para modificar o descalificar.</span>
+              <span className="small text-secondary">Tilde corredores para modificar, descalificar o marcar como "No largó".</span>
             )}
           </div>
         </header>
@@ -295,6 +337,12 @@ const ClasificacionTiempoReal: React.FC = () => {
         corredores={corredoresADescalificar}
         onConfirmar={confirmarDescalificacion}
         onCancelar={() => setCorredoresADescalificar([])}
+      />
+
+      <NoLargoCorredorModal
+        corredores={corredoresANoLargo}
+        onConfirmar={confirmarNoLargo}
+        onCancelar={() => setCorredoresANoLargo([])}
       />
 
       {!finalizada && <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />}
