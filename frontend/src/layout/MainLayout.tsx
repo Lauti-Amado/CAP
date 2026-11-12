@@ -10,7 +10,7 @@ export default function MainLayout() {
         <Row className="h-100 g-0 flex-nowrap">
           
           {/*Asidebar izquierda*/}
-          <Col xs="auto" className="p-0 h-100 flex-shrink-0" style={{ width: '220px', minWidth: '200px' }}>
+          <Col xs="auto" className="p-0 h-100 flex-shrink-0 overflow-hidden" style={{ width: '220px', minWidth: '200px' }}>
             <MainAsidebar />
           </Col>
 
