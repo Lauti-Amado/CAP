@@ -8,6 +8,7 @@ import MainLayout from './layout/MainLayout';
 import { PrivateRoute } from './layout/PrivateRoute';
 
 import Login from './pages/login/login';
+import AccesoContingencia from './pages/login/AccesoContingencia';
 import SeleccionarCarrera from './pages/seleccionarCarrera/seleccionarCarrera';
 import DashboardClasificacion from './pages/clasificacion/DashboardClasificacion';
 import GrandPrix from './pages/grandPrix/GrandPrix';
@@ -36,6 +37,7 @@ export default function AppRoutes() {
       <Routes>
 
         <Route path='/' element={<Login />} />
+        <Route path='/contingencia' element={<AccesoContingencia />} />
 
         <Route element={<PrivateRoute roles={["Administrador", "Clasificador"]} />}>
           <Route element={<CarreraProvider />}>
