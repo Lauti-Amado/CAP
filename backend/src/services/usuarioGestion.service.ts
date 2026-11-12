@@ -1,6 +1,7 @@
 //backend/src/services/usuarioGestion.service.ts
 import { prisma } from "../config/prisma";
-import type { Prisma } from "../generated/prisma/client";
+import type { Prisma, Rol } from "../generated/prisma/client";
+import { ErrorQuitarPropioAdministrador } from "../errors/quitarPropioAdministrador.error";
 import { PaginaUsuariosDTO, ROLES_GESTIONABLES, UsuarioGestionDTO, toUsuarioGestionDto,} from "../dtos/usuarioGestion.dto";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 
@@ -41,4 +42,36 @@ export async function obtener(id: string): Promise<UsuarioGestionDTO> {
     if (!usuario) throw new ErrorNoEncontrado();
 
     return toUsuarioGestionDto(usuario);
+}
+
+//Reemplaza los roles gestionables de un usuario, tocando solo los que cambian
+export async function actualizarRoles(id: string, rolesNuevos: Rol[], solicitanteId: string): Promise<UsuarioGestionDTO> {
+    const usuario = await prisma.usuario.findUnique({ where: { id }, include });
+    if (!usuario) throw new ErrorNoEncontrado();
+
+    const deseados = new Set(rolesNuevos);
+    if (id === solicitanteId && !deseados.has("Administrador")) {
+        throw new ErrorQuitarPropioAdministrador();
+    }
+
+    //Solo se miran los roles gestionables: otros (ej. Tesorero) se respetan
+    const actuales = usuario.roles.filter(ur => ROLES_GESTIONABLES.includes(ur.rolAdministrativo.rol));
+    const rolesActuales = new Set(actuales.map(ur => ur.rolAdministrativo.rol));
+
+    const aQuitar = actuales.filter(ur => !deseados.has(ur.rolAdministrativo.rol));
+    const aAgregar = [...deseados].filter(rol => !rolesActuales.has(rol));
+
+    await prisma.$transaction(async (tx) => {
+        if (aQuitar.length > 0) {
+            await tx.usuarioRol.deleteMany({ where: { id: { in: aQuitar.map(ur => ur.id) } } });
+        }
+        if (aAgregar.length > 0) {
+            const rolesAdministrativos = await tx.rolAdministrativo.findMany({ where: { rol: { in: aAgregar } } });
+            await tx.usuarioRol.createMany({
+                data: rolesAdministrativos.map(ra => ({ usuarioId: id, rolAdministrativoId: ra.id })),
+            });
+        }
+    });
+
+    return obtener(id);
 }
