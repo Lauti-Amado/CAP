@@ -17,6 +17,7 @@ import claveRespaldoRoutes from "./routes/claveRespaldo.routes"
 import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
+import usuarioGestionRoutes from "./routes/usuarioGestion.routes"
 import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
 
 
@@ -51,6 +52,7 @@ app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
 app.use("/api/claves-respaldo", claveRespaldoRoutes);
+app.use("/api/usuarios", usuarioGestionRoutes);
 
 //EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.
 if (isProduction) {

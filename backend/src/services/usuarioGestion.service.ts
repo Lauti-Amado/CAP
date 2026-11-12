@@ -39,7 +39,7 @@ export async function listar(pagina: number): Promise<PaginaUsuariosDTO> {
 
 export async function obtener(id: string): Promise<UsuarioGestionDTO> {
     const usuario = await prisma.usuario.findUnique({ where: { id }, include });
-    if (!usuario) throw new ErrorNoEncontrado();
+    if (!usuario) throw new ErrorNoEncontrado("Usuario no encontrado.");
 
     return toUsuarioGestionDto(usuario);
 }
@@ -47,7 +47,7 @@ export async function obtener(id: string): Promise<UsuarioGestionDTO> {
 //Reemplaza los roles gestionables de un usuario, tocando solo los que cambian
 export async function actualizarRoles(id: string, rolesNuevos: Rol[], solicitanteId: string): Promise<UsuarioGestionDTO> {
     const usuario = await prisma.usuario.findUnique({ where: { id }, include });
-    if (!usuario) throw new ErrorNoEncontrado();
+    if (!usuario) throw new ErrorNoEncontrado("Usuario no encontrado.");
 
     const deseados = new Set(rolesNuevos);
     if (id === solicitanteId && !deseados.has("Administrador")) {
