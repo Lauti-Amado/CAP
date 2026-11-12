@@ -19,7 +19,11 @@ export const tiempoRealQuerySchema = z.object({
 // Sólo se permiten los estados que se fijan a mano. "Finalizo" se obtiene
 // únicamente al registrar un resultado (PUT .../resultado) y "Pendiente" es el inicial.
 export const cambiarEstadoClasificacionSchema = z.object({
-    estado: z.enum([EstadoClasificacion.Descalificado, EstadoClasificacion.No_finalizo]),
+    estado: z.enum([
+        EstadoClasificacion.Descalificado,
+        EstadoClasificacion.No_finalizo,
+        EstadoClasificacion.No_largo,
+    ]),
 }).strict();
 
 // PUT /api/clasificaciones/:id/resultado

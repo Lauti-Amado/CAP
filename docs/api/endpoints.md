@@ -5,8 +5,24 @@
 | Método | Ruta | Propósito |
 |---|---|---|
 | `POST` | `/api/auth/login` | Iniciar sesión |
+| `POST` | `/api/auth/contingencia` | Iniciar sesión con email y clave de respaldo de uso único |   <!-- NUEVA -->
 | `POST` | `/api/auth/logout` | Cerrar sesión |
 | `GET` | `/api/auth/yo` | Obtener el usuario autenticado |
+
+#### Usuarios (solo Administrador)
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/api/usuarios?pagina={n}` | Listar los usuarios del personal, paginados de a 10 |
+| `GET` | `/api/usuarios/{id}` | Consultar un usuario |
+| `PATCH` | `/api/usuarios/{id}` | Reemplazar sus roles. Body: `{ "roles": ["Administrador", "Clasificador"] }` |
+
+#### Claves de respaldo (solo Administrador)
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/api/claves-respaldo` | Consultar el lote vigente de claves |
+| `POST` | `/api/claves-respaldo` | Anular las claves disponibles y generar un lote nuevo de 8 |
 
 #### Carreras
 | Método | Ruta | Propósito |
@@ -40,7 +56,7 @@
 |---|---|---|
 | `GET` | `/api/carreras/{id}/clasificacion` | Consultar los resultados de una carrera |
 | `GET` | `/api/clasificaciones/{id}` | Consultar el estado de clasificación de una inscripción |
-| `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación, por ejemplo, registrar una descalificación |
+| `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación: descalificar, marcar "No finalizó" o "No largó" |
 | `PUT` | `/api/clasificaciones/{id}/resultado` | Registrar o corregir el tiempo, el puesto y el estado de un resultado |
 | `GET` | `/api/carreras/{id}/clasificacion/tiempo-real` | Obtener los datos para la vista de clasificación en tiempo real, si el frontend lo necesita |
 

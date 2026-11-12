@@ -400,3 +400,8 @@
 
 /* Fila seleccionada */
 .rt-tabla tr:has(.rt-check input:checked) td { background: #f0faf4; }
+
+.rt-badge-status.status-no-largo {
+  background: #e5e7eb;
+  color: #4b5563;
+}

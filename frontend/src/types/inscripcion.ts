@@ -1,5 +1,5 @@
 export type Inscripcion = {
-  id: number
+  id: string
   dni: string
   corredor: string
   carrera: string
@@ -21,7 +21,7 @@ export type FiltrosInscripciones = {
 }
 
 export type InscripcionDetalle = {
-  id: number
+  id: string
   numero: string
   estado: string
   carrera: string

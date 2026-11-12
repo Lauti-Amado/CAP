@@ -1,28 +1,11 @@
 //frontend/src/pages/administracion/Administracion.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  Container,
-  Row,
-  Table,
-} from 'react-bootstrap'
-import {
-  Award,
-  Cpu,
-  KeyRound,
-  Pencil,
-  Plus,
-  Shapes,
-  UserCog,
-  type LucideIcon,
-} from 'lucide-react'
-import type { EstadoUsuario, RolUsuario } from '../../types/administracion'
-// MOCK TEMPORAL
-import { usuariosMock } from './administracionMock'
+import { Award, Cpu, KeyRound, Pencil, Shapes, UserCog, type LucideIcon } from 'lucide-react'
+import type { EstadoUsuario, RolUsuario, UsuarioAdministracion } from '../../types/administracion'
+import { listarUsuarios } from '../../services/usuarioGestionService'
+import ClavesRespaldoModal from '../../components/modales/ClavesRespaldoModal'
+import './Administracion.css'
 
 type Atajo = {
   titulo: string
@@ -76,15 +59,35 @@ const badgeEstadoEstilos: Record<EstadoUsuario, React.CSSProperties> = {
 
 function Administracion() {
   const navigate = useNavigate()
+  const [mostrarClaves, setMostrarClaves] = useState(false)
   const [paginaActual, setPaginaActual] = useState(1)
-  const [hoveredAtajo, setHoveredAtajo] = useState<string | null>(null)
-  const [hoverRespaldo, setHoverRespaldo] = useState(false)
-  const [hoverNuevoUsuario, setHoverNuevoUsuario] = useState(false)
+  const [usuarios, setUsuarios] = useState<UsuarioAdministracion[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(1)
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // MOCK TEMPORAL
-  // TODO BACKEND: GET /api/usuarios?pagina={paginaActual}
-  const usuarios = usuariosMock
-  const totalPaginas = 2 // temporal, para ver el botón "Siguiente" como en Figma
+  useEffect(() => {
+    let activo = true
+    setCargando(true)
+    setError(null)
+
+    listarUsuarios(paginaActual)
+      .then((respuesta) => {
+        if (!activo) return
+        setUsuarios(respuesta.datos)
+        setTotal(respuesta.total)
+        setTotalPaginas(respuesta.totalPaginas)
+      })
+      .catch((e) => {
+        if (activo) setError(e instanceof Error ? e.message : 'No se pudieron cargar los usuarios')
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+
+    return () => { activo = false }
+  }, [paginaActual])
 
   return (
     <Container fluid as="main" className="p-4" style={{ minHeight: '100vh', background: 'transparent' }}>
@@ -153,33 +156,16 @@ function Administracion() {
 
       {/* =========================
           CLAVES DE RESPALDO
-          TODO (compañero): implementar la acción de este botón.
       ========================= */}
       <div className="mb-4">
         <Button
           type="button"
-          size="sm"
-          className="d-inline-flex align-items-center gap-2 fw-semibold"
-          onMouseEnter={() => setHoverRespaldo(true)}
-          onMouseLeave={() => setHoverRespaldo(false)}
-          onClick={() => {
-            // TODO: pendiente de implementación
-          }}
-          style={{
-            color: hoverRespaldo ? '#7f1d1d' : '#991b1b',
-            backgroundColor: hoverRespaldo ? '#fecaca' : '#fee2e2',
-            borderColor: hoverRespaldo ? '#fca5a5' : '#fecaca',
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderRadius: 6,
-            padding: '6px 12px',
-            fontSize: '0.875rem',
-            transition: 'all 0.15s ease-in-out',
-          }}
+          className="btn btn-sm admin-respaldo d-inline-flex align-items-center gap-2"
+          onClick={() => setMostrarClaves(true)}   // MODIFICADO
         >
           <KeyRound size={14} aria-hidden="true" />
           Claves de respaldo
-        </Button>
+        </button>
       </div>
 
       {/* =========================
@@ -196,72 +182,52 @@ function Administracion() {
               Administre el acceso al sistema CAP Gestión.
             </Card.Text>
           </div>
-
-          {/* TODO: navegar al alta de usuario cuando exista la pantalla */}
-          <Button
-            type="button"
-            size="sm"
-            className="d-inline-flex align-items-center gap-2 border-0 fw-semibold text-white"
-            onMouseEnter={() => setHoverNuevoUsuario(true)}
-            onMouseLeave={() => setHoverNuevoUsuario(false)}
-            style={{
-              backgroundColor: hoverNuevoUsuario ? '#16a34a' : '#22c55e',
-              borderRadius: 6,
-              padding: '6px 14px',
-              transition: 'background-color 0.15s ease-in-out',
-            }}
-          >
-            <Plus size={14} aria-hidden="true" />
-            Nuevo usuario
-          </Button>
-        </Card.Body>
+        </div>
 
         <div className="table-responsive">
           <Table hover className="align-middle mb-0 small" style={{ borderColor: '#eef1ff' }}>
             <thead>
-              <tr style={{ background: '#eef1ff' }}>
-                <th style={{ background: '#eef1ff', color: '#344054', fontSize: '0.75rem', fontWeight: 600, padding: '10px 16px', borderTop: 'none' }}>
-                  Nombre
-                </th>
-                <th style={{ background: '#eef1ff', color: '#344054', fontSize: '0.75rem', fontWeight: 600, padding: '10px 16px', borderTop: 'none' }}>
-                  DNI
-                </th>
-                <th style={{ background: '#eef1ff', color: '#344054', fontSize: '0.75rem', fontWeight: 600, padding: '10px 16px', borderTop: 'none' }}>
-                  Correo
-                </th>
-                <th style={{ background: '#eef1ff', color: '#344054', fontSize: '0.75rem', fontWeight: 600, padding: '10px 16px', borderTop: 'none' }}>
-                  Rol
-                </th>
-                <th style={{ background: '#eef1ff', color: '#344054', fontSize: '0.75rem', fontWeight: 600, padding: '10px 16px', borderTop: 'none' }}>
-                  Estado
-                </th>
-                <th className="text-end" style={{ background: '#eef1ff', color: '#344054', fontSize: '0.75rem', fontWeight: 600, padding: '10px 16px', borderTop: 'none' }}>
-                  Acciones
-                </th>
+              <tr>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Correo</th>
+                <th>Roles</th>
+                <th>Estado</th>
+                <th className="text-end">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((usuario) => (
+              {cargando && (
+                <tr>
+                  <td colSpan={6} className="text-center py-4">
+                    <span className="spinner-border spinner-border-sm" role="status" aria-label="Cargando" />
+                  </td>
+                </tr>
+              )}
+
+              {!cargando && error && (
+                <tr>
+                  <td colSpan={6} className="text-center text-danger py-4">{error}</td>
+                </tr>
+              )}
+
+              {!cargando && !error && usuarios.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center text-secondary py-4">No hay usuarios para mostrar.</td>
+                </tr>
+              )}
+
+              {!cargando && !error && usuarios.map((usuario) => (
                 <tr key={usuario.id}>
-                  <td className="fw-semibold" style={{ padding: '12px 16px' }}>{usuario.nombre}</td>
-                  <td style={{ padding: '12px 16px' }}>{usuario.dni}</td>
-                  <td style={{ padding: '12px 16px' }}>{usuario.correo}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <Badge
-                      pill
-                      style={{
-                        ...badgeRolEstilos[usuario.rol],
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '0.4em 0.85em',
-                        border: 0,
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {usuario.rol}
-                    </Badge>
+                  <td className="fw-semibold">{usuario.nombre}</td>
+                  <td>{usuario.dni}</td>
+                  <td>{usuario.correo}</td>
+                  <td>
+                    <div className="d-flex flex-wrap gap-1">
+                      {usuario.roles.map((rol) => (
+                        <span key={rol} className={`admin-pill ${claseRol[rol]}`}>{rol}</span>
+                      ))}
+                    </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <Badge
@@ -284,9 +250,8 @@ function Administracion() {
                     <div className="d-flex justify-content-end">
                       <Button
                         type="button"
-                        variant="link"
-                        className="text-secondary p-0 ms-auto me-0"
-                        aria-label={`Editar rol de ${usuario.nombre}`}
+                        className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
+                        aria-label={`Editar roles de ${usuario.nombre}`}
                         onClick={() => navigate(`/administrador/configuraciones/${usuario.id}`)}
                       >
                         <Pencil size={13} aria-hidden="true" />
@@ -299,8 +264,8 @@ function Administracion() {
           </Table>
         </div>
 
-        <Card.Footer className="bg-white d-flex justify-content-between align-items-center small text-secondary py-3 px-3 border-top" style={{ borderColor: '#e6e9f3' }}>
-          <span>Mostrando {usuarios.length} usuarios</span>
+        <div className="card-footer bg-white d-flex justify-content-between align-items-center small text-secondary">
+          <span>Mostrando {usuarios.length} de {total} usuarios</span>
           <div className="d-flex gap-2">
             <Button
               type="button"
@@ -321,9 +286,10 @@ function Administracion() {
               Siguiente
             </Button>
           </div>
-        </Card.Footer>
-      </Card>
-    </Container>
+        </div>
+      </section>
+      <ClavesRespaldoModal show={mostrarClaves} onCerrar={() => setMostrarClaves(false)} />
+    </main>
   )
 }
 

@@ -2,7 +2,7 @@ import type { InscripcionDetalle } from '../../types/inscripcion'
 
 export const inscripcionDetalleMock: InscripcionDetalle[] = [
   {
-    id: 1,
+    id: '1',
     numero: '001',
     estado: 'Confirmada',
     carrera: 'Maratón Internacional',
@@ -41,7 +41,7 @@ export const inscripcionDetalleMock: InscripcionDetalle[] = [
   },
 
   {
-    id: 2,
+    id: '2',
     numero: '002',
     estado: 'En Proceso',
     carrera: 'Media Maratón de la Ciudad',
@@ -80,7 +80,7 @@ export const inscripcionDetalleMock: InscripcionDetalle[] = [
   },
 
   {
-    id: 3,
+    id: '3',
     numero: '003',
     estado: 'Anulada',
     carrera: 'Maratón Internacional',

@@ -1,9 +1,7 @@
 import './AccionesNavbar.css'
 import { Bell, CircleHelp, UserRound, Cloud } from 'lucide-react';
-
+import type { EstadoSincronizacion } from '../../types/sincronizacion';
 import { useAuth } from '../../context/AuthContext';
-
-type EstadoSincronizacion = 'conectado' | 'sincronizando' | 'sin-conexion';
 
 const estadosSincronizacion: Record<
     EstadoSincronizacion,

@@ -29,14 +29,16 @@ export function calcularProgreso(llegados: number, participantes: number): numbe
 // Resumen de la carrera a partir de la cantidad de clasificaciones por estado
 export function resumirConteos(conteos: Record<EstadoClasificacion, number>) {
     const participantes = Object.values(conteos).reduce((total, cantidad) => total + cantidad, 0);
+    const largaron = participantes - conteos.No_largo;
 
     return {
         participantes,
         llegados: conteos.Finalizo,
         pendientes: conteos.Pendiente,
         noFinalizaron: conteos.No_finalizo,
+        noLargaron: conteos.No_largo,
         descalificados: conteos.Descalificado,
-        progreso: calcularProgreso(conteos.Finalizo, participantes),
+        progreso: calcularProgreso(conteos.Finalizo, largaron),
     };
 }
 
@@ -50,7 +52,7 @@ export function evaluarCambioEstado(
 ): CambioEstado {
     if (nuevo === "Descalificado") return { permitido: true };
 
-    if (nuevo === "No_finalizo") {
+    if (nuevo === "No_finalizo" || nuevo === "No_largo") {
         if (actual === "Descalificado") return { permitido: false, motivo: "El corredor está descalificado." };
         if (tieneResultado) return { permitido: false, motivo: "El corredor ya tiene un resultado registrado." };
         return { permitido: true };
