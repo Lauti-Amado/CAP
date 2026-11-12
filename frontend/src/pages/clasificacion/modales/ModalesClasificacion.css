@@ -68,3 +68,8 @@
   list-style: none;
   font-size: 0.9375rem;
 }
+
+.modal-pill--gris {
+  background: #e5e7eb;
+  color: #4b5563;
+}
