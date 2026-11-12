@@ -538,6 +538,7 @@ enum EstadoClasificacion {
     Pendiente //El corredor se encuentra corriendo la carrera
     Finalizo //El corredor comienza y termina la carrera legalmente
     No_finalizo //El corredor comienza la carrera pero no se registra su llegada
+    No_largo //El corredor retiró su kit pero no largó la carrera (DNS)
     Descalificado //Un clasificador marca al corredor como descalificado
 }
 

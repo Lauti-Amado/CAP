@@ -56,7 +56,7 @@
 |---|---|---|
 | `GET` | `/api/carreras/{id}/clasificacion` | Consultar los resultados de una carrera |
 | `GET` | `/api/clasificaciones/{id}` | Consultar el estado de clasificación de una inscripción |
-| `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación, por ejemplo, registrar una descalificación |
+| `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación: descalificar, marcar "No finalizó" o "No largó" |
 | `PUT` | `/api/clasificaciones/{id}/resultado` | Registrar o corregir el tiempo, el puesto y el estado de un resultado |
 | `GET` | `/api/carreras/{id}/clasificacion/tiempo-real` | Obtener los datos para la vista de clasificación en tiempo real, si el frontend lo necesita |
 
