@@ -55,3 +55,18 @@ export async function generar(usuarioId: string): Promise<ClaveRespaldoDTO[]> {
 
     return listar();
 }
+
+//Consume la clave de forma atómica. Devuelve false si no existe o ya no está disponible
+export async function consumir(clave: string, usuarioId: string): Promise<boolean> {
+    const registro = await prisma.claveRespaldo.findUnique({
+        where: { claveHash: hashearClave(clave) },
+    });
+    if (!registro || registro.estado !== "Disponible") return false;
+
+    //El where con estado evita que dos pedidos simultáneos usen la misma clave
+    const { count } = await prisma.claveRespaldo.updateMany({
+        where: { id: registro.id, estado: "Disponible" },
+        data: { estado: "Utilizada", usadaPorId: usuarioId, fechaHoraUso: new Date() },
+    });
+    return count === 1;
+}
