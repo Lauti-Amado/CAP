@@ -256,6 +256,7 @@ function Administracion() {
                         padding: '0.4em 0.85em',
                         border: 0,
                         fontSize: '0.7rem',
+                        color:'White',
                         fontWeight: 600,
                         lineHeight: 1,
                       }}
@@ -273,6 +274,7 @@ function Administracion() {
                         padding: '0.4em 0.85em',
                         border: 0,
                         fontSize: '0.7rem',
+                        color:'White',
                         fontWeight: 600,
                         lineHeight: 1,
                       }}
