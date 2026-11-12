@@ -1,11 +1,10 @@
 //frontend/src/pages/administracion/Administracion.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Award, Cpu, KeyRound, Pencil, Plus, Shapes, UserCog, type LucideIcon,} from 'lucide-react'
-import type { EstadoUsuario, RolUsuario } from '../../types/administracion'
+import { Award, Cpu, KeyRound, Pencil, Shapes, UserCog, type LucideIcon } from 'lucide-react'
+import type { EstadoUsuario, RolUsuario, UsuarioAdministracion } from '../../types/administracion'
+import { listarUsuarios } from '../../services/usuarioGestionService'
 import ClavesRespaldoModal from '../../components/modales/ClavesRespaldoModal'
-// MOCK TEMPORAL
-import { usuariosMock } from './administracionMock'
 import './Administracion.css'
 
 type Atajo = {
@@ -34,13 +33,35 @@ const claseEstado: Record<EstadoUsuario, string> = {
 
 function Administracion() {
   const navigate = useNavigate()
-  const [paginaActual, setPaginaActual] = useState(1)
   const [mostrarClaves, setMostrarClaves] = useState(false)
+  const [paginaActual, setPaginaActual] = useState(1)
+  const [usuarios, setUsuarios] = useState<UsuarioAdministracion[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(1)
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // MOCK TEMPORAL
-  // TODO BACKEND: GET /api/usuarios?pagina={paginaActual}
-  const usuarios = usuariosMock
-  const totalPaginas = 2   // temporal, para ver el botón "Siguiente" como en Figma
+  useEffect(() => {
+    let activo = true
+    setCargando(true)
+    setError(null)
+
+    listarUsuarios(paginaActual)
+      .then((respuesta) => {
+        if (!activo) return
+        setUsuarios(respuesta.datos)
+        setTotal(respuesta.total)
+        setTotalPaginas(respuesta.totalPaginas)
+      })
+      .catch((e) => {
+        if (activo) setError(e instanceof Error ? e.message : 'No se pudieron cargar los usuarios')
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+
+    return () => { activo = false }
+  }, [paginaActual])
 
   return (
     <main className="main-content p-4">
@@ -105,15 +126,6 @@ function Administracion() {
               Administre el acceso al sistema CAP Gestión.
             </p>
           </div>
-
-          {/* TODO: navegar al alta de usuario cuando exista la pantalla */}
-          <button
-            type="button"
-            className="btn btn-sm admin-btn-primary d-inline-flex align-items-center gap-2"
-          >
-            <Plus size={14} aria-hidden="true" />
-            Nuevo usuario
-          </button>
         </div>
 
         <div className="table-responsive">
@@ -123,21 +135,43 @@ function Administracion() {
                 <th>Nombre</th>
                 <th>DNI</th>
                 <th>Correo</th>
-                <th>Rol</th>
+                <th>Roles</th>
                 <th>Estado</th>
                 <th className="text-end">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((usuario) => (
+              {cargando && (
+                <tr>
+                  <td colSpan={6} className="text-center py-4">
+                    <span className="spinner-border spinner-border-sm" role="status" aria-label="Cargando" />
+                  </td>
+                </tr>
+              )}
+
+              {!cargando && error && (
+                <tr>
+                  <td colSpan={6} className="text-center text-danger py-4">{error}</td>
+                </tr>
+              )}
+
+              {!cargando && !error && usuarios.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center text-secondary py-4">No hay usuarios para mostrar.</td>
+                </tr>
+              )}
+
+              {!cargando && !error && usuarios.map((usuario) => (
                 <tr key={usuario.id}>
                   <td className="fw-semibold">{usuario.nombre}</td>
                   <td>{usuario.dni}</td>
                   <td>{usuario.correo}</td>
                   <td>
-                    <span className={`admin-pill ${claseRol[usuario.rol]}`}>
-                      {usuario.rol}
-                    </span>
+                    <div className="d-flex flex-wrap gap-1">
+                      {usuario.roles.map((rol) => (
+                        <span key={rol} className={`admin-pill ${claseRol[rol]}`}>{rol}</span>
+                      ))}
+                    </div>
                   </td>
                   <td>
                     <span className={`admin-pill ${claseEstado[usuario.estado]}`}>
@@ -149,7 +183,7 @@ function Administracion() {
                       <button
                         type="button"
                         className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
-                        aria-label={`Editar rol de ${usuario.nombre}`}
+                        aria-label={`Editar roles de ${usuario.nombre}`}
                         onClick={() => navigate(`/administrador/configuraciones/${usuario.id}`)}
                       >
                         <Pencil size={13} aria-hidden="true" />
@@ -163,7 +197,7 @@ function Administracion() {
         </div>
 
         <div className="card-footer bg-white d-flex justify-content-between align-items-center small text-secondary">
-          <span>Mostrando {usuarios.length} usuarios</span>
+          <span>Mostrando {usuarios.length} de {total} usuarios</span>
           <div className="d-flex gap-2">
             <button
               type="button"
