@@ -22,7 +22,7 @@
 | Método | Ruta | Propósito |
 |---|---|---|
 | `GET` | `/api/claves-respaldo` | Consultar el lote vigente de claves |
-| `POST` | `/api/claves-respaldo/generar` | Anular las claves disponibles y generar un lote nuevo de 8 |
+| `POST` | `/api/claves-respaldo` | Anular las claves disponibles y generar un lote nuevo de 8 |
 
 #### Carreras
 | Método | Ruta | Propósito |

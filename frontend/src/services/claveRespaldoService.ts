@@ -6,4 +6,4 @@ export const listarClavesRespaldo = () =>
   apiFetch<ClaveRespaldo[]>('/claves-respaldo')
 
 export const generarClavesRespaldo = () =>
-  apiFetch<ClaveRespaldo[]>('/claves-respaldo/generar', { method: 'POST' })
+  apiFetch<ClaveRespaldo[]>('/claves-respaldo', { method: 'POST' })
