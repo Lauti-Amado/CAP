@@ -1,17 +1,9 @@
 //frontend/src/pages/administracion/Administracion.tsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Award,
-  Cpu,
-  KeyRound,
-  Pencil,
-  Plus,
-  Shapes,
-  UserCog,
-  type LucideIcon,
-} from 'lucide-react'
+import { Award, Cpu, KeyRound, Pencil, Plus, Shapes, UserCog, type LucideIcon,} from 'lucide-react'
 import type { EstadoUsuario, RolUsuario } from '../../types/administracion'
+import ClavesRespaldoModal from '../../components/modales/ClavesRespaldoModal'
 // MOCK TEMPORAL
 import { usuariosMock } from './administracionMock'
 import './Administracion.css'
@@ -43,6 +35,7 @@ const claseEstado: Record<EstadoUsuario, string> = {
 function Administracion() {
   const navigate = useNavigate()
   const [paginaActual, setPaginaActual] = useState(1)
+  const [mostrarClaves, setMostrarClaves] = useState(false)
 
   // MOCK TEMPORAL
   // TODO BACKEND: GET /api/usuarios?pagina={paginaActual}
@@ -86,20 +79,17 @@ function Administracion() {
 
       {/* =========================
           CLAVES DE RESPALDO
-          TODO (compañero): implementar la acción de este botón.
       ========================= */}
       <div className="mb-4">
         <button
           type="button"
           className="btn btn-sm admin-respaldo d-inline-flex align-items-center gap-2"
-          onClick={() => {
-            // TODO: pendiente de implementación
-          }}
+          onClick={() => setMostrarClaves(true)}   // MODIFICADO
         >
           <KeyRound size={14} aria-hidden="true" />
           Claves de respaldo
         </button>
-      </div> 
+      </div>
 
       {/* =========================
           GESTIÓN DE USUARIOS
@@ -194,6 +184,7 @@ function Administracion() {
           </div>
         </div>
       </section>
+      <ClavesRespaldoModal show={mostrarClaves} onCerrar={() => setMostrarClaves(false)} />
     </main>
   )
 }
