@@ -101,8 +101,9 @@ export type ResumenClasificacionDTO = {
     llegados: number;
     pendientes: number;
     noFinalizaron: number;
+    noLargaron: number;
     descalificados: number;
-    progreso: number; //porcentaje de llegados sobre participantes (0-100)
+    progreso: number; //porcentaje de llegados sobre los que largaron (0-100)
 }
 
 export type ClasificacionTiempoRealDTO = {
