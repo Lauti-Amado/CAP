@@ -1,31 +1,42 @@
-//backend/src/routes/carrera.routes.ts
+// backend/src/routes/carrera.routes.ts
+
 import { Router } from "express";
 
 import * as carreraController from "../controllers/carrera.controller";
 import * as carreraDetalleController from "../controllers/carreraDetalle.controller";
+
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { idParamSchema } from "../validations/id.validations";
 import { validateParams } from "../middlewares/validate.middleware";
 
 const router = Router();
 
-//GET carreras
-router.get("/", 
+// Ambos roles pueden consultar carreras
+const protegido = [
+    authenticate,
+    authorize("Administrador", "Clasificador")
+];
+
+// GET todas las carreras
+router.get(
+    "/",
+    ...protegido,
     carreraController.getAll
 );
 
-//GET carrera por ID
-router.get("/:id", 
-    validateParams(idParamSchema), 
-    carreraController.getById   
+// GET carrera por ID
+router.get(
+    "/:id",
+    ...protegido,
+    validateParams(idParamSchema),
+    carreraController.getById
 );
 
-//NOTA: Ni POST o PUT se incluyen porque eso es el objetivo del sistema web.
-
-//GET detalle de una carrera (con inscriptos, kits entregados y clasificados)
-router.get("/:id/detalle",
-    authenticate,
-    authorize("Administrador", "Clasificador"),
+// GET detalle de una carrera
+// Incluye inscriptos, kits entregados y clasificados
+router.get(
+    "/:id/detalle",
+    ...protegido,
     validateParams(idParamSchema),
     carreraDetalleController.getDetalle
 );
