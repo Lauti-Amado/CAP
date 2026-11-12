@@ -11,6 +11,6 @@ router.use(authenticate, authorize("Administrador"));
 router.get("/", claveController.listar);
 
 //Invalidar el lote actual y generar uno nuevo
-router.post("/generar", claveController.generar);
+router.post("/", claveController.generar);
 
 export default router;
