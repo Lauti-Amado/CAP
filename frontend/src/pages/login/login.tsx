@@ -130,15 +130,6 @@ export default function Login() {
                             )}
                         </Form.Group>
 
-                        {/* Checkbox Recordarme (A IMPLEMENTAR: loggea automáticamente y los tokens ya duran 30 días en el back) */}
-                        <Form.Group className="mb-3 remember-container" controlId="loginRemember">
-                            <Form.Check
-                                type="checkbox"
-                                label="Recordarme en este dispositivo"
-                                {...register('recordarme')}
-                            />
-                        </Form.Group>
-
                         {/* Error devuelto por la API */}
                         {errorApi && (
                             <Alert variant="danger" className="login-alert">

@@ -10,7 +10,6 @@ const email = z.string()
 export const loginSchema = z.object({
   email: email,
   password: z.string().min(1, "La contraseña es obligatoria"),
-  recordarme: z.boolean().optional()
 });
 
 export type Login = z.infer<typeof loginSchema>;
