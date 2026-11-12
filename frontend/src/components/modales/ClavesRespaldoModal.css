@@ -1,0 +1,90 @@
+.claves-modal {
+  border: 0;
+  border-radius: 12px;
+}
+
+.claves-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #e8ecff;
+  color: #4f5fd6;
+}
+
+.claves-barra {
+  background: #f3f6ff;
+  border-radius: 8px;
+}
+
+.claves-btn-generar.btn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #006b35;
+  --bs-btn-border-color: #006b35;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #005a31;
+  --bs-btn-hover-border-color: #005a31;
+  --bs-btn-active-bg: #005a31;
+  --bs-btn-active-border-color: #005a31;
+  font-weight: 600;
+}
+
+.claves-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e1e6ef;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.claves-item--usada {
+  background: #f5f6f8;
+}
+
+.claves-item--usada .claves-codigo {
+  text-decoration: line-through;
+  color: #98a2b3;
+}
+
+.claves-numero {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #667085;
+  background: #eef1ff;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.claves-codigo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #1c2237;
+}
+
+.claves-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4em 0.85em;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.claves-pill--uso-unico { background: #e8ecff; color: #4f5fd6; }
+.claves-pill--disponible { background: #bbf7d0; color: #166534; }
+.claves-pill--utilizada,
+.claves-pill--invalidada { background: #d9dee8; color: #475467; }
+
+.claves-aviso {
+  background: #eef1ff;
+  border-radius: 8px;
+  color: #344054;
+  font-size: 0.9rem;
+}

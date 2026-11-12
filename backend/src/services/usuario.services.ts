@@ -1,6 +1,8 @@
+//backend/src/servies/usuario.services.ts
 import { prisma } from "../config/prisma";
 
-import type { Login } from "../validations/usuario.validations";
+import type { Login, LoginContingencia } from "../validations/usuario.validations";
+import { consumir } from "./claveRespaldo.service";
 import { TokenPayload, UsuarioDTO, toUsuarioDto } from "../dtos/usuario.dto";
 
 import bcrypt from "bcrypt";
@@ -47,4 +49,26 @@ export async function login(datos: Login): Promise<{ token: string; usuario: Usu
         token,
         usuario: toUsuarioDto(usuario)
     };
+}
+
+//Login de contingencia: email de la cuenta + clave de respaldo de uso único
+export async function loginContingencia(datos: LoginContingencia): Promise<{ token: string; usuario: UsuarioDTO } | null> {
+    const usuario = await prisma.usuario.findUnique({
+        where: { email: datos.email },
+        include: {
+            roles: { include: { rolAdministrativo: true } },
+            persona: { include: { corredor: { include: { contactoEmergencia: true, aptosMedicos: true, afiliacion: true } } } }
+        },
+    });
+
+    if (!usuario || usuario.estado !== "Activo") return null;
+
+    const consumida = await consumir(datos.clave, usuario.id);
+    if (!consumida) return null;
+
+    const roles = usuario.roles.map(r => r.rolAdministrativo.rol);
+    const payload: TokenPayload = { id: usuario.id, roles };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    return { token, usuario: toUsuarioDto(usuario) };
 }

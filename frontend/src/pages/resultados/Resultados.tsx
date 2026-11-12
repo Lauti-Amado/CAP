@@ -38,7 +38,7 @@ const Resultados: React.FC = () => {
   const [certificadosEnviados, setCertificadosEnviados] = useState(false);
 
   // TODO: tomar el id de la carrera seleccionada cuando exista
-  const carreraId = 1;
+  const carreraId = '1';
   
   // Datos mock de atletas finalizados (simulando una base de datos)
   const resultadosMock: ResultadoAtleta[] = [

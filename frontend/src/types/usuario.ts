@@ -19,7 +19,7 @@ export type Persona = {
 }
 
 export type Corredor = {
-  fechaNacimiento: Date
+  fechaNacimiento: string
   sexo: Sexo;
   discapacidad?: Discapacidad | null;
 }
