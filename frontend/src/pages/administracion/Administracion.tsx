@@ -1,7 +1,7 @@
 //frontend/src/pages/administracion/Administracion.tsx
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Award, Cpu, KeyRound, Pencil, Plus, Shapes, UserCog, type LucideIcon } from 'lucide-react'
+import { Award, Cpu, KeyRound, Pencil, Shapes, UserCog, type LucideIcon } from 'lucide-react'
 import type { EstadoUsuario, RolUsuario, UsuarioAdministracion } from '../../types/administracion'
 import { listarUsuarios } from '../../services/usuarioGestionService'
 import ClavesRespaldoModal from '../../components/modales/ClavesRespaldoModal'
@@ -126,15 +126,6 @@ function Administracion() {
               Administre el acceso al sistema CAP Gestión.
             </p>
           </div>
-
-          {/* TODO: navegar al alta de usuario cuando exista la pantalla */}
-          <button
-            type="button"
-            className="btn btn-sm admin-btn-primary d-inline-flex align-items-center gap-2"
-          >
-            <Plus size={14} aria-hidden="true" />
-            Nuevo usuario
-          </button>
         </div>
 
         <div className="table-responsive">
