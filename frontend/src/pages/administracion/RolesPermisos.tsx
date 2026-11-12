@@ -5,7 +5,7 @@ import { Check } from 'lucide-react'
 import type { RolUsuario } from '../../types/administracion'
 // MOCK TEMPORAL
 import { opcionesRolMock, usuariosMock } from './administracionMock'
-import './Administracion.css'
+
 
 function RolesPermisos() {
   const { id } = useParams<{ id: string }>()
