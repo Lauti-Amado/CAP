@@ -5,6 +5,7 @@ import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import { inscripcionCertificadoInclude, toCandidatoCertificadoDto, type CandidatoCertificadoDTO, type InscripcionCertificado, type ResultadoEnvioCertificadoDTO, type ResultadoReintentoDTO,} from "../dtos/certificado.dto";
 import * as reglas from "../rules/certificado.rules";
 import { enviarEmailConPlantilla, ErrorEmailNoDisponible, leerConfiguracionBrevo } from "./email.service";
+import { obtenerParametrosEstiloActivo } from "./plantillaCertificado.service";
 
 const LIMITE_CANDIDATOS = 20;
 
@@ -99,6 +100,7 @@ export async function enviarCertificado(inscripcionId: string): Promise<Resultad
                 para: { email, nombre },
                 plantillaId: plantillaCertificadoId,
                 parametros: {
+                    ...(await obtenerParametrosEstiloActivo()),
                     nombre,
                     carrera: inscripcion.distanciaCarrera.carrera.nombre,
                     distancia: `${inscripcion.distanciaCarrera.distancia.kilometraje} km`,
