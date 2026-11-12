@@ -1,3 +1,4 @@
+//frontend/src/pages/login/login.tsx
 import './Login.css';
 
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
@@ -6,7 +7,7 @@ import { ArrowRight, Mail, Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,13 +96,13 @@ export default function Login() {
                         {/* Input Contraseña */}
                         <Form.Group className="form-field" controlId="loginPassword">
 
-                            {/* Contraseña olvidada (a implementar) */}
-                            <div className="label-row">
-                                <Form.Label>Contraseña</Form.Label>
-                                <a href="#" className="forgot-link">
-                                    ¿Olvidaste tu contraseña?
-                                </a>
-                            </div>
+                        {/* Acceso de contingencia con clave de respaldo */}
+                        <div className="label-row">
+                            <Form.Label>Contraseña</Form.Label>
+                            <Link to="/contingencia" className="forgot-link">
+                                Acceso de contingencia
+                            </Link>
+                        </div>
 
                             <div className="input-wrapper">
                                 <Lock className="input-icon left-icon" />
