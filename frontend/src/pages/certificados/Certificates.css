@@ -3,15 +3,12 @@
 .certificate-titlebar, .editor-titlebar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px; }
 .certificate-titlebar h1, .editor-titlebar h1 { margin:0; color:#20283a; font-size:22px; }
 .certificate-titlebar p { margin:4px 0 0; color:#69736d; font-size:11px; }
-.certificate-primary { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px; padding:0 14px; border:0; border-radius:5px; background:#20bf63; color:#fff; font-size:10px; font-weight:600; cursor:pointer; }
 .certificate-layout { display:grid; grid-template-columns:minmax(0, 2.25fr) minmax(210px, .9fr); gap:14px; }
 .certificate-workspace, .certificate-sidecard { border:1px solid #e3e8ef; border-radius:8px; background:#fff; box-shadow:0 4px 12px rgba(30,42,62,.05); }
 .certificate-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; border-bottom:1px solid #e6e9f0; font-size:12px; }
 .certificate-summary span { margin-left:5px; padding:2px 5px; border-radius:8px; background:#d6f6df; color:#198148; font-size:8px; }
 .certificate-summary small { display:block; margin-top:5px; color:#707971; font-size:8px; }
 .certificate-summary-actions { display:flex; gap:7px; }
-.certificate-summary-actions button, .editor-titlebar button { display:inline-flex; align-items:center; gap:5px; min-height:28px; padding:0 10px; border:1px solid #ccd5d0; border-radius:4px; background:#fff; color:#283344; font-size:9px; cursor:pointer; }
-.certificate-summary-actions button:last-child { background:#edf1ff; }
 .certificate-workspace > h2 { margin:13px 14px; font-size:13px; }
 .certificate-preview-shell { margin:0 14px 14px; padding:14px; display:grid; place-items:center; min-height:420px; background:#f4f6fb; border:1px solid #e4e8ef; border-radius:6px; }
 .certificate-paper { position:relative; width:min(100%, 390px); aspect-ratio:1 / 1.27; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; border:1px solid #e1e6e3; color:#252c3c; text-align:center; }
@@ -43,7 +40,6 @@
 .certificate-editor { height:calc(100vh - 48px); display:flex; flex-direction:column; background:#f1f4ff; }
 .editor-titlebar { flex:0 0 62px; margin:0; padding:0 20px; background:#fff; border-bottom:1px solid #dde3f1; }
 .editor-titlebar > div { display:flex; gap:8px; }
-.editor-titlebar .certificate-primary { color:#fff; background:#20bf63; border:0; }
 .editor-layout { flex:1; min-height:0; display:grid; grid-template-columns:230px 1fr; }
 .editor-controls { padding:15px; overflow:auto; background:#fff; border-right:1px solid #dfe5f2; }
 .editor-controls h2 { margin:0 0 15px; color:#263346; font-size:12px; }
