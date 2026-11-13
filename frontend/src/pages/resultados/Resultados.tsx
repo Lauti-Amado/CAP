@@ -113,7 +113,7 @@ const Resultados: React.FC = () => {
         <span 
           className="rounded px-2 py-1 fw-bold" 
           style={{
-            fontSize: '11px',
+            fontSize: '0.8rem',
             backgroundColor: atleta.puesto <= 3 ? '#bbf7d0' : '#f1f5f9',
             color: atleta.puesto <= 3 ? '#166534' : '#475569'
           }}
@@ -263,7 +263,7 @@ const Resultados: React.FC = () => {
       <header className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
           <div className="d-flex align-items-center gap-3 mb-1">
-            <h1 className="h2 fw-bold mb-0">Resultados Finales</h1>
+            <h1 style={{fontSize:'2rem'}} className="h2 fw-bold mb-0">Resultados Finales</h1>
             <span className="d-inline-flex align-items-center gap-1 rounded-pill bg-light border text-secondary fw-bold px-2 py-1" style={{ fontSize: '11px' }}>
               <span className="d-inline-block rounded-circle bg-secondary" style={{ width: '6px', height: '6px' }} />
               FINALIZADA
@@ -278,7 +278,7 @@ const Resultados: React.FC = () => {
             className="btn btn-outline-secondary btn-sm fw-semibold d-inline-flex align-items-center gap-2"
             onClick={handleExportPDF}
           >
-            <FileText size={14} className="text-success" aria-hidden="true" />
+            <FileText size={16} className="text-success" aria-hidden="true" />
             PDF
           </button>
           <button
@@ -286,7 +286,7 @@ const Resultados: React.FC = () => {
             className="btn btn-outline-secondary btn-sm fw-semibold d-inline-flex align-items-center gap-2"
             onClick={handleExportExcel}
           >
-            <FileSpreadsheet size={14} className="text-success" aria-hidden="true" />
+            <FileSpreadsheet size={16} className="text-success" aria-hidden="true" />
             Excel
           </button>
           <button
@@ -294,7 +294,7 @@ const Resultados: React.FC = () => {
             className="btn btn-outline-secondary btn-sm fw-semibold d-inline-flex align-items-center gap-2"
             onClick={handleExportCSV}
           >
-            <TableIcon size={14} className="text-success" aria-hidden="true" />
+            <TableIcon size={16} className="text-success" aria-hidden="true" />
             CSV
           </button>
         </div>

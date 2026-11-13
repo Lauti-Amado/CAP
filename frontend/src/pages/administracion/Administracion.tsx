@@ -11,24 +11,50 @@ type Atajo = {
   titulo: string
   descripcion: string
   icon: LucideIcon
-  path?: string   // sin path = pantalla todavía no creada
+  path?: string // sin path = pantalla todavía no creada
 }
 
 const atajos: Atajo[] = [
-  { titulo: 'Categorías', descripcion: 'Clasificaciones de corredores.', icon: Shapes, path: '/administrador/configuraciones/categorias' },
+  {
+    titulo: 'Categorías',
+    descripcion: 'Clasificaciones de corredores.',
+    icon: Shapes,
+    path: '/administrador/configuraciones/categorias',
+  },
   // TODO: navegar a la configuración RFID cuando exista
-  { titulo: 'Configuración RFID', descripcion: 'Parámetros de cronometraje.', icon: Cpu },
-  { titulo: 'Certificados', descripcion: 'Plantillas de premiación.', icon: Award, path: '/administrador/configuraciones/certificados' },
+  {
+    titulo: 'Configuración RFID',
+    descripcion: 'Parámetros de cronometraje.',
+    icon: Cpu,
+  },
+  {
+    titulo: 'Certificados',
+    descripcion: 'Plantillas de premiación.',
+    icon: Award,
+    path: '/administrador/configuraciones/certificados',
+  },
 ]
 
-const claseRol: Record<RolUsuario, string> = {
-  Administrador: 'admin-badge--administrador',
-  Clasificador: 'admin-badge--clasificador',
+const badgeRolEstilos: Record<RolUsuario, React.CSSProperties> = {
+  Administrador: {
+    backgroundColor: '#006b35',
+    color: '#ffffff',
+  },
+  Clasificador: {
+    backgroundColor: '#d4def5',
+    color: '#344054',
+  },
 }
 
-const claseEstado: Record<EstadoUsuario, string> = {
-  Activo: 'admin-badge--activo',
-  Inactivo: 'admin-badge--inactivo',
+const badgeEstadoEstilos: Record<EstadoUsuario, React.CSSProperties> = {
+  Activo: {
+    backgroundColor: '#bbf7d0',
+    color: '#166534',
+  },
+  Inactivo: {
+    backgroundColor: '#d9dee8',
+    color: '#475467',
+  },
 }
 
 function Administracion() {
@@ -64,12 +90,14 @@ function Administracion() {
   }, [paginaActual])
 
   return (
-    <main className="main-content p-4">
+    <Container fluid as="main" className="p-4" style={{ minHeight: '100vh', background: 'transparent' }}>
       {/* =========================
           ENCABEZADO
       ========================= */}
       <header className="mb-4">
-        <h1 className="h2 fw-bold mb-1">Panel de Administración</h1>
+        <h1 className="h2 fw-bold mb-1" style={{ color: '#172033' }}>
+          Panel de Administración
+        </h1>
         <p className="text-secondary small mb-0">
           Gestione la configuración global, roles de sistema y parámetros operativos de las carreras.
         </p>
@@ -78,31 +106,59 @@ function Administracion() {
       {/* =========================
           ACCESOS
       ========================= */}
-      <section className="row g-3 mb-3" aria-label="Accesos de administración">
-        {atajos.map(({ titulo, descripcion, icon: Icon, path }) => (
-          <div className="col-12 col-sm-6 col-xl-4" key={titulo}>
-            <button
-              type="button"
-              className="card admin-atajo h-100 w-100 text-start"
-              onClick={() => path && navigate(path)}
-            >
-              <div className="card-body">
-                <span className="admin-icono mb-4">
-                  <Icon size={18} aria-hidden="true" />
-                </span>
-                <h2 className="h6 fw-bold mb-1">{titulo}</h2>
-                <p className="text-secondary small mb-0">{descripcion}</p>
-              </div>
-            </button>
-          </div>
-        ))}
-      </section>
+      <Row as="section" className="g-3 mb-3" aria-label="Accesos de administración">
+        {atajos.map(({ titulo, descripcion, icon: Icon, path }) => {
+          const isHovered = hoveredAtajo === titulo
+          return (
+            <Col xs={12} sm={6} xl={4} key={titulo}>
+              <Card
+                as="button"
+                type="button"
+                className="h-100 w-100 text-start border shadow-none"
+                onClick={() => path && navigate(path)}
+                onMouseEnter={() => setHoveredAtajo(titulo)}
+                onMouseLeave={() => setHoveredAtajo(null)}
+                style={{
+                  borderColor: isHovered ? '#22c55e' : '#e6e9f3',
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  backgroundColor: '#ffffff',
+                  boxShadow: isHovered ? '0 4px 12px rgba(24, 38, 65, 0.08)' : 'none',
+                  transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
+                  padding: 0,
+                }}
+              >
+                <Card.Body className="p-3">
+                  <div
+                    className="d-inline-flex align-items-center justify-content-center mb-3"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 6,
+                      backgroundColor: '#e8ecff',
+                      color: '#4f5fd6',
+                    }}
+                  >
+                    <Icon size={18} aria-hidden="true" />
+                  </div>
+                  <Card.Title as="h2" className="h6 fw-bold mb-1" style={{ color: '#172033' }}>
+                    {titulo}
+                  </Card.Title>
+                  <Card.Text className="text-secondary small mb-0">
+                    {descripcion}
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          )
+        })}
+      </Row>
 
       {/* =========================
           CLAVES DE RESPALDO
       ========================= */}
       <div className="mb-4">
-        <button
+        <Button
           type="button"
           className="btn btn-sm admin-respaldo d-inline-flex align-items-center gap-2"
           onClick={() => setMostrarClaves(true)}   // MODIFICADO
@@ -115,21 +171,21 @@ function Administracion() {
       {/* =========================
           GESTIÓN DE USUARIOS
       ========================= */}
-      <section className="card">
-        <div className="card-body d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <Card className="border" style={{ borderColor: '#e6e9f3', borderRadius: 10, overflow: 'hidden' }}>
+        <Card.Body className="d-flex flex-wrap justify-content-between align-items-start gap-3 p-3 pb-2">
           <div>
-            <h2 className="h5 fw-bold mb-1 d-flex align-items-center gap-2">
+            <Card.Title as="h2" className="h5 fw-bold mb-1 d-flex align-items-center gap-2" style={{ color: '#172033' }}>
               <UserCog size={18} className="text-success" aria-hidden="true" />
               Gestión de Usuarios
-            </h2>
-            <p className="text-secondary small mb-0">
+            </Card.Title>
+            <Card.Text className="text-secondary small mb-0">
               Administre el acceso al sistema CAP Gestión.
-            </p>
+            </Card.Text>
           </div>
         </div>
 
         <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0 small admin-tabla">
+          <Table hover className="align-middle mb-0 small" style={{ borderColor: '#eef1ff' }}>
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -173,48 +229,63 @@ function Administracion() {
                       ))}
                     </div>
                   </td>
-                  <td>
-                    <span className={`admin-pill ${claseEstado[usuario.estado]}`}>
+                  <td style={{ padding: '12px 16px' }}>
+                    <Badge
+                      pill
+                      style={{
+                        ...badgeEstadoEstilos[usuario.estado],
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '0.4em 0.85em',
+                        border: 0,
+                        fontSize: '0.7rem',
+                        color:'White',
+                        fontWeight: 600,
+                        lineHeight: 1,
+                      }}
+                    >
                       {usuario.estado}
-                    </span>
+                    </Badge>
                   </td>
-                  <td>
+                  <td style={{ padding: '12px 16px' }}>
                     <div className="d-flex justify-content-end">
-                      <button
+                      <Button
                         type="button"
                         className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
                         aria-label={`Editar roles de ${usuario.nombre}`}
                         onClick={() => navigate(`/administrador/configuraciones/${usuario.id}`)}
                       >
                         <Pencil size={13} aria-hidden="true" />
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
 
         <div className="card-footer bg-white d-flex justify-content-between align-items-center small text-secondary">
           <span>Mostrando {usuarios.length} de {total} usuarios</span>
           <div className="d-flex gap-2">
-            <button
+            <Button
               type="button"
-              className="btn btn-outline-secondary btn-sm"
+              variant="outline-secondary"
+              size="sm"
               disabled={paginaActual === 1}
               onClick={() => setPaginaActual(paginaActual - 1)}
             >
               Anterior
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-outline-secondary btn-sm"
+              variant="outline-secondary"
+              size="sm"
               disabled={paginaActual === totalPaginas}
               onClick={() => setPaginaActual(paginaActual + 1)}
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         </div>
       </section>
