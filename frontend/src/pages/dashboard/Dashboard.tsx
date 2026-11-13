@@ -52,10 +52,17 @@ function formatRaceDate(value: string) {
 }
 
 function formatActivityTime(value: string) {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86400000))
-  if (days === 0) return 'Hoy'
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000))
+  if (minutes < 1) return 'Ahora'
+  if (minutes < 60) return `Hace ${minutes} min`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`
+
+  const days = Math.floor(hours / 24)
   if (days === 1) return 'Hace 1 día'
   if (days < 7) return `Hace ${days} días`
+
   const weeks = Math.floor(days / 7)
   return `Hace ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`
 }
