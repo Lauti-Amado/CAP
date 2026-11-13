@@ -1,25 +1,43 @@
 //frontend/src/pages/administracion/RolesPermisos.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Check } from 'lucide-react'
-import type { RolUsuario } from '../../types/administracion'
-// MOCK TEMPORAL
-import { opcionesRolMock, usuariosMock } from './administracionMock'
-
+import type { RolUsuario, UsuarioAdministracion } from '../../types/administracion'
+import { actualizarRolesUsuario, obtenerUsuario } from '../../services/usuarioGestionService'
+// MOCK TEMPORAL: solo quedan las descripciones de cada rol
+import { opcionesRolMock } from './administracionMock'
+import './Administracion.css'
 
 function RolesPermisos() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  // MOCK TEMPORAL
-  // TODO BACKEND: GET /api/usuarios/{id}
-  const usuario = usuariosMock.find((u) => u.id === Number(id))
+  const [usuario, setUsuario] = useState<UsuarioAdministracion | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [rolesSeleccionados, setRolesSeleccionados] = useState<RolUsuario[]>([])
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const [rolSeleccionado, setRolSeleccionado] = useState<RolUsuario | null>(
-    usuario?.rol ?? null
-  )
+  useEffect(() => {
+    if (!id) return
+    obtenerUsuario(id)
+      .then((encontrado) => {
+        setUsuario(encontrado)
+        setRolesSeleccionados(encontrado.roles)
+      })
+      .catch(() => setUsuario(null))
+      .finally(() => setCargando(false))
+  }, [id])
 
   const volverAAdministracion = () => navigate('/administrador/configuraciones')
+
+  if (cargando) {
+    return (
+      <main className="main-content p-4">
+        <span className="spinner-border" role="status" aria-label="Cargando" />
+      </main>
+    )
+  }
 
   if (!usuario) {
     return (
@@ -40,9 +58,22 @@ function RolesPermisos() {
     .slice(0, 2)
     .toUpperCase()
 
-  const guardarCambios = () => {
-    // TODO BACKEND: PATCH /api/usuarios/{id} con { rol: rolSeleccionado }
-    volverAAdministracion()
+    // marca o desmarca un rol (un usuario puede tener varios)
+  const alternarRol = (rol: RolUsuario) =>
+    setRolesSeleccionados((actuales) =>
+      actuales.includes(rol) ? actuales.filter((r) => r !== rol) : [...actuales, rol]
+    )
+
+  const guardarCambios = async () => {
+    setGuardando(true)
+    setError(null)
+    try {
+      await actualizarRolesUsuario(usuario.id, rolesSeleccionados)
+      volverAAdministracion()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudieron guardar los cambios')
+      setGuardando(false)
+    }
   }
 
   return (
@@ -81,22 +112,22 @@ function RolesPermisos() {
         <div className="col-12 col-lg-8">
           <section className="card h-100">
             <div className="card-body">
-              <h2 className="h5 fw-bold mb-1">Asignación de Rol</h2>
+              <h2 className="h5 fw-bold mb-1">Asignación de Roles</h2>
               <p className="text-secondary small mb-3">
-                Seleccione el rol que definirá los permisos y accesos del usuario en la plataforma.
+                Seleccione los roles que definirán los permisos y accesos del usuario en la plataforma.
               </p>
 
-              <div className="d-grid gap-2 pb-3 mb-3 border-bottom" role="radiogroup" aria-label="Rol">
+              <div className="d-grid gap-2 pb-3 mb-3 border-bottom" role="group" aria-label="Roles">
                 {opcionesRolMock.map(({ rol, descripcion }) => {
-                  const seleccionado = rolSeleccionado === rol
+                  const seleccionado = rolesSeleccionados.includes(rol)
                   return (
                     <button
                       type="button"
                       key={rol}
-                      role="radio"
+                      role="checkbox"
                       aria-checked={seleccionado}
                       className={`admin-rol d-flex justify-content-between align-items-center${seleccionado ? ' admin-rol--seleccionado' : ''}`}
-                      onClick={() => setRolSeleccionado(rol)}
+                      onClick={() => alternarRol(rol)}
                     >
                       <span>
                         <span className="admin-rol__titulo d-block fw-bold small">{rol}</span>
@@ -112,6 +143,8 @@ function RolesPermisos() {
                 })}
               </div>
 
+              {error && <div className="alert alert-danger py-2 small">{error}</div>}
+
               <div className="d-flex justify-content-end gap-2">
                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={volverAAdministracion}>
                   Cancelar
@@ -119,10 +152,10 @@ function RolesPermisos() {
                 <button
                   type="button"
                   className="btn btn-sm admin-btn-primary"
-                  disabled={!rolSeleccionado}
+                  disabled={rolesSeleccionados.length === 0 || guardando}
                   onClick={guardarCambios}
                 >
-                  Guardar cambios
+                  {guardando ? 'Guardando...' : 'Guardar cambios'}
                 </button>
               </div>
             </div>
