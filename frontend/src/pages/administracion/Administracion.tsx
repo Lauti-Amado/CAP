@@ -1,6 +1,7 @@
 //frontend/src/pages/administracion/Administracion.tsx
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Badge, Button, Card, Col, Container, Row, Table } from 'react-bootstrap'
 import { Award, Cpu, KeyRound, Pencil, Shapes, UserCog, type LucideIcon } from 'lucide-react'
 import type { EstadoUsuario, RolUsuario, UsuarioAdministracion } from '../../types/administracion'
 import { listarUsuarios } from '../../services/usuarioGestionService'
@@ -57,8 +58,30 @@ const badgeEstadoEstilos: Record<EstadoUsuario, React.CSSProperties> = {
   },
 }
 
+// Base común de las píldoras de rol y estado
+const estiloBadge: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '0.4em 0.85em',
+  border: 0,
+  fontSize: '0.7rem',
+  fontWeight: 600,
+  lineHeight: 1,
+}
+
+const estiloCelda: React.CSSProperties = { padding: '12px 16px' }
+
+const estiloEncabezado: React.CSSProperties = {
+  ...estiloCelda,
+  backgroundColor: '#eef1ff',
+  color: '#344054',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+}
+
 function Administracion() {
   const navigate = useNavigate()
+  const [hoveredAtajo, setHoveredAtajo] = useState<string | null>(null)
   const [mostrarClaves, setMostrarClaves] = useState(false)
   const [paginaActual, setPaginaActual] = useState(1)
   const [usuarios, setUsuarios] = useState<UsuarioAdministracion[]>([])
@@ -158,10 +181,10 @@ function Administracion() {
           CLAVES DE RESPALDO
       ========================= */}
       <div className="mb-4">
-        <Button
+        <button
           type="button"
           className="btn btn-sm admin-respaldo d-inline-flex align-items-center gap-2"
-          onClick={() => setMostrarClaves(true)}   // MODIFICADO
+          onClick={() => setMostrarClaves(true)}
         >
           <KeyRound size={14} aria-hidden="true" />
           Claves de respaldo
@@ -182,18 +205,18 @@ function Administracion() {
               Administre el acceso al sistema CAP Gestión.
             </Card.Text>
           </div>
-        </div>
+        </Card.Body>
 
         <div className="table-responsive">
-          <Table hover className="align-middle mb-0 small" style={{ borderColor: '#eef1ff' }}>
+          <Table hover className="align-middle mb-0 small">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>DNI</th>
-                <th>Correo</th>
-                <th>Roles</th>
-                <th>Estado</th>
-                <th className="text-end">Acciones</th>
+                <th style={estiloEncabezado}>Nombre</th>
+                <th style={estiloEncabezado}>DNI</th>
+                <th style={estiloEncabezado}>Correo</th>
+                <th style={estiloEncabezado}>Roles</th>
+                <th style={estiloEncabezado}>Estado</th>
+                <th style={estiloEncabezado} className="text-end">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -219,39 +242,30 @@ function Administracion() {
 
               {!cargando && !error && usuarios.map((usuario) => (
                 <tr key={usuario.id}>
-                  <td className="fw-semibold">{usuario.nombre}</td>
-                  <td>{usuario.dni}</td>
-                  <td>{usuario.correo}</td>
-                  <td>
+                  <td className="fw-semibold" style={estiloCelda}>{usuario.nombre}</td>
+                  <td style={estiloCelda}>{usuario.dni}</td>
+                  <td style={estiloCelda}>{usuario.correo}</td>
+                  <td style={estiloCelda}>
                     <div className="d-flex flex-wrap gap-1">
                       {usuario.roles.map((rol) => (
-                        <span key={rol} className={`admin-pill ${claseRol[rol]}`}>{rol}</span>
+                        <Badge key={rol} pill bg="none" style={{ ...estiloBadge, ...badgeRolEstilos[rol] }}>
+                          {rol}
+                        </Badge>
                       ))}
                     </div>
                   </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <Badge
-                      pill
-                      style={{
-                        ...badgeEstadoEstilos[usuario.estado],
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '0.4em 0.85em',
-                        border: 0,
-                        fontSize: '0.7rem',
-                        color:'White',
-                        fontWeight: 600,
-                        lineHeight: 1,
-                      }}
-                    >
+                  <td style={estiloCelda}>
+                    <Badge pill bg="none" style={{ ...estiloBadge, ...badgeEstadoEstilos[usuario.estado] }}>
                       {usuario.estado}
                     </Badge>
                   </td>
-                  <td style={{ padding: '12px 16px' }}>
+                  <td style={estiloCelda}>
                     <div className="d-flex justify-content-end">
                       <Button
                         type="button"
-                        className="btn btn-sm btn-link text-secondary p-0 ms-auto me-0"
+                        variant="link"
+                        size="sm"
+                        className="text-secondary p-0 ms-auto me-0"
                         aria-label={`Editar roles de ${usuario.nombre}`}
                         onClick={() => navigate(`/administrador/configuraciones/${usuario.id}`)}
                       >
@@ -265,7 +279,7 @@ function Administracion() {
           </Table>
         </div>
 
-        <div className="card-footer bg-white d-flex justify-content-between align-items-center small text-secondary">
+        <Card.Footer className="bg-white d-flex justify-content-between align-items-center small text-secondary">
           <span>Mostrando {usuarios.length} de {total} usuarios</span>
           <div className="d-flex gap-2">
             <Button
@@ -287,10 +301,11 @@ function Administracion() {
               Siguiente
             </Button>
           </div>
-        </div>
-      </section>
+        </Card.Footer>
+      </Card>
+
       <ClavesRespaldoModal show={mostrarClaves} onCerrar={() => setMostrarClaves(false)} />
-    </main>
+    </Container>
   )
 }
 

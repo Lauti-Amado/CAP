@@ -342,6 +342,25 @@ model CertificadoCarrera {
     fechaHoraCreacion   DateTime @default(now())
 }
 
+//DIFIERE: tabla exclusiva de este sistema (no existe en el sistema web)
+model PlantillaCertificado {
+    id                    String @id @default(uuid())
+
+    nombre                String
+    activa                Boolean @default(false) //Solo una plantilla puede estar activa a la vez
+
+    colorPrimario         String
+    colorSecundario       String
+    colorFondo            String
+    fuente                String
+    esquinasRedondeadas   Boolean @default(true)
+    sombras               Boolean @default(true)
+    marcaDeAgua           Boolean @default(false)
+
+    fechaHoraCreacion     DateTime @default(now())
+    fechaHoraModificacion DateTime @updatedAt
+}
+
 model Equipo {
     id              String @id @default(uuid())
 
