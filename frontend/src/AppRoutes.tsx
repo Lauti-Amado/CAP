@@ -91,22 +91,26 @@ export default function AppRoutes() {
               </Route>
 
               {/*ADMINISTRADOR-----------------------------*/}
-              <Route path='administrador'>
-                {/*Carreras*/}
-                <Route path="carreras" element={<Carreras />} />
-                <Route path="carreras/:id" element={<DetalleCarrera />} />
-                <Route path="carreras/:id/clasificacion" element={<ModificarClasificacionCarrera />} />
-                <Route path="carreras/:id/clasificacion/completa" element={<ClasificacionTiempoReal />} />
-                <Route path="carreras/:id/clasificacion/:corredorId" element={<ModClasifCorredor />} />
+              <Route element={<PrivateRoute roles={["Administrador"]} />}>
+                <Route path='administrador'>
 
-                {/*Administracion*/}
-                <Route path='configuraciones'>
-                  <Route index element={<Administracion />} />
-                  <Route path="categorias" element={<ConfiguracionClasificaciones />} />
-                  <Route path="categorias/nueva" element={<NuevaCategoria />} />
-                  <Route path="categorias/:id" element={<NuevaCategoria />} />
-                  <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
-                  <Route path=":id" element={<RolesPermisos />} />
+                  {/*Carreras*/}
+                  <Route path="carreras" element={<Carreras />} />
+                  <Route path="carreras/:id" element={<DetalleCarrera />} />
+                  <Route path="carreras/:id/clasificacion" element={<ModificarClasificacionCarrera />} />
+                  <Route path="carreras/:id/clasificacion/completa" element={<ClasificacionTiempoReal />} />
+                  <Route path="carreras/:id/clasificacion/:corredorId" element={<ModClasifCorredor />} />
+
+                  {/*Administracion*/}
+                  <Route path='configuraciones'>
+                    <Route index element={<Administracion />} />
+                    <Route path="categorias" element={<ConfiguracionClasificaciones />} />
+                    <Route path="categorias/nueva" element={<NuevaCategoria />} />
+                    <Route path="categorias/:id" element={<NuevaCategoria />} />
+                    <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
+                    <Route path=":id" element={<RolesPermisos />} />
+                  </Route>
+
                 </Route>
               </Route>
 
