@@ -1,10 +1,11 @@
 import { prisma } from "../src/config/prisma";
-import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion, EstadoCompra, MetodoPago, TipoDetalle } from "../src/generated/prisma/client";
+import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion, EstadoCompra, MetodoPago, TipoDetalle, EstadoClasificacion, EstadoResultado } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
+import "dotenv/config";
 
 const usuarios = [
     {
-        email: "corredor@cap.test", 
+        email: process.env.SEED_EMAIL_CORREDOR ?? "corredor@cap.test",
         password: "Corredor1234", 
         rolesAdministrativos: [],
         persona: { dni: "22222222", nombre: "Bianca", apellido: "Petz", telefono: "2210000000" },
@@ -66,7 +67,17 @@ const carreras = [
         participantesMax: 500, 
         lugarNombre: "Club Villa San Carlos",
         estado: EstadoCarrera.Entrega_kits,
-    }
+    },
+    {
+        nombre: "Carrera de Prueba (Finalizada)",
+        fechaHoraCarrera: new Date('2026-10-18T08:00:00.000Z'),
+        fechaHoraEntregaKits: new Date('2026-10-17T10:00:00.000Z'),
+        imagenUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScWSQ8Qa-Gq_f8YeoQRu2JVESzFOZJoUlTgii_QXdu5e7asJWpG5284I_G&s=10",
+        descripcion: "Carrera finalizada para probar resultados y certificados.",
+        participantesMax: 100,
+        lugarNombre: "Paseo del Bosque",
+        estado: EstadoCarrera.Finalizada,
+    },
 ];
 
 const distancias = [
@@ -84,7 +95,8 @@ const distanciasCarreras = [
     { fechaHoraCarrera: new Date('2027-03-19T08:00:00.000Z'), kilometraje: 10, tipoDistancia: TipoDistancia.Competitiva, precioDistancia: 20000 },
     { fechaHoraCarrera: new Date('2027-03-19T08:00:00.000Z'), kilometraje: 10, tipoDistancia: TipoDistancia.Participativa, precioDistancia: 15000 },
     { fechaHoraCarrera: new Date('2027-06-22T08:00:00.000Z'), kilometraje: 5,  tipoDistancia: TipoDistancia.Competitiva, precioDistancia: 15000 },
-    { fechaHoraCarrera: new Date('2027-06-22T08:00:00.000Z'), kilometraje: 5,  tipoDistancia: TipoDistancia.Participativa, precioDistancia: 15000 }
+    { fechaHoraCarrera: new Date('2027-06-22T08:00:00.000Z'), kilometraje: 5,  tipoDistancia: TipoDistancia.Participativa, precioDistancia: 15000 },
+        { fechaHoraCarrera: new Date('2026-10-18T08:00:00.000Z'), kilometraje: 5, tipoDistancia: TipoDistancia.Competitiva, precioDistancia: 15000 },
 ];
 
 const productos = [
@@ -260,6 +272,49 @@ async function sembrarInscripcionPrueba(o: {
             idCorredor: o.corredorId,
             idCarrera: o.carreraId,
             idDistancia: o.idDistancia,
+        },
+    });
+}
+
+async function sembrarFinalista(o: {
+    dni: string; carreraId: string; idDistancia: string; precio: number;
+    usuarioId: string; dorsal: string; puesto: number; tiempoMs: number;
+}) {
+    const corredor = await prisma.corredor.findFirst({ where: { persona: { dni: o.dni } } });
+    if (!corredor) return;
+
+    await sembrarInscripcionPrueba({
+        corredorId: corredor.id, carreraId: o.carreraId, idDistancia: o.idDistancia,
+        precio: o.precio, usuarioId: o.usuarioId, pagada: true,
+    });
+
+    const inscripcion = await prisma.inscripcion.findUnique({
+        where: { idCorredor_idCarrera: { idCorredor: corredor.id, idCarrera: o.carreraId } },
+    });
+    if (!inscripcion) return;
+
+    await prisma.inscripcion.update({ where: { id: inscripcion.id }, data: { estado: EstadoInscripcion.Confirmada } });
+
+    const entrega = await prisma.entregaKit.findUnique({ where: { inscripcionId: inscripcion.id } });
+    if (!entrega) {
+        const dorsal = await prisma.dorsal.create({ data: { numero: o.dorsal } });
+        await prisma.entregaKit.create({ data: { inscripcionId: inscripcion.id, dorsalId: dorsal.id } });
+    }
+
+    const clasificacion = await prisma.clasificacion.upsert({
+        where: { inscripcionId: inscripcion.id },
+        update: { estado: EstadoClasificacion.Finalizo },
+        create: { inscripcionId: inscripcion.id, estado: EstadoClasificacion.Finalizo },
+    });
+
+    await prisma.resultado.upsert({
+        where: { clasificacionId: clasificacion.id },
+        update: {},
+        create: {
+            clasificacionId: clasificacion.id,
+            puestoGeneral: o.puesto,
+            tiempoLlegada: o.tiempoMs,
+            estado: EstadoResultado.Oficial,
         },
     });
 }
@@ -538,6 +593,26 @@ async function main() {
             pagada: false,
         });
         console.log("Inscripción impaga de Martina creada/verificada.");
+    }
+
+        // Carrera finalizada: Bianca (socia) y Lucas (no socio) terminaron
+    const carreraFinalizada = await prisma.carrera.findUnique({
+        where: { fechaHoraCarrera: new Date('2026-10-18T08:00:00.000Z') },
+    });
+    const distanciaFinalizada = carreraFinalizada
+        ? await prisma.distanciaCarrera.findFirst({ where: { idCarrera: carreraFinalizada.id } })
+        : null;
+
+    if (carreraFinalizada && distanciaFinalizada && usuarioAdmin) {
+        const base = {
+            carreraId: carreraFinalizada.id,
+            idDistancia: distanciaFinalizada.idDistancia,
+            precio: distanciaFinalizada.precioDistancia,
+            usuarioId: usuarioAdmin.id,
+        };
+        await sembrarFinalista({ ...base, dni: "22222222", dorsal: "9001", puesto: 1, tiempoMs: 1294000 }); // 00:21:34
+        await sembrarFinalista({ ...base, dni: "33333333", dorsal: "9002", puesto: 2, tiempoMs: 1390000 }); // 00:23:10
+        console.log("Carrera finalizada con finalistas creada/verificada.");
     }
 
     //Productos
