@@ -1,24 +1,33 @@
 //frontend/src/services/certificadosService.ts
-import type { ResultadoEnvioCertificados } from '../types/certificado'
+import { apiFetch } from './apiService'
+import type {
+  CandidatoCertificado,
+  ResultadoEnvioCertificado,
+  ResultadoReintento,
+} from '../types/certificado'
 
-// MOCK TEMPORAL
-// TODO BACKEND: poner en false cuando el endpoint esté implementado.
-const USAR_MOCK = true
+export function buscarCandidatos(carreraId: string, busqueda = ''): Promise<CandidatoCertificado[]> {
+  const params = new URLSearchParams()
+  if (busqueda.trim()) params.set('busqueda', busqueda.trim())
+  const query = params.toString()
 
-export async function enviarCertificados(carreraId: string): Promise<ResultadoEnvioCertificados> {
-  if (USAR_MOCK) {
-    await new Promise((resolver) => setTimeout(resolver, 1200))
-    return { enviados: 5, fallidos: 0 }
-  }
+  return apiFetch<CandidatoCertificado[]>(
+    `/carreras/${carreraId}/certificados/candidatos${query ? `?${query}` : ''}`,
+  )
+}
 
-  // TODO: agregar el token de autenticación igual que en el resto de las llamadas
-  const respuesta = await fetch(`/api/carreras/${carreraId}/certificados/envios`, {
+export function listarPendientes(carreraId: string): Promise<CandidatoCertificado[]> {
+  return apiFetch<CandidatoCertificado[]>(`/carreras/${carreraId}/certificados/pendientes`)
+}
+
+export function enviarCertificado(inscripcionId: string): Promise<ResultadoEnvioCertificado> {
+  return apiFetch<ResultadoEnvioCertificado>(`/inscripciones/${inscripcionId}/certificado`, {
     method: 'POST',
   })
+}
 
-  if (!respuesta.ok) {
-    throw new Error(`Error ${respuesta.status} al enviar certificados`)
-  }
-
-  return (await respuesta.json()) as ResultadoEnvioCertificados
+export function reintentarPendientes(carreraId: string): Promise<ResultadoReintento> {
+  return apiFetch<ResultadoReintento>(`/carreras/${carreraId}/certificados/pendientes/reintentar`, {
+    method: 'POST',
+  })
 }

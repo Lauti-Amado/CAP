@@ -1,9 +1,15 @@
-import { useState } from 'react'
+//frontend/src/pages/certificados/Certificates.tsx
+import { useCallback, useEffect, useState } from 'react'
 import { Award, Eye, FilePenLine, Plus, Save, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react'
-import { certificatePreview, certificateTemplates, dynamicFields, type CertificateTemplate } from './certificateData'
+import { Alert, Button, Form, Spinner } from 'react-bootstrap'
+import { certificatePreview, crearPlantillaNueva, dynamicFields, type CertificateTemplate } from './certificateData'
 import './Certificates.css'
-import { Button } from 'react-bootstrap'
 import ConfirmacionModal from '../../components/modales/ConfirmacionModal'
+import { ApiError } from '../../services/apiService'
+import { activarPlantilla, actualizarPlantilla, crearPlantilla, eliminarPlantilla, listarPlantillas,} from '../../services/plantillasCertificadoService'
+
+const textoError = (error: unknown, defecto: string) =>
+  error instanceof ApiError ? error.message : defecto
 
 type Props = { onEditorChange: (editing: boolean) => void }
 
@@ -17,7 +23,7 @@ function CertificateCanvas({ template, editor = false }: { template: Certificate
       <h3 style={{ color: template.style.primaryColor }}>{editor ? 'CERTIFICADO DE PARTICIPACIÓN' : 'CERTIFICADO'}</h3>
       {!editor && <div className="certificate-subtitle">DE PARTICIPACIÓN</div>}
       <p>Se otorga el presente reconocimiento a:</p>
-      <strong className={editor ? 'certificate-token' : ''}>{editor ? '{{nombre}} {{apellido}}' : data.participantName}</strong>
+      <strong className={editor ? 'certificate-token' : ''}>{editor ? '{{nombre}}' : data.participantName}</strong>
       <div className="certificate-rule" style={{ background: template.style.primaryColor }} />
       <p>Por su destacada participación y haber<br />completado exitosamente la carrera <b>{data.raceName}</b><br />el día {data.participationDate}.</p>
       {!editor && <div className="certificate-signatures"><span>{data.signerName}</span><span style={{ color: template.style.primaryColor }}>{data.sealText}</span></div>}
@@ -26,67 +32,123 @@ function CertificateCanvas({ template, editor = false }: { template: Certificate
 }
 
 function TemplateManager({ onEdit }: { onEdit: (template: CertificateTemplate) => void }) {
-  const [templates, setTemplates] = useState(certificateTemplates)
-  const [selectedId, setSelectedId] = useState(certificateTemplates[0].id)
+  const [templates, setTemplates] = useState<CertificateTemplate[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [procesando, setProcesando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [porEliminar, setPorEliminar] = useState<CertificateTemplate | null>(null)
-  const selected = templates.find((item) => item.id === selectedId) ?? templates[0]
 
-  const confirmarEliminacion = () => {
-    if (!porEliminar) return
-    // TODO BACKEND: DELETE de la plantilla (ruta a definir)
-    setTemplates((actuales) => actuales.filter((item) => item.id !== porEliminar.id))
-    setPorEliminar(null)
+  const cargar = useCallback(async () => {
+    try {
+      const lista = await listarPlantillas()
+      setTemplates(lista)
+      setSelectedId((actual) =>
+        lista.some((item) => item.id === actual) ? actual : (lista.find((item) => item.active) ?? lista[0])?.id ?? null,
+      )
+    } catch (e) {
+      setError(textoError(e, 'No se pudieron cargar las plantillas.'))
+    } finally {
+      setCargando(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+
+  const selected = templates.find((item) => item.id === selectedId) ?? null
+
+  const ejecutar = async (accion: () => Promise<unknown>, mensajeError: string) => {
+    setProcesando(true)
+    setError(null)
+    try {
+      await accion()
+      await cargar()
+    } catch (e) {
+      setError(textoError(e, mensajeError))
+    } finally {
+      setProcesando(false)
+    }
   }
 
-  const date = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(selected.updatedAt))
+  const confirmarEliminacion = async () => {
+    if (!porEliminar) return
+    const plantilla = porEliminar
+    setPorEliminar(null)
+    await ejecutar(() => eliminarPlantilla(plantilla.id), 'No se pudo eliminar la plantilla.')
+  }
+
+  const date = selected
+    ? new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(selected.updatedAt))
+    : ''
 
   return (
     <div className="certificates-page">
       <div className="certificate-titlebar">
         <div><h1>Plantillas de Certificados</h1><p>Gestión y personalización de diplomas atléticos.</p></div>
-        <button className="certificate-primary" type="button" onClick={() => onEdit(certificateTemplates[2])}><Plus size={14} /> Nueva plantilla</button>
+        <Button variant="success" size="sm" onClick={() => onEdit(crearPlantillaNueva())}><Plus size={14} className="me-1" /> Nueva plantilla</Button>
       </div>
-      <div className="certificate-layout">
-        <section className="certificate-workspace">
-          <article className="certificate-summary">
-            <div><b>{selected.name}</b> {selected.active && <span>ACTIVA</span>}<small>Última modificación: {date}</small></div>
-            <div className="certificate-summary-actions"><button type="button"><Eye size={13} /> Vista previa</button><button type="button" onClick={() => onEdit(selected)}><FilePenLine size={13} /> Editar</button></div>
-          </article>
-          <h2>Vista Previa Generada</h2>
-          <div className="certificate-preview-shell"><CertificateCanvas template={selected} /></div>
-        </section>
-        <aside className="certificate-rightbar">
-          <section className="certificate-sidecard"><h2>Campos Dinámicos</h2><p>Variables disponibles para insertar en la plantilla.</p><ul className="dynamic-field-list">{dynamicFields.map((field) => <li key={field.id}><span>{field.label}</span><code>{field.token}</code></li>)}</ul></section>
-          <section className="certificate-sidecard">
-            <h2>Mis Plantillas</h2>
-            <div className="template-list">
-              {templates.map((template) => {
-                const noSePuedeEliminar = template.active || templates.length === 1
-                return (
-                  <div className={`template-item${selectedId === template.id ? ' selected' : ''}`} key={template.id}>
-                    <button type="button" onClick={() => setSelectedId(template.id)}>
-                      <b>{template.name}</b>
-                      <span>{template.active ? 'En uso' : 'Inactiva'}</span>
-                      <small>{selectedId === template.id ? 'Configurar' : 'Usar esta plantilla'}</small>
-                    </button>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="template-item__eliminar p-0 text-danger"
-                      aria-label={`Eliminar ${template.name}`}
-                      title={noSePuedeEliminar ? 'No se puede eliminar la plantilla en uso ni la última plantilla' : 'Eliminar plantilla'}
-                      disabled={noSePuedeEliminar}
-                      onClick={() => setPorEliminar(template)}
-                    >
-                      <Trash2 size={13} aria-hidden="true" />
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
+
+      {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
+
+      {cargando ? (
+        <div className="text-center py-5"><Spinner animation="border" /></div>
+      ) : !selected ? (
+        <Alert variant="info">Todavía no hay plantillas. Creá la primera con “Nueva plantilla”.</Alert>
+      ) : (
+        <div className="certificate-layout">
+          <section className="certificate-workspace">
+            <article className="certificate-summary">
+              <div><b>{selected.name}</b> {selected.active && <span>ACTIVA</span>}<small>Última modificación: {date}</small></div>
+              <div className="certificate-summary-actions d-flex gap-2">
+                {!selected.active && (
+                  <Button variant="outline-success" size="sm" disabled={procesando}
+                    onClick={() => ejecutar(() => activarPlantilla(selected.id), 'No se pudo activar la plantilla.')}>
+                    Usar como activa
+                  </Button>
+                )}
+                <Button variant="outline-secondary" size="sm"><Eye size={13} className="me-1" /> Vista previa</Button>
+                <Button variant="outline-primary" size="sm" onClick={() => onEdit(selected)}><FilePenLine size={13} className="me-1" /> Editar</Button>
+              </div>
+            </article>
+            <h2>Vista Previa Generada</h2>
+            <div className="certificate-preview-shell"><CertificateCanvas template={selected} /></div>
           </section>
-        </aside>
-      </div>
+          <aside className="certificate-rightbar">
+            <section className="certificate-sidecard"><h2>Campos Dinámicos</h2><p>Variables disponibles para insertar en la plantilla.</p><ul className="dynamic-field-list">{dynamicFields.map((field) => <li key={field.id}><span>{field.label}</span><code>{field.token}</code></li>)}</ul></section>
+            <section className="certificate-sidecard">
+              <h2>Mis Plantillas</h2>
+              <div className="template-list">
+                {templates.map((template) => {
+                  const noSePuedeEliminar = template.active || templates.length === 1
+                  return (
+                    <div className={`template-item${selectedId === template.id ? ' selected' : ''}`} key={template.id}>
+                      <button type="button" onClick={() => setSelectedId(template.id)}>
+                        <b>{template.name}</b>
+                        <span>{template.active ? 'En uso' : 'Inactiva'}</span>
+                        <small>{selectedId === template.id ? 'Seleccionada' : 'Ver esta plantilla'}</small>
+                      </button>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="template-item__eliminar p-0 text-danger"
+                        aria-label={`Eliminar ${template.name}`}
+                        title={noSePuedeEliminar ? 'No se puede eliminar la plantilla en uso ni la última plantilla' : 'Eliminar plantilla'}
+                        disabled={noSePuedeEliminar || procesando}
+                        onClick={() => setPorEliminar(template)}
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          </aside>
+        </div>
+      )}
+
       <ConfirmacionModal
         show={porEliminar !== null}
         titulo="¿Está seguro de que desea eliminar esta plantilla?"
@@ -105,13 +167,47 @@ function Toggle({ value, onChange, label }: { value: boolean; onChange: (value: 
 
 function CertificateEditor({ initial, onClose }: { initial: CertificateTemplate; onClose: () => void }) {
   const [template, setTemplate] = useState(initial)
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const nombreValido = template.name.trim().length > 0
+
   const setStyle = <K extends keyof CertificateTemplate['style']>(key: K, value: CertificateTemplate['style'][K]) => setTemplate((current) => ({ ...current, style: { ...current.style, [key]: value } }))
+
+  const guardar = async () => {
+    if (!nombreValido) return
+    setGuardando(true)
+    setError(null)
+    try {
+      if (template.id) await actualizarPlantilla(template)
+      else await crearPlantilla(template)
+      onClose()
+    } catch (e) {
+      setError(textoError(e, 'No se pudo guardar la plantilla.'))
+      setGuardando(false)
+    }
+  }
+
   return (
     <div className="certificate-editor">
-      <div className="editor-titlebar"><h1>Editar Plantilla de Certificado</h1><div><button type="button" onClick={onClose}><X size={13} /> Cancelar</button><button className="certificate-primary" type="button" onClick={onClose}><Save size={13} /> Guardar Cambios</button></div></div>
+      <div className="editor-titlebar">
+        <h1>{template.id ? 'Editar' : 'Nueva'} Plantilla de Certificado</h1>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" size="sm" disabled={guardando} onClick={onClose}><X size={13} className="me-1" /> Cancelar</Button>
+          <Button variant="success" size="sm" disabled={guardando || !nombreValido} onClick={guardar}>
+            {guardando ? <Spinner size="sm" className="me-1" /> : <Save size={13} className="me-1" />} Guardar Cambios
+          </Button>
+        </div>
+      </div>
+      {error && <Alert variant="danger" className="m-3 mb-0">{error}</Alert>}
       <div className="editor-layout">
         <aside className="editor-controls">
           <h2>◉ Estilo Visual</h2>
+          <Form.Group className="mb-2">
+            <Form.Label htmlFor="certificate-name">NOMBRE</Form.Label>
+            <Form.Control id="certificate-name" size="sm" maxLength={100} value={template.name} isInvalid={!nombreValido}
+              onChange={(event) => setTemplate((current) => ({ ...current, name: event.target.value }))} />
+            <Form.Control.Feedback type="invalid">El nombre es obligatorio.</Form.Control.Feedback>
+          </Form.Group>
           <label>COLORES</label><div className="color-controls">{(['primaryColor', 'secondaryColor', 'backgroundColor'] as const).map((key) => <input key={key} type="color" aria-label={key} value={template.style[key]} onChange={(event) => setStyle(key, event.target.value)} />)}</div>
           <label htmlFor="certificate-font">TIPOGRAFÍA</label><select id="certificate-font" value={template.style.fontFamily} onChange={(event) => setStyle('fontFamily', event.target.value)}><option value="Arial, Helvetica, sans-serif">Inter (Predefinida)</option><option value="Georgia, serif">Clásica</option><option value="Verdana, sans-serif">Verdana</option></select>
           <label>DETALLES</label><div className="style-option"><span>Esquinas Redondeadas</span><Toggle label="Esquinas redondeadas" value={template.style.rounded} onChange={(value) => setStyle('rounded', value)} /></div><div className="style-option"><span>Sombras Suaves</span><Toggle label="Sombras suaves" value={template.style.shadows} onChange={(value) => setStyle('shadows', value)} /></div><div className="style-option"><span>Marca de Agua</span><Toggle label="Marca de agua" value={template.style.watermark} onChange={(value) => setStyle('watermark', value)} /></div>
