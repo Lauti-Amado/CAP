@@ -1,33 +1,11 @@
 //frontend/src/pages/dashboard/Dashboard.tsx
 import { useState } from 'react'
-import {
-  Button,
-  Card,
-  Col,
-  Container,
-  ProgressBar,
-  Row,
-} from 'react-bootstrap'
+import { Button, Card, Col, Container, ProgressBar, Row,} from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
-import {
-  Archive,
-  BarChart3,
-  CalendarDays,
-  CloudCheck,
-  Footprints,
-  MapPin,
-  MoreHorizontal,
-  RefreshCw,
-  Timer,
-  Trophy,
-  UsersRound,
-  WifiOff,
-  type LucideIcon,
-} from 'lucide-react'
-import type { DashboardActivity, DashboardData } from '../../types/dashboard'
+import { Archive, BarChart3, CalendarDays, CloudCheck, Footprints, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, type LucideIcon,} from 'lucide-react'
+import type { DashboardActivity } from '../../types/dashboard'
 import type { EstadoSincronizacion } from '../../types/sincronizacion'
-// MOCK TEMPORAL
-import { dashboardMock } from './dashboardMock'
+import { useDashboard } from '../../hooks/useDashboard'
 
 const quickActions = [
   { label: 'Ver carreras', icon: Footprints, path: '/administrador/carreras' },
@@ -36,9 +14,9 @@ const quickActions = [
 ]
 
 const activityIcons = {
-  reading: Timer,
+  lectura: Timer,
   kit: Archive,
-  registration: UsersRound,
+  inscripcion: UsersRound,
 }
 
 const estadosSincronizacion: Record<
@@ -83,8 +61,8 @@ function formatActivityTime(value: string) {
 }
 
 function ActivityRow({ activity }: { activity: DashboardActivity }) {
-  const Icon = activityIcons[activity.kind]
-  const isKit = activity.kind === 'kit'
+  const Icon = activityIcons[activity.tipo]
+  const isKit = activity.tipo === 'kit'
 
   return (
     <li className="d-flex align-items-start gap-2 py-2">
@@ -104,10 +82,10 @@ function ActivityRow({ activity }: { activity: DashboardActivity }) {
       </span>
       <span className="d-flex flex-column min-w-0">
         <span style={{ fontSize: '13px', lineHeight: '13px', color: '#172033' }}>
-          {activity.description}
+          {activity.descripcion}
         </span>
         <span style={{ marginTop: '3px', color: '#828b84', fontSize: '10px' }}>
-          {formatActivityTime(activity.occurredAt)}
+          {formatActivityTime(activity.fechaHora)}
         </span>
       </span>
     </li>
@@ -120,9 +98,15 @@ function Dashboard() {
   const [hoverChipBtn, setHoverChipBtn] = useState(false)
   const [hoverVerTodo, setHoverVerTodo] = useState(false)
 
-  // MOCK TEMPORAL
-  // TODO BACKEND: reemplazar por la consulta real al backend.
-  const data: DashboardData = dashboardMock
+  const { data, cargando } = useDashboard()
+
+  if (cargando) {
+    return (
+      <Container fluid as="main" className="py-3 px-3 px-md-4" aria-label="Dashboard de inicio">
+        <span className="spinner-border" role="status" aria-label="Cargando" />
+      </Container>
+    )
+  }
 
   const { nextRace, registrations, rfid, activities, sincronizacion } = data
 
