@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
-    "react-bootstrap": "^2.10.10",
-    "run": "^2.1.11"
+    "react-bootstrap": "^2.10.10"
   }
 }
