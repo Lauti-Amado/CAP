@@ -22,7 +22,8 @@ function Inscripciones() {
   const navigate = useNavigate()
   const { nombreCarrera } = useParams();
 
-  const filtros: FiltrosInscripciones = {
+  // TODO BACKEND: usar filtros en la consulta real al backend
+  const _filtros: FiltrosInscripciones = {
     dni,
     carrera,
     distancia,

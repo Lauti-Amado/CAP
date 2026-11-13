@@ -1,12 +1,27 @@
-//frontend/src/components/clasificacion/ParticipantesCard.tsx
+
 import { useState } from 'react'
-import { Button, Card, Form, InputGroup } from 'react-bootstrap'
-import { ArrowRight, ChevronDown, ChevronUp, Search, Table as IconoTabla } from 'lucide-react'
+import {
+  Button,
+  Card,
+  Form,
+  InputGroup,
+  Row,
+  Col,
+  Badge,
+} from 'react-bootstrap'
+
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Table as IconoTabla,
+} from 'lucide-react'
+
 import { Tabla, type Columna } from '../tabla/Tabla'
 import type { ParticipanteClasificacion } from '../../types/clasificacion'
-import '../../pages/clasificacion/DashboardClasificacion.css'
 
-// Filas visibles antes de tocar "Ver todos". Con el mock (4 filas) se ve el efecto; subir a 10 con datos reales.
+// Cantidad de filas visibles inicialmente
 const FILAS_INICIALES = 3
 
 type ParticipantesCardProps = {
@@ -20,49 +35,86 @@ function ParticipantesCard({
   textoAccion = 'Ver clasificación',
   onVerClasificacion,
 }: ParticipantesCardProps) {
+
   const [busqueda, setBusqueda] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('Todos')
   const [verTodos, setVerTodos] = useState(false)
 
+  // Filtrar participantes
   const filtrados = participantes.filter((p) => {
+    const termino = busqueda.toLowerCase().trim()
+
     const coincideBusqueda =
-      p.dorsal.includes(busqueda) ||
-      p.dni.includes(busqueda) ||
-      p.atleta.toLowerCase().includes(busqueda.toLowerCase())
-    const coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado.toUpperCase()
+      p.dorsal.toLowerCase().includes(termino) ||
+      p.dni.toLowerCase().includes(termino) ||
+      p.atleta.toLowerCase().includes(termino)
+
+    const coincideEstado =
+      filtroEstado === 'Todos' ||
+      p.estado === filtroEstado.toUpperCase()
+
     return coincideBusqueda && coincideEstado
   })
 
-  const visibles = verTodos ? filtrados : filtrados.slice(0, FILAS_INICIALES)
+  // Determinar filas visibles
+  const visibles = verTodos
+    ? filtrados
+    : filtrados.slice(0, FILAS_INICIALES)
 
+  // Columnas de la tabla
   const columnas: Columna<ParticipanteClasificacion>[] = [
     {
       titulo: 'DORSAL',
       key: 'dorsal',
-      render: (p) => <strong className="dc-dorsal">{p.dorsal}</strong>,
+      render: (p) => (
+        <strong className="dc-dorsal">
+          {p.dorsal}
+        </strong>
+      ),
     },
     {
       titulo: 'ATLETA',
       key: 'atleta',
       render: (p) => (
-        <div>
-          <span className="dc-atleta__nombre">{p.atleta}</span>
-          <span className="dc-atleta__dni">DNI {p.dni}</span>
+        <div className="d-flex flex-column">
+          <span className="dc-atleta__nombre">
+            {p.atleta}
+          </span>
+          <small className="text-muted">
+            DNI {p.dni}
+          </small>
         </div>
       ),
     },
-    { titulo: 'CATEGORÍA', key: 'categoria' },
+    {
+      titulo: 'CATEGORÍA',
+      key: 'categoria',
+    },
     {
       titulo: 'ESTADO/TIEMPO',
       key: 'estado',
       render: (p) => (
         <>
-          {p.estado === 'PENDIENTE' && <span className="dc-pill dc-pill--gris">PENDIENTE</span>}
-          {p.estado === 'EN CURSO' && <span className="dc-pill dc-pill--verde">EN CURSO</span>}
+          {p.estado === 'PENDIENTE' && (
+            <Badge bg="secondary">
+              PENDIENTE
+            </Badge>
+          )}
+
+          {p.estado === 'EN CURSO' && (
+            <Badge bg="success">
+              EN CURSO
+            </Badge>
+          )}
+
           {p.estado === 'LLEGADO' && (
             <>
-              <span className="dc-pill dc-pill--verde">LLEGÓ</span>
-              <div className="dc-tiempo">{p.tiempo}</div>
+              <Badge bg="success">
+                LLEGÓ
+              </Badge>
+              <div className="dc-tiempo mt-1">
+                {p.tiempo}
+              </div>
             </>
           )}
         </>
@@ -73,49 +125,81 @@ function ParticipantesCard({
       key: 'accion',
       render: (p) =>
         p.estado === 'LLEGADO' ? (
-          <Button variant="link" size="sm" className="dc-link-accion" onClick={() => onVerClasificacion(p)}>
-            {textoAccion} <ArrowRight size={12} aria-hidden="true" />
+          <Button
+            variant="link"
+            size="sm"
+            className="dc-link-accion text-decoration-none"
+            onClick={() => onVerClasificacion(p)}
+          >
+            {textoAccion}
+            <ArrowRight
+              size={12}
+              className="ms-1"
+              aria-hidden="true"
+            />
           </Button>
         ) : null,
     },
   ]
 
   return (
-    <Card>
+    <Card className="shadow-sm border-0">
       <Card.Body>
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-          <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
-            <IconoTabla size={16} aria-hidden="true" /> Participantes
-          </h2>
 
-          <div className="d-flex gap-2">
-            <InputGroup size="sm" className="dc-buscador">
-              <InputGroup.Text className="bg-white">
-                <Search size={14} aria-hidden="true" />
-              </InputGroup.Text>
-              <Form.Control
-                type="text"
-                placeholder="Buscar por DNI o Dorsal..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-              />
-            </InputGroup>
+        {/* Encabezado */}
+        <Row className="align-items-center g-3 mb-3">
+          <Col xs={12} md>
+            <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
+              <IconoTabla size={16} aria-hidden="true" />
+              Participantes
+            </h2>
+          </Col>
 
-            <Form.Select
-              size="sm"
-              className="dc-filtro"
-              value={filtroEstado}
-              aria-label="Filtrar por estado"
-              onChange={(e) => setFiltroEstado(e.target.value)}
-            >
-              <option value="Todos">Estado: Todos</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="En Curso">En Curso</option>
-              <option value="Llegado">Llegado</option>
-            </Form.Select>
-          </div>
-        </div>
+          {/* Buscador y filtro */}
+          <Col xs={12} md="auto">
+            <Row className="g-2">
 
+              <Col xs={12} sm="auto">
+                <InputGroup size="sm">
+                  <InputGroup.Text className="bg-white">
+                    <Search size={14} aria-hidden="true" />
+                  </InputGroup.Text>
+
+                  <Form.Control
+                    type="text"
+                    placeholder="Buscar por DNI o dorsal..."
+                    value={busqueda}
+                    onChange={(e) => {
+                      setBusqueda(e.target.value)
+                      setVerTodos(false)
+                    }}
+                    aria-label="Buscar participante"
+                  />
+                </InputGroup>
+              </Col>
+
+              <Col xs={12} sm="auto">
+                <Form.Select
+                  size="sm"
+                  value={filtroEstado}
+                  aria-label="Filtrar por estado"
+                  onChange={(e) => {
+                    setFiltroEstado(e.target.value)
+                    setVerTodos(false)
+                  }}
+                >
+                  <option value="Todos">Estado: Todos</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="En Curso">En Curso</option>
+                  <option value="Llegado">Llegado</option>
+                </Form.Select>
+              </Col>
+
+            </Row>
+          </Col>
+        </Row>
+
+        {/* Tabla de participantes */}
         <Tabla
           columnas={columnas}
           datos={visibles}
@@ -126,25 +210,29 @@ function ParticipantesCard({
           textoPaginacion={`Mostrando ${visibles.length} de ${filtrados.length} resultados`}
         />
 
+        {/* Botón ver todos */}
         {filtrados.length > FILAS_INICIALES && (
           <Button
             variant="outline-secondary"
             size="sm"
-            className="w-100 mt-3 d-inline-flex align-items-center justify-content-center gap-2"
+            className="w-100 mt-3 d-flex align-items-center justify-content-center gap-2"
             aria-expanded={verTodos}
             onClick={() => setVerTodos((actual) => !actual)}
           >
             {verTodos ? (
               <>
-                <ChevronUp size={14} aria-hidden="true" /> Ver menos
+                <ChevronUp size={14} aria-hidden="true" />
+                Ver menos
               </>
             ) : (
               <>
-                <ChevronDown size={14} aria-hidden="true" /> Ver todos ({filtrados.length})
+                <ChevronDown size={14} aria-hidden="true" />
+                Ver todos ({filtrados.length})
               </>
             )}
           </Button>
         )}
+
       </Card.Body>
     </Card>
   )

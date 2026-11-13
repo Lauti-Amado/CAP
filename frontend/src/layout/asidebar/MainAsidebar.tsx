@@ -11,7 +11,7 @@ export default function MainAsidebar() {
             <LogoCap />
 
             {/*Navegacion (paginas)*/}
-            <div className="flex-grow-1 overflow-y-auto overflow-x-hidden mt-1">
+            <div className="flex-grow-1 asidebar-nav overflow-x-hidden mt-1">
                 <Navegacion />
             </div>
 
