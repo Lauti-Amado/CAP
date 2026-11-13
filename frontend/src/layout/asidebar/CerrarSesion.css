@@ -1,16 +1,17 @@
 .sidebar-footer {
   border-top: 1px solid rgba(209, 226, 214, 0.2); 
-  padding: 16px 0; 
+  padding: 10px 0; 
   width: 100%;
 }
 
 .logout-button {
-  padding: 8px 32px !important;
+  padding: 8px 18px !important;
   color: #d1e2d6 !important;
   text-decoration: none;
-  font-size: 1.1rem !important; 
+  font-size: 0.875rem !important; 
   font-weight: 600;
   border: none;
+  white-space: nowrap;
   transition: all 0.2s ease-in-out;
 }
 

@@ -1,191 +1,515 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Eye, Plus, Save, Trash2 } from 'lucide-react'
-import { ApiError } from '../../../services/apiService'
-import { actualizarCategoria, crearCategoria, obtenerCategoria } from '../../../services/categoriaService'
-import type { CriterioCategoria, DatosCategoria } from '../../../types/categoria'
-import '../Administracion.css'
-import './Categorias.css'
+
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Eye, Plus, Save, Trash2 } from 'lucide-react';
+
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Container,
+  Form,
+  Row,
+  Spinner
+} from 'react-bootstrap';
+
+import { ApiError } from '../../../services/apiService';
+
+import {
+  actualizarCategoria,
+  crearCategoria,
+  obtenerCategoria
+} from '../../../services/categoriaService';
+
+import type {
+  CriterioCategoria,
+  DatosCategoria
+} from '../../../types/categoria';
+
+import '../Administracion.css';
 
 const formularioInicial: DatosCategoria = {
   nombre: '',
   descripcion: '',
   criterios: [],
-}
+};
 
 function NuevaCategoria() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const editando = id !== undefined
-  const [form, setForm] = useState<DatosCategoria>(formularioInicial)
-  const [cargando, setCargando] = useState(editando)
-  const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState('')
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  const volver = () => navigate('/administrador/configuraciones/categorias')
+  const editando = id !== undefined;
 
+  const [form, setForm] = useState<DatosCategoria>(formularioInicial);
+  const [cargando, setCargando] = useState(editando);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+
+  const volver = () =>
+    navigate('/administrador/configuraciones/categorias');
+
+  // Cargar categoría cuando estamos editando
   useEffect(() => {
-    if (!id) return
-    let activo = true
+    if (!id) return;
+
+    let activo = true;
+
     obtenerCategoria(id)
       .then((categoria) => {
-        if (activo) setForm({
-          nombre: categoria.nombre,
-          descripcion: categoria.descripcion,
-          criterios: categoria.criterios.map((criterio) => ({ ...criterio })),
-        })
+        if (activo) {
+          setForm({
+            nombre: categoria.nombre,
+            descripcion: categoria.descripcion,
+            criterios: categoria.criterios.map((criterio) => ({
+              ...criterio
+            })),
+          });
+        }
       })
       .catch((e: unknown) => {
-        if (activo) setError(e instanceof ApiError ? e.message : 'No se pudo cargar la categoría.')
+        if (activo) {
+          setError(
+            e instanceof ApiError
+              ? e.message
+              : 'No se pudo cargar la categoría.'
+          );
+        }
       })
-      .finally(() => { if (activo) setCargando(false) })
-    return () => { activo = false }
-  }, [id])
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
 
-  const actualizarCampo = (campo: 'nombre' | 'descripcion', valor: string) => {
-    setForm((anterior) => ({ ...anterior, [campo]: valor }))
-  }
+    return () => {
+      activo = false;
+    };
+  }, [id]);
 
-  const actualizarCriterio = (indice: number, campo: keyof CriterioCategoria, valor: string) => {
+  // Actualizar nombre o descripción
+  const actualizarCampo = (
+    campo: 'nombre' | 'descripcion',
+    valor: string
+  ) => {
     setForm((anterior) => ({
       ...anterior,
-      criterios: anterior.criterios.map((criterio, i) => i === indice ? { ...criterio, [campo]: valor } : criterio),
-    }))
-  }
+      [campo]: valor
+    }));
+  };
 
+  // Actualizar un criterio
+  const actualizarCriterio = (
+    indice: number,
+    campo: keyof CriterioCategoria,
+    valor: string
+  ) => {
+    setForm((anterior) => ({
+      ...anterior,
+      criterios: anterior.criterios.map((criterio, i) =>
+        i === indice
+          ? { ...criterio, [campo]: valor }
+          : criterio
+      ),
+    }));
+  };
+
+  // Agregar criterio
   const agregarCriterio = () => {
     setForm((anterior) => ({
       ...anterior,
-      criterios: [...anterior.criterios, { nombre: '', valor: '' }],
-    }))
-  }
+      criterios: [
+        ...anterior.criterios,
+        { nombre: '', valor: '' }
+      ],
+    }));
+  };
 
+  // Quitar criterio
   const quitarCriterio = (indice: number) => {
     setForm((anterior) => ({
       ...anterior,
-      criterios: anterior.criterios.filter((_, i) => i !== indice),
-    }))
-  }
+      criterios: anterior.criterios.filter(
+        (_, i) => i !== indice
+      ),
+    }));
+  };
 
-  const puedeGuardar = form.nombre.trim().length > 0 && form.descripcion.trim().length > 0 &&
-    form.criterios.every((criterio) => criterio.nombre.trim() && criterio.valor.trim())
+  // Validación del formulario
+  const puedeGuardar =
+    form.nombre.trim().length > 0 &&
+    form.descripcion.trim().length > 0 &&
+    form.criterios.every(
+      (criterio) =>
+        criterio.nombre.trim() &&
+        criterio.valor.trim()
+    );
 
+  // Guardar categoría
   const guardar = async () => {
-    if (!puedeGuardar || guardando) return
-    setGuardando(true)
-    setError('')
+    if (!puedeGuardar || guardando) return;
+
+    setGuardando(true);
+    setError('');
+
     const datos: DatosCategoria = {
       nombre: form.nombre.trim(),
       descripcion: form.descripcion.trim(),
-      criterios: form.criterios.map(({ nombre, valor }) => ({ nombre: nombre.trim(), valor: valor.trim() })),
-    }
-    try {
-      if (id) await actualizarCategoria(id, datos)
-      else await crearCategoria(datos)
-      volver()
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo guardar la categoría.')
-    } finally {
-      setGuardando(false)
-    }
-  }
+      criterios: form.criterios.map(
+        ({ nombre, valor }) => ({
+          nombre: nombre.trim(),
+          valor: valor.trim()
+        })
+      ),
+    };
 
+    try {
+      if (id) {
+        await actualizarCategoria(id, datos);
+      } else {
+        await crearCategoria(datos);
+      }
+
+      volver();
+
+    } catch (e) {
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : 'No se pudo guardar la categoría.'
+      );
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // Estado de carga
   if (cargando) {
-    return <main className="main-content p-4"><p className="text-secondary">Cargando categoría...</p></main>
+    return (
+      <Container fluid className="main-content p-4">
+        <div
+          className="d-flex align-items-center gap-2 text-secondary"
+          role="status"
+        >
+          <Spinner animation="border" size="sm" />
+          Cargando categoría...
+        </div>
+      </Container>
+    );
   }
 
   return (
-    <main className="main-content cat-form p-4">
+    <Container fluid className="main-content p-4">
+
+      {/* ENCABEZADO */}
       <header className="d-flex align-items-start gap-3 mb-4">
-        <button type="button" className="btn btn-link text-dark p-0 mt-1" aria-label="Volver a categorías" onClick={volver}>
+
+        <Button
+          variant="link"
+          className="text-dark p-0 mt-1"
+          aria-label="Volver a categorías"
+          onClick={volver}
+        >
           <ArrowLeft size={18} aria-hidden="true" />
-        </button>
+        </Button>
+
         <div>
-          <h1 className="h2 fw-bold mb-1">{editando ? 'Editar categoría' : 'Nueva categoría'}</h1>
-          <p className="text-secondary small mb-0">Definí el nombre, la descripción y los criterios de clasificación.</p>
+          <h1 className="h2 fw-bold mb-1">
+            {editando ? 'Editar categoría' : 'Nueva categoría'}
+          </h1>
+
+          <p className="text-secondary small mb-0">
+            Definí el nombre, la descripción y los criterios de clasificación.
+          </p>
         </div>
+
       </header>
 
-      {error && <div className="alert alert-danger" role="alert">{error}</div>}
+      {/* MENSAJE DE ERROR */}
+      {error && (
+        <Alert variant="danger" role="alert">
+          {error}
+        </Alert>
+      )}
 
-      <div className="row g-3">
-        <div className="col-12 col-lg-8">
-          <section className="card mb-3">
-            <div className="card-body">
-              <h2 className="h6 fw-bold pb-2 mb-3 border-bottom">Información general</h2>
-              <div className="mb-3">
-                <label htmlFor="categoriaNombre" className="form-label small fw-semibold">Nombre <span className="text-danger">*</span></label>
-                <input id="categoriaNombre" type="text" maxLength={100} className="form-control form-control-sm" placeholder="Ej.: 30 a 39 años" value={form.nombre} onChange={(e) => actualizarCampo('nombre', e.target.value)} />
-              </div>
-              <div>
-                <label htmlFor="categoriaDescripcion" className="form-label small fw-semibold">Descripción <span className="text-danger">*</span></label>
-                <textarea id="categoriaDescripcion" maxLength={500} className="form-control form-control-sm" rows={3} placeholder="Describí a qué grupo corresponde esta categoría." value={form.descripcion} onChange={(e) => actualizarCampo('descripcion', e.target.value)} />
-              </div>
-            </div>
-          </section>
+      <Row className="g-3">
 
-          <section className="card">
-            <div className="card-body">
+        {/* COLUMNA PRINCIPAL */}
+        <Col xs={12} lg={8}>
+
+          {/* INFORMACIÓN GENERAL */}
+          <Card className="mb-3 shadow-sm">
+
+            <Card.Body>
+
+              <h2 className="h6 fw-bold pb-2 mb-3 border-bottom">
+                Información general
+              </h2>
+
+              <Form.Group className="mb-3" controlId="categoriaNombre">
+
+                <Form.Label className="small fw-semibold">
+                  Nombre <span className="text-danger">*</span>
+                </Form.Label>
+
+                <Form.Control
+                  type="text"
+                  size="sm"
+                  maxLength={100}
+                  placeholder="Ej.: edad, sexo, organización ..."
+                  value={form.nombre}
+                  onChange={(e) =>
+                    actualizarCampo('nombre', e.target.value)
+                  }
+                />
+
+              </Form.Group>
+
+              <Form.Group controlId="categoriaDescripcion">
+
+                <Form.Label className="small fw-semibold">
+                  Descripción <span className="text-danger">*</span>
+                </Form.Label>
+
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  size="sm"
+                  maxLength={500}
+                  placeholder="Describí a qué grupo corresponde esta categoría."
+                  value={form.descripcion}
+                  onChange={(e) =>
+                    actualizarCampo('descripcion', e.target.value)
+                  }
+                />
+
+              </Form.Group>
+
+            </Card.Body>
+
+          </Card>
+
+          {/* CRITERIOS DE CLASIFICACIÓN */}
+          <Card className="shadow-sm">
+
+            <Card.Body>
+
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 pb-2 mb-3 border-bottom">
+
                 <div>
-                  <h2 className="h6 fw-bold mb-1">Criterios de clasificación</h2>
-                  <p className="text-secondary small mb-0">Cada criterio tiene un nombre y un valor.</p>
+                  <h2 className="h6 fw-bold mb-1">
+                    Criterios de clasificación
+                  </h2>
+
+                  <p className="text-secondary small mb-0">
+                    Cada criterio tiene un nombre y un valor.
+                  </p>
                 </div>
-                <button type="button" className="btn btn-outline-success btn-sm" onClick={agregarCriterio}>
-                  <Plus size={14} className="me-1" aria-hidden="true" /> Agregar criterio
-                </button>
+
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={agregarCriterio}
+                >
+                  <Plus size={14} className="me-1" aria-hidden="true" />
+                  Agregar criterio
+                </Button>
+
               </div>
 
+              {/* SIN CRITERIOS */}
               {form.criterios.length === 0 ? (
-                <p className="text-secondary small mb-0">Todavía no agregaste criterios. Podés crear la categoría sin criterios y completarlos después.</p>
-              ) : form.criterios.map((criterio, indice) => (
-                <div className="row g-2 align-items-end mb-3" key={indice}>
-                  <div className="col-12 col-md-5">
-                    <label htmlFor={`criterioNombre-${indice}`} className="form-label small fw-semibold">Nombre del criterio</label>
-                    <input id={`criterioNombre-${indice}`} className="form-control form-control-sm" placeholder="Ej.: Edad mínima" value={criterio.nombre} onChange={(e) => actualizarCriterio(indice, 'nombre', e.target.value)} />
-                  </div>
-                  <div className="col-10 col-md-5">
-                    <label htmlFor={`criterioValor-${indice}`} className="form-label small fw-semibold">Valor</label>
-                    <input id={`criterioValor-${indice}`} className="form-control form-control-sm" placeholder="Ej.: 30" value={criterio.valor} onChange={(e) => actualizarCriterio(indice, 'valor', e.target.value)} />
-                  </div>
-                  <div className="col-2 col-md-2 d-grid">
-                    <button type="button" className="btn btn-outline-danger btn-sm" aria-label={`Quitar criterio ${indice + 1}`} onClick={() => quitarCriterio(indice)}>
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
 
-        <div className="col-12 col-lg-4">
-          <aside className="card" aria-label="Vista previa">
-            <div className="cat-vista-header d-flex justify-content-between align-items-center px-3 py-2">
-              <span className="small fw-bold text-secondary">VISTA PREVIA</span>
-              <Eye size={14} className="text-secondary" aria-hidden="true" />
-            </div>
-            <div className="card-body">
-              <h2 className={`h6 fw-bold mb-1 ${form.nombre.trim() ? 'text-success' : 'text-secondary'}`}>{form.nombre.trim() || 'Nombre de la categoría'}</h2>
-              <p className="text-secondary small mb-3">{form.descripcion.trim() || 'Sin descripción.'}</p>
+                <p className="text-secondary small mb-0">
+                  Todavía no agregaste criterios. Podés crear la categoría
+                  sin criterios y completarlos después.
+                </p>
+
+              ) : (
+
+                /* LISTADO DE CRITERIOS */
+                form.criterios.map((criterio, indice) => (
+
+                  <Row
+                    className="g-2 align-items-end mb-3"
+                    key={indice}
+                  >
+
+                    <Col xs={12} md={5}>
+
+                      <Form.Group controlId={`criterioNombre-${indice}`}>
+
+                        <Form.Label className="small fw-semibold">
+                          Nombre del criterio
+                        </Form.Label>
+
+                        <Form.Control
+                          size="sm"
+                          placeholder="Ej.: Edad"
+                          value={criterio.nombre}
+                          onChange={(e) =>
+                            actualizarCriterio(
+                              indice,
+                              'nombre',
+                              e.target.value
+                            )
+                          }
+                        />
+
+                      </Form.Group>
+
+                    </Col>
+
+                    <Col xs={10} md={5}>
+
+                      <Form.Group controlId={`criterioValor-${indice}`}>
+
+                        <Form.Label className="small fw-semibold">
+                          Valor
+                        </Form.Label>
+
+                        <Form.Control
+                          size="sm"
+                          placeholder="Ej.: 30 a 39"
+                          value={criterio.valor}
+                          onChange={(e) =>
+                            actualizarCriterio(
+                              indice,
+                              'valor',
+                              e.target.value
+                            )
+                          }
+                        />
+
+                      </Form.Group>
+
+                    </Col>
+
+                    <Col xs={2} md={2} className="d-grid">
+
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        aria-label={`Quitar criterio ${indice + 1}`}
+                        onClick={() => quitarCriterio(indice)}
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                      </Button>
+
+                    </Col>
+
+                  </Row>
+
+                ))
+
+              )}
+
+            </Card.Body>
+
+          </Card>
+
+        </Col>
+
+        {/* COLUMNA VISTA PREVIA */}
+        <Col xs={12} lg={4}>
+
+          <Card className="shadow-sm" aria-label="Vista previa">
+
+            {/* ENCABEZADO VISTA PREVIA */}
+            <Card.Header className="d-flex justify-content-between align-items-center bg-body-secondary">
+
+              <span className="small fw-bold text-secondary">
+                VISTA PREVIA
+              </span>
+
+              <Eye
+                size={14}
+                className="text-secondary"
+                aria-hidden="true"
+              />
+
+            </Card.Header>
+
+            <Card.Body>
+
+              <h2
+                className={`h6 fw-bold mb-1 ${
+                  form.nombre.trim()
+                    ? 'text-success'
+                    : 'text-secondary'
+                }`}
+              >
+                {form.nombre.trim() || 'Nombre de la categoría'}
+              </h2>
+
+              <p className="text-secondary small mb-3">
+                {form.descripcion.trim() || 'Sin descripción.'}
+              </p>
+
+              {/* CRITERIOS EN LA VISTA PREVIA */}
               {form.criterios.map((criterio, indice) => (
-                <div className="d-flex justify-content-between gap-3 small py-2 border-top" key={indice}>
-                  <span className="text-secondary">{criterio.nombre || 'Criterio'}</span>
-                  <strong>{criterio.valor || '—'}</strong>
+
+                <div
+                  className="d-flex justify-content-between gap-3 small py-2 border-top"
+                  key={indice}
+                >
+
+                  <span className="text-secondary">
+                    {criterio.nombre || 'Criterio'}
+                  </span>
+
+                  <strong>
+                    {criterio.valor || '—'}
+                  </strong>
+
                 </div>
+
               ))}
+
+              {/* BOTONES */}
               <div className="d-grid gap-2 mt-3">
-                <button type="button" className="btn btn-sm admin-btn-primary d-inline-flex align-items-center justify-content-center gap-2" disabled={!puedeGuardar || guardando} onClick={() => void guardar()}>
-                  <Save size={14} aria-hidden="true" /> {guardando ? 'Guardando...' : 'Guardar categoría'}
-                </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={volver} disabled={guardando}>Cancelar</button>
+
+                <Button
+                  variant="success"
+                  size="sm"
+                  className="d-inline-flex align-items-center justify-content-center gap-2"
+                  disabled={!puedeGuardar || guardando}
+                  onClick={() => void guardar()}
+                >
+
+                  {guardando ? (
+                    <>
+                      <Spinner animation="border" size="sm" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={14} aria-hidden="true" />
+                      Guardar categoría
+                    </>
+                  )}
+
+                </Button>
+
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={volver}
+                  disabled={guardando}
+                >
+                  Cancelar
+                </Button>
+
               </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </main>
-  )
+
+            </Card.Body>
+
+          </Card>
+
+        </Col>
+
+      </Row>
+
+    </Container>
+  );
 }
 
-export default NuevaCategoria
+export default NuevaCategoria;
