@@ -27,6 +27,9 @@ type EnviarConPlantillaParams = {
   parametros: Record<string, string | number>
 }
 
+// Falla temporal: sin conexión o Brevo caído. El envío puede quedar en cola y reintentarse.
+export class ErrorEmailNoDisponible extends Error {}
+
 export async function enviarEmailConPlantilla({
   para,
   plantillaId,
@@ -34,19 +37,30 @@ export async function enviarEmailConPlantilla({
 }: EnviarConPlantillaParams): Promise<string | undefined> {
   const { apiKey } = leerConfiguracionBrevo()
 
-  const respuesta = await fetch(BREVO_URL, {
-    method: 'POST',
-    headers: {
-      'api-key': apiKey,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    body: JSON.stringify({
-      to: [{ email: para.email, name: para.nombre }],
-      templateId: plantillaId,
-      params: parametros,
-    }),
-  })
+  let respuesta: Awaited<ReturnType<typeof fetch>>
+  try {
+    respuesta = await fetch(BREVO_URL, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        to: [{ email: para.email, name: para.nombre }],
+        templateId: plantillaId,
+        params: parametros,
+      }),
+    })
+  } catch (error) {
+    throw new ErrorEmailNoDisponible(
+      `No se pudo conectar con Brevo: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+
+  if (respuesta.status === 429 || respuesta.status >= 500) {
+    throw new ErrorEmailNoDisponible(`Brevo no disponible (${respuesta.status})`)
+  }
 
   if (!respuesta.ok) {
     const detalle = await respuesta.text()
