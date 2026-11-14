@@ -1,4 +1,4 @@
-//3. frontend/src/pages/inscripciones/NuevaInscripcion.tsx
+//frontend/src/pages/inscripciones/NuevaInscripcion.tsx
 import { useState } from 'react'
 import { Button, Form } from 'react-bootstrap'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -554,10 +554,6 @@ function NuevaInscripcion() {
 
                   <option value="Masculino">
                     Masculino
-                  </option>
-
-                  <option value="Otro">
-                    Otro
                   </option>
 
                 </Form.Select>
