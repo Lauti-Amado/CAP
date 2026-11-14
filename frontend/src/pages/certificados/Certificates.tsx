@@ -7,6 +7,8 @@ import './Certificates.css'
 import ConfirmacionModal from '../../components/modales/ConfirmacionModal'
 import { ApiError } from '../../services/apiService'
 import { activarPlantilla, actualizarPlantilla, crearPlantilla, eliminarPlantilla, listarPlantillas,} from '../../services/plantillasCertificadoService'
+import { plantillaCertificadoSchema } from '../../schemas/plantillacertificadoSchema'
+import { validar } from '../../utils/validar'
 
 const textoError = (error: unknown, defecto: string) =>
   error instanceof ApiError ? error.message : defecto
@@ -169,12 +171,13 @@ function CertificateEditor({ initial, onClose }: { initial: CertificateTemplate;
   const [template, setTemplate] = useState(initial)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const nombreValido = template.name.trim().length > 0
+  const validacion = validar(plantillaCertificadoSchema, template)
+  const errorNombre = validacion.errores.name
 
   const setStyle = <K extends keyof CertificateTemplate['style']>(key: K, value: CertificateTemplate['style'][K]) => setTemplate((current) => ({ ...current, style: { ...current.style, [key]: value } }))
 
   const guardar = async () => {
-    if (!nombreValido) return
+    if (!validacion.ok) return
     setGuardando(true)
     setError(null)
     try {
@@ -193,7 +196,7 @@ function CertificateEditor({ initial, onClose }: { initial: CertificateTemplate;
         <h1>{template.id ? 'Editar' : 'Nueva'} Plantilla de Certificado</h1>
         <div className="d-flex gap-2">
           <Button variant="outline-secondary" size="sm" disabled={guardando} onClick={onClose}><X size={13} className="me-1" /> Cancelar</Button>
-          <Button variant="success" size="sm" disabled={guardando || !nombreValido} onClick={guardar}>
+          <Button variant="success" size="sm" disabled={guardando || !validacion.ok} onClick={guardar}>
             {guardando ? <Spinner size="sm" className="me-1" /> : <Save size={13} className="me-1" />} Guardar Cambios
           </Button>
         </div>
@@ -204,9 +207,9 @@ function CertificateEditor({ initial, onClose }: { initial: CertificateTemplate;
           <h2>◉ Estilo Visual</h2>
           <Form.Group className="mb-2">
             <Form.Label htmlFor="certificate-name">NOMBRE</Form.Label>
-            <Form.Control id="certificate-name" size="sm" maxLength={100} value={template.name} isInvalid={!nombreValido}
+            <Form.Control id="certificate-name" size="sm" maxLength={100} value={template.name} isInvalid={!!errorNombre}
               onChange={(event) => setTemplate((current) => ({ ...current, name: event.target.value }))} />
-            <Form.Control.Feedback type="invalid">El nombre es obligatorio.</Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">{errorNombre}</Form.Control.Feedback>
           </Form.Group>
           <label>COLORES</label><div className="color-controls">{(['primaryColor', 'secondaryColor', 'backgroundColor'] as const).map((key) => <input key={key} type="color" aria-label={key} value={template.style[key]} onChange={(event) => setStyle(key, event.target.value)} />)}</div>
           <label htmlFor="certificate-font">TIPOGRAFÍA</label><select id="certificate-font" value={template.style.fontFamily} onChange={(event) => setStyle('fontFamily', event.target.value)}><option value="Arial, Helvetica, sans-serif">Inter (Predefinida)</option><option value="Georgia, serif">Clásica</option><option value="Verdana, sans-serif">Verdana</option></select>
