@@ -107,8 +107,7 @@ export default function CertificadosSocios({ carreraId }: Props) {
           <div>
             <h2 className="h6 fw-bold mb-1">Certificados para socios</h2>
             <p className="small text-secondary mb-0">
-              Se envían solo a socios que finalizaron la carrera y lo solicitaron, o por un motivo especial
-              (récord, cumpleaños, etc.). Cada certificado se puede enviar una sola vez.
+              Cada certificado se puede enviar una sola vez.
             </p>
           </div>
         </div>

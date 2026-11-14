@@ -1,20 +1,11 @@
+//frontend/src/pages/inscripciones/NuevaInscripcion.tsx
 import { useState } from 'react'
 import { Button, Form } from 'react-bootstrap'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Check,
-  Eye,
-  Plus,
-  Search,
-  UserRoundPlus,
-  X,
-  Footprints,
-  CreditCard,
-} from 'lucide-react'
-
+import { ArrowLeft, Check, Eye, Plus, Search, UserRoundPlus, X, Footprints, CreditCard,} from 'lucide-react'
+import { contactoEmergenciaSchema, inscripcionPaso1Schema } from '../../schemas/inscripcionSchema'
+import { validar, type ErroresFormulario } from '../../utils/validar'
 import type { ContactoEmergencia } from '../../types/inscripcion'
-
 import './NuevaInscripcion.css'
 
 // MOCK TEMPORAL
@@ -26,14 +17,7 @@ import './NuevaInscripcion.css'
 // Reemplazar estas fuentes por consultas reales
 // al backend.
 
-import {
-  contactosEmergenciaMock,
-  carreraInscripcionMock,
-  distanciasInscripcionMock,
-  productosDinamicosMock,
-  variantesProductoMock,
-  cantidadesProductoMock,
-} from './nuevaInscripcionMock'
+import { contactosEmergenciaMock, carreraInscripcionMock, distanciasInscripcionMock, productosDinamicosMock, variantesProductoMock, cantidadesProductoMock,} from './nuevaInscripcionMock'
 
 
 type DatosCorredor = {
@@ -103,6 +87,9 @@ function NuevaInscripcion() {
       dni: '',
       telefono: '',
     })
+
+  const [mostrarErrores, setMostrarErrores] = useState(false)
+  const [erroresContacto, setErroresContacto] = useState<ErroresFormulario>({})
 
 
   /* =====================================================
@@ -179,7 +166,7 @@ function NuevaInscripcion() {
       dni,
       telefono: '',
     })
-
+    setErroresContacto({})
     setMostrarModalContacto(true)
   }
 
@@ -191,7 +178,7 @@ function NuevaInscripcion() {
       dni: dniContacto.trim(),
       telefono: '',
     })
-
+    setErroresContacto({})
     setMostrarModalContacto(true)
   }
 
@@ -204,25 +191,21 @@ function NuevaInscripcion() {
    * Actualmente solamente se guarda en el estado local.
    */
 
+  const actualizarContacto = (campo: keyof ContactoEmergencia, valor: string) => {
+    setNuevoContacto((anterior) => ({ ...anterior, [campo]: valor }))
+    setErroresContacto((anteriores) => ({ ...anteriores, [campo]: '' }))
+  }
+
   const guardarNuevoContacto = () => {
-    if (
-      !nuevoContacto.nombre.trim() ||
-      !nuevoContacto.apellido.trim() ||
-      !nuevoContacto.dni.trim() ||
-      !nuevoContacto.telefono.trim()
-    ) {
+    const validacion = validar(contactoEmergenciaSchema, nuevoContacto)
+
+    if (!validacion.ok) {
+      setErroresContacto(validacion.errores)
       return
     }
 
-    setContactoEmergencia({
-      nombre: nuevoContacto.nombre.trim(),
-      apellido: nuevoContacto.apellido.trim(),
-      dni: nuevoContacto.dni.trim(),
-      telefono: nuevoContacto.telefono.trim(),
-    })
-
-    setDniContacto(nuevoContacto.dni.trim())
-
+    setContactoEmergencia(validacion.datos)
+    setDniContacto(validacion.datos.dni)
     setMostrarModalContacto(false)
   }
 
@@ -231,50 +214,26 @@ function NuevaInscripcion() {
      VALIDACIÓN PASO 1
   ===================================================== */
 
-  // El apto médico debe tener una fecha de vencimiento futura.
-  // Si está marcado como aprobado pero la fecha falta o ya venció,
-  // se muestra una advertencia y no se permite continuar.
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
+  const validacionPaso1 = validar(inscripcionPaso1Schema, {
+    corredor: datosCorredor,
+    contactoEmergencia,
+  })
 
-  const fechaVencimientoApto = datosCorredor.vencimientoAptoMedico
-    ? new Date(`${datosCorredor.vencimientoAptoMedico}T00:00:00`)
-    : null
+  // Los errores se muestran recién después de intentar continuar
+  const errorPaso1 = (campo: string) =>
+    mostrarErrores ? validacionPaso1.errores[campo] : undefined
 
-  const fechaAptoVencida =
-    fechaVencimientoApto !== null &&
-    fechaVencimientoApto <= hoy
-
-  const faltaFechaVencimiento =
-    datosCorredor.aptoMedico &&
-    datosCorredor.vencimientoAptoMedico === ''
-
-  const aptoMedicoValido =
-    !datosCorredor.aptoMedico ||
-    (
-      datosCorredor.vencimientoAptoMedico !== '' &&
-      !fechaAptoVencida
-    )
-
-  const puedeContinuarPaso1 =
-    datosCorredor.nombre.trim() !== '' &&
-    datosCorredor.apellido.trim() !== '' &&
-    datosCorredor.genero !== '' &&
-    datosCorredor.fechaNacimiento !== '' &&
-    datosCorredor.dni.trim() !== '' &&
-    datosCorredor.telefono.trim() !== '' &&
-    contactoEmergencia !== null &&
-    aptoMedicoValido
-
+  const errorContactoPaso1 =
+    errorPaso1('contactoEmergencia') ?? errorPaso1('contactoEmergencia.dni')
 
   const continuarPaso1 = () => {
-    if (!puedeContinuarPaso1) {
+    if (!validacionPaso1.ok) {
+      setMostrarErrores(true)
       return
     }
 
     setPaso(2)
   }
-
 
   /* =====================================================
      DATOS DEL PASO 2
@@ -530,8 +489,11 @@ function NuevaInscripcion() {
                     )
                   }
                   placeholder="Ingrese el nombre"
+                  isInvalid={!!errorPaso1('corredor.nombre')}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {errorPaso1('corredor.nombre')}
+                </Form.Control.Feedback>
               </div>
 
 
@@ -554,8 +516,11 @@ function NuevaInscripcion() {
                     )
                   }
                   placeholder="Ingrese el apellido"
+                  isInvalid={!!errorPaso1('corredor.apellido')}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {errorPaso1('corredor.apellido')}
+                </Form.Control.Feedback>
               </div>
 
 
@@ -576,6 +541,7 @@ function NuevaInscripcion() {
                       e.target.value
                     )
                   }
+                  isInvalid={!!errorPaso1('corredor.genero')}
                 >
 
                   <option value="" disabled>
@@ -590,12 +556,10 @@ function NuevaInscripcion() {
                     Masculino
                   </option>
 
-                  <option value="Otro">
-                    Otro
-                  </option>
-
                 </Form.Select>
-
+                <Form.Control.Feedback type="invalid">
+                  {errorPaso1('corredor.genero')}
+                </Form.Control.Feedback>
               </div>
 
 
@@ -617,8 +581,11 @@ function NuevaInscripcion() {
                       e.target.value
                     )
                   }
+                  isInvalid={!!errorPaso1('corredor.fechaNacimiento')}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {errorPaso1('corredor.fechaNacimiento')}
+                </Form.Control.Feedback>
               </div>
 
 
@@ -642,8 +609,11 @@ function NuevaInscripcion() {
                     )
                   }
                   placeholder="Ej. 12345678"
+                  isInvalid={!!errorPaso1('corredor.dni')}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {errorPaso1('corredor.dni')}
+                </Form.Control.Feedback>
               </div>
 
 
@@ -667,8 +637,11 @@ function NuevaInscripcion() {
                     )
                   }
                   placeholder="Ej. +54 9 11 1234-5678"
+                  isInvalid={!!errorPaso1('corredor.telefono')}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {errorPaso1('corredor.telefono')}
+                </Form.Control.Feedback>
               </div>
 
 
@@ -760,28 +733,11 @@ function NuevaInscripcion() {
                     onChange={(e) =>
                       actualizarDato('vencimientoAptoMedico', e.target.value)
                     }
-                    required
-                    aria-invalid={
-                      faltaFechaVencimiento || fechaAptoVencida
-                    }
-                    aria-describedby="advertenciaAptoMedico"
+                    isInvalid={!!errorPaso1('corredor.vencimientoAptoMedico')}
                   />
-                  {(faltaFechaVencimiento || fechaAptoVencida) && (
-                    <p
-                      id="advertenciaAptoMedico"
-                      className="nueva-inscripcion__error-apto"
-                      role="alert"
-                      style={{
-                        color: '#b42318',
-                        fontSize: '0.875rem',
-                        marginTop: '0.375rem',
-                      }}
-                    >
-                      {faltaFechaVencimiento
-                        ? 'Ingrese la fecha de vencimiento del apto médico para continuar.'
-                        : 'El apto médico está vencido. Cambie la fecha por una fecha futura para continuar con la inscripción.'}
-                    </p>
-                  )}
+                  <Form.Control.Feedback type="invalid">
+                    {errorPaso1('corredor.vencimientoAptoMedico')}
+                  </Form.Control.Feedback>
                 </div>
               )}
 
@@ -893,6 +849,11 @@ function NuevaInscripcion() {
                 </div>
 
               )}
+              {errorContactoPaso1 && (
+                <div className="text-danger small mt-2" role="alert">
+                  {errorContactoPaso1}
+                </div>
+              )}
 
             </div>
 
@@ -902,7 +863,6 @@ function NuevaInscripcion() {
               <Button
                 type="button"
                 onClick={continuarPaso1}
-                disabled={!puedeContinuarPaso1}
               >
                 Continuar
               </Button>
@@ -1598,104 +1558,72 @@ function NuevaInscripcion() {
 
 
             <div className="nueva-inscripcion__modal-formulario">
-
               <div className="nueva-inscripcion__modal-campo">
-
                 <label htmlFor="contactoNombre">
                   Nombre <span>*</span>
                 </label>
-
                 <Form.Control
                   id="contactoNombre"
                   type="text"
                   value={nuevoContacto.nombre}
-                  onChange={(e) =>
-                    setNuevoContacto(
-                      (anterior) => ({
-                        ...anterior,
-                        nombre: e.target.value,
-                      })
-                    )
-                  }
+                  onChange={(e) => actualizarContacto('nombre', e.target.value)}
                   placeholder="Ej. Juan"
+                  isInvalid={!!erroresContacto.nombre}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {erroresContacto.nombre}
+                </Form.Control.Feedback>
               </div>
-
-
               <div className="nueva-inscripcion__modal-campo">
-
                 <label htmlFor="contactoApellido">
                   Apellido <span>*</span>
                 </label>
-
                 <Form.Control
                   id="contactoApellido"
                   type="text"
                   value={nuevoContacto.apellido}
-                  onChange={(e) =>
-                    setNuevoContacto(
-                      (anterior) => ({
-                        ...anterior,
-                        apellido: e.target.value,
-                      })
-                    )
-                  }
+                  onChange={(e) => actualizarContacto('apellido', e.target.value)}
                   placeholder="Ej. Pérez"
+                  isInvalid={!!erroresContacto.apellido}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {erroresContacto.apellido}
+                </Form.Control.Feedback>
               </div>
-
-
               <div className="nueva-inscripcion__modal-campo">
-
                 <label htmlFor="contactoDni">
                   DNI <span>*</span>
                 </label>
-
                 <Form.Control
                   id="contactoDni"
                   type="text"
                   inputMode="numeric"
                   value={nuevoContacto.dni}
-                  onChange={(e) =>
-                    setNuevoContacto(
-                      (anterior) => ({
-                        ...anterior,
-                        dni: e.target.value,
-                      })
-                    )
-                  }
+                  onChange={(e) => actualizarContacto('dni', e.target.value)}
                   placeholder="Ej. 12345678"
+                  isInvalid={!!erroresContacto.dni}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {erroresContacto.dni}
+                </Form.Control.Feedback>
               </div>
-
-
               <div className="nueva-inscripcion__modal-campo">
-
                 <label htmlFor="contactoTelefono">
                   Número de teléfono <span>*</span>
                 </label>
-
                 <Form.Control
                   id="contactoTelefono"
                   type="text"
                   inputMode="tel"
                   value={nuevoContacto.telefono}
-                  onChange={(e) =>
-                    setNuevoContacto(
-                      (anterior) => ({
-                        ...anterior,
-                        telefono: e.target.value,
-                      })
-                    )
-                  }
+                  onChange={(e) => actualizarContacto('telefono', e.target.value)}
                   placeholder="Ej. +54 9 11 1234567"
+                  isInvalid={!!erroresContacto.telefono}
                 />
-
+                <Form.Control.Feedback type="invalid">
+                  {erroresContacto.telefono}
+                </Form.Control.Feedback>
               </div>
-
             </div>
 
 

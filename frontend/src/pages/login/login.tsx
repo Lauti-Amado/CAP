@@ -95,14 +95,13 @@ export default function Login() {
 
                         {/* Input Contraseña */}
                         <Form.Group className="form-field" controlId="loginPassword">
-
-                        {/* Acceso de contingencia con clave de respaldo */}
-                        <div className="label-row">
-                            <Form.Label>Contraseña</Form.Label>
-                            <Link to="/contingencia" className="forgot-link">
-                                Acceso de contingencia
-                            </Link>
-                        </div>
+                            {/* Acceso de contingencia con clave de respaldo */}
+                            <div className="label-row">
+                                <Form.Label>Contraseña</Form.Label>
+                                <Link to="/contingencia" className="forgot-link">
+                                    Acceso de contingencia
+                                </Link>
+                            </div>
 
                             <div className="input-wrapper">
                                 <Lock className="input-icon left-icon" />
