@@ -70,8 +70,7 @@ export default function AccesoContingencia() {
                     {/* TITULO */}
                     <div className="header-text">
                         <h1>Acceso de Contingencia</h1>
-                        <h2>Ingresá tu email y una clave de seguridad de 8 caracteres para restablecer el acceso al sistema.</h2>
-                    </div>
+                          <h2>Ingresá tu email y una clave de seguridad de 8 caracteres para restablecer el acceso al sistema. Es solo para clasificadores: los administradores ingresan con su contraseña.</h2>                    </div>
 
                     <Form onSubmit={handleSubmit(onSubmit)} className="login-form" noValidate>
                         {/* Email */}
