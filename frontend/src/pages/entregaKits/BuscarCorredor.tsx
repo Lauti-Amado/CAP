@@ -7,11 +7,11 @@ import { Container, Card, Button, Form, Badge, Spinner } from 'react-bootstrap'
 import CorredorNoEncontrado from './CorredorNoEncontrado'
 import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
 import { ApiError } from '../../services/apiService'
-import {
-  buscarCorredorPorDni,
-  obtenerEntregasRecientes,
-} from '../../services/entregaKitService'
+import { buscarCorredorPorDni, obtenerEntregasRecientes,} from '../../services/entregaKitService'
 import type { EntregaRecienteDTO } from '../../types/entregaKits'
+
+import { dniBusquedaSchema } from '../../schemas/kitSchema'
+import { validar } from '../../utils/validar'
 
 function BuscarCorredor() {
   const [dni, setDni] = useState('')
@@ -67,12 +67,14 @@ function BuscarCorredor() {
   }, [carreraSeleccionada])
 
   const buscarCorredor = async () => {
-    const dniIngresado = dni.trim()
+    const validacion = validar(dniBusquedaSchema, { dni })
 
-    if (dniIngresado === '') {
-      setErrorBusqueda('Por favor, ingrese un DNI válido.')
+    if (!validacion.ok) {
+      setErrorBusqueda(validacion.errores.dni)
       return
     }
+
+    const dniIngresado = validacion.datos.dni
 
     if (!carreraSeleccionada) {
       setErrorBusqueda('No hay una carrera seleccionada.')

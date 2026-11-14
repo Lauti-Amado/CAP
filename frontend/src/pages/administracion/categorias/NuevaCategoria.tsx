@@ -1,33 +1,14 @@
-
+//frontend/src\pages/administracion/categorias/NuevaCategoria.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Eye, Plus, Save, Trash2 } from 'lucide-react';
-
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Container,
-  Form,
-  Row,
-  Spinner
-} from 'react-bootstrap';
-
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner} from 'react-bootstrap';
 import { ApiError } from '../../../services/apiService';
-
-import {
-  actualizarCategoria,
-  crearCategoria,
-  obtenerCategoria
-} from '../../../services/categoriaService';
-
-import type {
-  CriterioCategoria,
-  DatosCategoria
-} from '../../../types/categoria';
-
+import { actualizarCategoria, crearCategoria, obtenerCategoria} from '../../../services/categoriaService';
+import type { CriterioCategoria, DatosCategoria} from '../../../types/categoria';
 import '../Administracion.css';
+import { categoriaSchema } from '../../../schemas/categoriaSchema';
+import { validar } from '../../../utils/validar';
 
 const formularioInicial: DatosCategoria = {
   nombre: '',
@@ -41,6 +22,7 @@ function NuevaCategoria() {
 
   const editando = id !== undefined;
 
+  const [mostrarErrores, setMostrarErrores] = useState(false);
   const [form, setForm] = useState<DatosCategoria>(formularioInicial);
   const [cargando, setCargando] = useState(editando);
   const [guardando, setGuardando] = useState(false);
@@ -134,38 +116,27 @@ function NuevaCategoria() {
   };
 
   // Validación del formulario
-  const puedeGuardar =
-    form.nombre.trim().length > 0 &&
-    form.descripcion.trim().length > 0 &&
-    form.criterios.every(
-      (criterio) =>
-        criterio.nombre.trim() &&
-        criterio.valor.trim()
-    );
+  const validacion = validar(categoriaSchema, form);
+  const errorCampo = (campo: string) =>
+    mostrarErrores ? validacion.errores[campo] : undefined;
 
   // Guardar categoría
   const guardar = async () => {
-    if (!puedeGuardar || guardando) return;
+    if (guardando) return;
+
+    if (!validacion.ok) {
+      setMostrarErrores(true);
+      return;
+    }
 
     setGuardando(true);
     setError('');
 
-    const datos: DatosCategoria = {
-      nombre: form.nombre.trim(),
-      descripcion: form.descripcion.trim(),
-      criterios: form.criterios.map(
-        ({ nombre, valor }) => ({
-          nombre: nombre.trim(),
-          valor: valor.trim()
-        })
-      ),
-    };
-
     try {
       if (id) {
-        await actualizarCategoria(id, datos);
+        await actualizarCategoria(id, validacion.datos);
       } else {
-        await crearCategoria(datos);
+        await crearCategoria(validacion.datos);
       }
 
       volver();
@@ -259,7 +230,11 @@ function NuevaCategoria() {
                   onChange={(e) =>
                     actualizarCampo('nombre', e.target.value)
                   }
+                  isInvalid={!!errorCampo('nombre')}
                 />
+                <Form.Control.Feedback type="invalid">
+                  {errorCampo('nombre')}
+                </Form.Control.Feedback>
 
               </Form.Group>
 
@@ -279,7 +254,11 @@ function NuevaCategoria() {
                   onChange={(e) =>
                     actualizarCampo('descripcion', e.target.value)
                   }
+                  isInvalid={!!errorCampo('descripcion')}
                 />
+                <Form.Control.Feedback type="invalid">
+                  {errorCampo('descripcion')}
+                </Form.Control.Feedback>
 
               </Form.Group>
 
@@ -352,7 +331,11 @@ function NuevaCategoria() {
                               e.target.value
                             )
                           }
+                          isInvalid={!!errorCampo(`criterios.${indice}.nombre`)}
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {errorCampo(`criterios.${indice}.nombre`)}
+                        </Form.Control.Feedback>
 
                       </Form.Group>
 
@@ -377,7 +360,11 @@ function NuevaCategoria() {
                               e.target.value
                             )
                           }
+                          isInvalid={!!errorCampo(`criterios.${indice}.valor`)}
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {errorCampo(`criterios.${indice}.valor`)}
+                        </Form.Control.Feedback>
 
                       </Form.Group>
 
@@ -471,7 +458,7 @@ function NuevaCategoria() {
                   variant="success"
                   size="sm"
                   className="d-inline-flex align-items-center justify-content-center gap-2"
-                  disabled={!puedeGuardar || guardando}
+                  disabled={guardando}
                   onClick={() => void guardar()}
                 >
 

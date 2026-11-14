@@ -1,8 +1,12 @@
+//frontend/src/pages/clasificacion/modClasifCorredor/modClasifCorredor.tsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion';
 import { llegadasMock } from '../llegadasMock';
 import './ModClasifCorredor.css';
+import { Form } from 'react-bootstrap';
+import { resultadoClasificacionSchema } from '../../../schemas/clasificacionSchema';
+import { validar, type ErroresFormulario } from '../../../utils/validar';
 
 const ModClasifCorredor: React.FC = () => {
   const { id, corredorId } = useParams();
@@ -18,14 +22,23 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
   // TODO BACKEND: GET /api/clasificaciones/{id}
   const llegada = llegadasMock.find((l) => String(l.id) === id);
 
+    const [errores, setErrores] = useState<ErroresFormulario>({});
   const [tiempoOficial, setTiempoOficial] = useState(llegada?.tiempo ?? '01:45:23.450');
   const [puestoGeneral, setPuestoGeneral] = useState(String(llegada?.puesto ?? 42));
   const [categoria, setCategoria] = useState('Masc 35 a 39 años');
 
   const handleGuardar = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Guardando modificaciones para el registro:', id);
-    // TODO BACKEND: PATCH /api/clasificaciones/{id}
+
+    const validacion = validar(resultadoClasificacionSchema, { tiempoOficial, puestoGeneral });
+    if (!validacion.ok) {
+      setErrores(validacion.errores);
+      return;
+    }
+
+    // TODO BACKEND: PUT /api/clasificaciones/{id}/resultado con validacion.datos
+    // ({ puestoGeneral, tiempoLlegada en milisegundos })
+    console.log('Guardando modificaciones para el registro:', id, validacion.datos);
     // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
     navigate(rutas.trasGuardar(search), { replace: true });
   };
@@ -118,22 +131,31 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                 <div className="mod-input-group">
                   <label>Tiempo Oficial</label>
                   <div className="mod-input-with-icon">
-                    <input 
-                      type="text" 
-                      value={tiempoOficial} 
-                      onChange={(e) => setTiempoOficial(e.target.value)} 
+                    <Form.Control
+                      type="text"
+                      value={tiempoOficial}
+                      isInvalid={!!errores.tiempoOficial}
+                      onChange={(e) => { setTiempoOficial(e.target.value); setErrores({}); }}
                     />
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   </div>
+                  <Form.Control.Feedback type="invalid" className="d-block">
+                    {errores.tiempoOficial}
+                  </Form.Control.Feedback>
                 </div>
 
                 <div className="mod-input-group">
                   <label>Puesto General</label>
-                  <input 
-                    type="text" 
-                    value={puestoGeneral} 
-                    onChange={(e) => setPuestoGeneral(e.target.value)} 
+                  <Form.Control
+                    type="text"
+                    inputMode="numeric"
+                    value={puestoGeneral}
+                    isInvalid={!!errores.puestoGeneral}
+                    onChange={(e) => { setPuestoGeneral(e.target.value); setErrores({}); }}
                   />
+                  <Form.Control.Feedback type="invalid" className="d-block">
+                    {errores.puestoGeneral}
+                  </Form.Control.Feedback>
                 </div>
 
                 <div className="mod-input-group">

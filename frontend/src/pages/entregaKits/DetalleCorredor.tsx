@@ -9,12 +9,12 @@ import '../../components/corredor/DetalleCorredor.css'
 
 import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
 import { ApiError } from '../../services/apiService'
-import {
-  buscarCorredorPorDni,
-  registrarEntregaKit,
-} from '../../services/entregaKitService'
+import { buscarCorredorPorDni, registrarEntregaKit,} from '../../services/entregaKitService'
 
 import type { CorredorEntregaKitDTO } from '../../types/entregaKits'
+
+import { dorsalSchema } from '../../schemas/kitSchema'
+import { validar } from '../../utils/validar'
 
 function DetalleCorredor() {
   const { dni, nombreCarrera } = useParams<{
@@ -85,10 +85,11 @@ function DetalleCorredor() {
       )
     }
 
+  const validacionDorsal = validar(dorsalSchema, { dorsal })
+
   const puedeEntregar =
     Boolean(corredor?.habilitadoParaRetirarKit) &&
-    /^\d+$/.test(dorsal.trim()) &&
-    Number(dorsal) > 0 &&
+    validacionDorsal.ok &&
     !entregando
 
   async function entregarKit() {
@@ -271,6 +272,11 @@ function DetalleCorredor() {
                           className="detalle-corredor__dorsal-input"
                         />
                       </div>
+                      {dorsal !== '' && !validacionDorsal.ok && (
+                        <div className="text-danger small mt-1">
+                          {validacionDorsal.errores.dorsal}
+                        </div>
+                      )}
                     </div>
 
                     <div className="detalle-corredor__kit-dato">
