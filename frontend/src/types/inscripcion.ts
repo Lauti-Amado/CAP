@@ -1,3 +1,4 @@
+//frontend/src/types/incripcion.ts
 export type Inscripcion = {
   id: string
   dni: string

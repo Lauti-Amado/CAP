@@ -1,4 +1,4 @@
-
+//frontend/src/pages/inscripciones/DetalleInscripcion.tsx
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
