@@ -7,6 +7,8 @@ import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import '../../components/corredor/DetalleCorredor.css'
 import { corredoresClasificacionMock } from './corredoresClasificacionMock'
 import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
+import { puestoManualSchema } from '../../schemas/clasificacionSchema'
+import { validar } from '../../utils/validar'
 
 // MOCK TEMPORAL
 // TODO BACKEND: cantidad real de participantes de la carrera
@@ -48,10 +50,10 @@ function ClasificacionManualDetalle() {
   // Para clasificarlo tiene que tener la inscripción paga y el dorsal asignado
   const habilitado = corredor.estadoInscripcion === 'pagado' && corredor.dorsal !== ''
 
+  const validacionPuesto = validar(puestoManualSchema(TOTAL_PARTICIPANTES), { puesto })
   const puestoNumero = Number(puesto)
-  const puestoValido = /^\d+$/.test(puesto) && puestoNumero >= 1 && puestoNumero <= TOTAL_PARTICIPANTES
-  const puestoFueraDeRango = puesto !== '' && !puestoValido
-  const puedeGuardar = habilitado && puestoValido && !guardado
+  const puestoFueraDeRango = puesto !== '' && !validacionPuesto.ok
+  const puedeGuardar = habilitado && validacionPuesto.ok && !guardado
 
   const guardarClasificacion = () => {
   if (!puedeGuardar) return
@@ -147,7 +149,7 @@ function ClasificacionManualDetalle() {
 
                   {puestoFueraDeRango && (
                     <div className="text-danger small mt-1">
-                      El puesto debe estar entre 1 y {TOTAL_PARTICIPANTES.toLocaleString('es-AR')}.
+                      {validacionPuesto.errores.puesto}
                     </div>
                   )}
                 </div>
