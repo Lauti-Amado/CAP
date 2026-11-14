@@ -5,7 +5,6 @@ import type { Prisma } from "../generated/prisma/client";
 import type { Login, LoginContingencia } from "../validations/usuario.validations";
 import { consumir } from "./claveRespaldo.service";
 import { TokenPayload, UsuarioDTO, toUsuarioDto } from "../dtos/usuario.dto";
-import { ROLES_GESTIONABLES } from "../dtos/usuarioGestion.dto";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -52,7 +51,8 @@ export async function login(datos: Login): Promise<Sesion | null> {
     return emitirSesion(usuario);
 }
 
-//Login de contingencia: email de la cuenta + clave de respaldo de uso único
+//Login de contingencia: email de la cuenta + clave de respaldo de uso único.
+//Solo para clasificadores: los administradores ingresan únicamente con contraseña.
 export async function loginContingencia(datos: LoginContingencia): Promise<Sesion | null> {
     const usuario = await prisma.usuario.findUnique({
         where: { email: datos.email },
@@ -60,9 +60,9 @@ export async function loginContingencia(datos: LoginContingencia): Promise<Sesio
     });
     if (!usuario || usuario.estado !== "Activo") return null;
 
-    //Solo el personal entra por contingencia. Se chequea antes de consumir para no gastar la clave
-    const esPersonal = usuario.roles.some(ur => ROLES_GESTIONABLES.includes(ur.rolAdministrativo.rol));
-    if (!esPersonal) return null;
+    //Se chequea antes de consumir para no gastar la clave
+    const roles = usuario.roles.map(ur => ur.rolAdministrativo.rol);
+    if (roles.includes("Administrador") || !roles.includes("Clasificador")) return null;
 
     const consumida = await consumir(datos.clave, usuario.id);
     if (!consumida) return null;
