@@ -144,7 +144,9 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
               <strong className="d-block mb-1">Instrucción de Seguridad Institucional</strong>
               Las claves de respaldo son de uso único. Una vez utilizada una clave para restablecer
               el acceso o autenticar un punto de cronometraje de emergencia, queda inhabilitada de
-              forma permanente. Guarde esta información en una ubicación segura y confidencial.
+              forma permanente. Solo habilitan el ingreso de cuentas de clasificador: los
+              administradores siempre ingresan con su contraseña. Guarde esta información en una
+              ubicación segura y confidencial.
             </div>
           </div>
         </Modal.Body>
