@@ -13,9 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
-    "bcrypt": "^6.0.0",
     "bootstrap": "^5.3.8",
-    "dotenv": "^17.4.2",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.9",
     "lucide-react": "^1.66.0",
