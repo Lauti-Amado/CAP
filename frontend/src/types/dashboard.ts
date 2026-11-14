@@ -3,9 +3,9 @@ import type { EstadoSincronizacion } from './sincronizacion'
 
 export type DashboardActivity = {
   id: string
-  kind: 'reading' | 'kit' | 'registration'
-  description: string
-  occurredAt: string
+  tipo: 'lectura' | 'kit' | 'inscripcion'
+  descripcion: string
+  fechaHora: string
 }
 
 export type DashboardData = {
