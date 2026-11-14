@@ -53,9 +53,13 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
   }
 
   const copiar = async (clave: ClaveRespaldo) => {
-    await navigator.clipboard.writeText(clave.clave)
-    setCopiada(clave.id)
-    setTimeout(() => setCopiada(null), 1500)
+    try {
+      await navigator.clipboard.writeText(clave.clave)
+      setCopiada(clave.id)
+      setTimeout(() => setCopiada(null), 1500)
+    } catch {
+      setError('No se pudo copiar la clave. Copiala manualmente.')
+    }
   }
 
   return (
