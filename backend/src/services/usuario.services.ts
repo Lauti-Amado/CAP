@@ -5,6 +5,7 @@ import type { Prisma } from "../generated/prisma/client";
 import type { Login, LoginContingencia } from "../validations/usuario.validations";
 import { consumir } from "./claveRespaldo.service";
 import { TokenPayload, UsuarioDTO, toUsuarioDto } from "../dtos/usuario.dto";
+import { ROLES_GESTIONABLES } from "../dtos/usuarioGestion.dto";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -58,6 +59,10 @@ export async function loginContingencia(datos: LoginContingencia): Promise<Sesio
         include: incluirSesion,
     });
     if (!usuario || usuario.estado !== "Activo") return null;
+
+    //Solo el personal entra por contingencia. Se chequea antes de consumir para no gastar la clave
+    const esPersonal = usuario.roles.some(ur => ROLES_GESTIONABLES.includes(ur.rolAdministrativo.rol));
+    if (!esPersonal) return null;
 
     const consumida = await consumir(datos.clave, usuario.id);
     if (!consumida) return null;
