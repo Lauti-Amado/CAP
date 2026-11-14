@@ -203,6 +203,32 @@ async function seedCategorias() {
   }
 }
 
+async function seedPlantillaCertificado() {
+    if ((await prisma.plantillaCertificado.count()) > 0) return;
+
+    await prisma.plantillaCertificado.create({
+        data: {
+            nombre: "Certificado CAP",
+            activa: true,
+            colorPrimario: "#175f35",
+            colorSecundario: "#20bf63",
+            colorFondo: "#ffffff",
+            fuente: "Arial, Helvetica, sans-serif",
+        },
+    });
+}
+
+async function seedAfiliacionBianca() {
+    const corredor = await prisma.corredor.findFirst({ where: { persona: { dni: "22222222" } } });
+    if (!corredor) return;
+
+    await prisma.afiliacion.upsert({
+        where: { afiliadoId: corredor.id },
+        update: {},
+        create: { numeroSocio: 1, afiliadoId: corredor.id },
+    });
+}
+
 async function sembrarInscripcionPrueba(o: {
     corredorId: string; carreraId: string; idDistancia: string;
     precio: number; usuarioId: string; pagada: boolean;
@@ -240,6 +266,7 @@ async function sembrarInscripcionPrueba(o: {
 
 async function main() {
     await seedCategorias();
+    await seedPlantillaCertificado();
 
     //Roles administrativos
     const rolesEnum = [Rol.Administrador, Rol.Tesorero, Rol.Clasificador];
@@ -302,6 +329,8 @@ async function main() {
             }
         }
     }
+
+    await seedAfiliacionBianca();
 
     //Localidades y Lugares
     for (const localidad of localidades) {
