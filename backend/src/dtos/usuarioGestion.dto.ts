@@ -1,5 +1,6 @@
 //backend/src/dtos/usuarioGestion.dto.ts
 import { Prisma } from "../generated/prisma/client";
+import type { PaginaDTO } from "./pagina.dto";
 import type { Rol, EstadoUsuario } from "../generated/prisma/client";
 
 //Roles que este sistema administra (el resto, como Tesorero, se gestiona solo en la web)
@@ -19,12 +20,7 @@ export type UsuarioGestionDTO = {
   estado: EstadoUsuario;
 };
 
-export type PaginaUsuariosDTO = {
-  datos: UsuarioGestionDTO[];
-  total: number;
-  pagina: number;
-  totalPaginas: number;
-};
+export type PaginaUsuariosDTO = PaginaDTO<UsuarioGestionDTO>;
 
 export function toUsuarioGestionDto(usuario: UsuarioGestionPrisma): UsuarioGestionDTO {
   return {

@@ -4,6 +4,7 @@ import type { Prisma, Rol } from "../generated/prisma/client";
 import { ErrorQuitarPropioAdministrador } from "../errors/quitarPropioAdministrador.error";
 import { PaginaUsuariosDTO, ROLES_GESTIONABLES, UsuarioGestionDTO, toUsuarioGestionDto,} from "../dtos/usuarioGestion.dto";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
+import { toPaginaDto } from "../dtos/pagina.dto";
 
 const LIMITE_POR_PAGINA = 10;
 
@@ -29,12 +30,7 @@ export async function listar(pagina: number): Promise<PaginaUsuariosDTO> {
         }),
     ]);
 
-    return {
-        datos: usuarios.map(toUsuarioGestionDto),
-        total,
-        pagina,
-        totalPaginas: Math.max(1, Math.ceil(total / LIMITE_POR_PAGINA)),
-    };
+        return toPaginaDto(usuarios.map(toUsuarioGestionDto), total, pagina, LIMITE_POR_PAGINA);
 }
 
 export async function obtener(id: string): Promise<UsuarioGestionDTO> {
