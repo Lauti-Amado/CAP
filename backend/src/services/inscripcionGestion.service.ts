@@ -263,6 +263,7 @@ export async function crear(
         const { kilometraje, tipoDistancia } = distanciaCarrera.distancia;
         const detalleInscripcion = await tx.detalleCompra.create({
             data: {
+                tipo: "Inscripcion",
                 descripcion: `Inscripción ${carrera.nombre} ${kilometraje}K ${tipoDistancia}`,
                 monto: distanciaCarrera.precioDistancia,
                 cantidad: 1,
@@ -272,6 +273,7 @@ export async function crear(
         for (const { variante, cantidad } of lineas) {
             await tx.detalleCompra.create({
                 data: {
+                    tipo: "Producto",
                     descripcion: `${variante.producto.nombreProducto} (${variante.nombreVariante})`,
                     monto: variante.precio, // unitario
                     cantidad,
