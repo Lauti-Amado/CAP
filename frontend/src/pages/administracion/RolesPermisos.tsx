@@ -4,8 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import type { RolUsuario, UsuarioAdministracion } from '../../types/administracion'
 import { actualizarRolesUsuario, obtenerUsuario } from '../../services/usuarioGestionService'
-// MOCK TEMPORAL: solo quedan las descripciones de cada rol
-import { opcionesRolMock } from './administracionMock'
+import { opcionesRol } from './opcionesRol'
 import './Administracion.css'
 
 function RolesPermisos() {
@@ -118,7 +117,7 @@ function RolesPermisos() {
               </p>
 
               <div className="d-grid gap-2 pb-3 mb-3 border-bottom" role="group" aria-label="Roles">
-                {opcionesRolMock.map(({ rol, descripcion }) => {
+                {opcionesRol.map(({ rol, descripcion }) => {
                   const seleccionado = rolesSeleccionados.includes(rol)
                   return (
                     <button
