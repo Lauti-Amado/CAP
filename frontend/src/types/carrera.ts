@@ -1,3 +1,4 @@
+//frontend/src/types/carrera.ts
 export type EstadoCarrera =
   | "Creada"
   | "Publicada"
@@ -39,6 +40,7 @@ export type Lugar = {
 // Detalle de una carrera: la carrera + los conteos que calcula el backend
 export type CarreraDetalle = Carrera & {
   cantidadInscriptos: number;
+  cantidadInscriptosConfirmados: number;
   cantidadKitsEntregados: number;
   cantidadClasificados: number;
 };

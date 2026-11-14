@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Award, FileSpreadsheet, FileText, Search, Send, Table as TableIcon } from 'lucide-react';
+import { FileSpreadsheet, FileText, Search, Table as TableIcon } from 'lucide-react';
 import { Tabla, type Columna } from '../../components/tabla/Tabla';
-import { enviarCertificados } from '../../services/certificadosService';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext';
+import CertificadosSocios from '../../components/certificados/CertificadosSocios';
 
 interface ResultadoAtleta {
   id: number;
@@ -29,16 +30,7 @@ const Resultados: React.FC = () => {
   const [totalRegistros, setTotalRegistros] = useState(0);
   const elementosPorPagina = 50;
 
-  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-  const [enviando, setEnviando] = useState(false);
-  const [mensajeEnvio, setMensajeEnvio] = useState<{
-    tipo: 'success' | 'warning' | 'danger';
-    texto: string;
-  } | null>(null);
-  const [certificadosEnviados, setCertificadosEnviados] = useState(false);
-
-  // TODO: tomar el id de la carrera seleccionada cuando exista
-  const carreraId = '1';
+  const { carreraSeleccionada } = useSeleccionarCarrera();
   
   // Datos mock de atletas finalizados (simulando una base de datos)
   const resultadosMock: ResultadoAtleta[] = [
@@ -223,42 +215,6 @@ const Resultados: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const handleEnviarCertificados = async () => {
-    setMostrarConfirmacion(false);
-
-    if (!navigator.onLine) {
-      setMensajeEnvio({
-        tipo: 'danger',
-        texto: 'Sin conexión a internet. Conecte la notebook a una red para enviar los certificados.',
-      });
-      return;
-    }
-
-    setEnviando(true);
-    setMensajeEnvio(null);
-
-    try {
-      const { enviados, fallidos } = await enviarCertificados(carreraId);
-
-      if (enviados === 0 && fallidos === 0) {
-        setMensajeEnvio({ tipo: 'warning', texto: 'No hay socios con certificados pendientes de envío.' });
-      } else if (fallidos > 0) {
-        setMensajeEnvio({
-          tipo: 'warning',
-          texto: `Se enviaron ${enviados} certificados y ${fallidos} fallaron. Puede reintentar: solo se reenviarán los pendientes.`,
-        });
-      } else {
-        setCertificadosEnviados(true);
-        setMensajeEnvio({ tipo: 'success', texto: `Se enviaron ${enviados} certificados a los socios correctamente.` });
-      }
-    } catch (error) {
-      console.error('Error al enviar certificados:', error);
-      setMensajeEnvio({ tipo: 'danger', texto: 'No se pudieron enviar los certificados. Intente nuevamente.' });
-    } finally {
-      setEnviando(false);
-    }
-  };
-
   return (
     <main className="main-content p-4">
       {/* Estilos locales en línea para reemplazos específicos de Bootstrap */}
@@ -430,108 +386,8 @@ const Resultados: React.FC = () => {
         />
       </div>
 
-      {/* =========================
-          RESULTADO DEL ENVÍO
-      ========================= */}
-      {mensajeEnvio && (
-        <div className={`alert alert-${mensajeEnvio.tipo} alert-dismissible mb-3`} role="alert">
-          {mensajeEnvio.texto}
-          <button
-            type="button"
-            className="btn-close"
-            aria-label="Cerrar"
-            onClick={() => setMensajeEnvio(null)}
-          />
-        </div>
-      )}
+      {carreraSeleccionada && <CertificadosSocios carreraId={carreraSeleccionada.id} />}
 
-      {/* =========================
-          CERTIFICADOS DE FINISHER
-      ========================= */}
-      <section 
-        className="rounded-3 p-4 d-flex flex-wrap justify-content-between align-items-center gap-3 shadow-sm"
-        style={{
-          background: 'linear-gradient(to right, #eef2ff, #e0e7ff)',
-          border: '1px solid #c7d2fe'
-        }}
-      >
-        <div className="d-flex align-items-center gap-3">
-          <span 
-            className="d-inline-flex align-items-center justify-content-center rounded-3 text-white flex-shrink-0"
-            style={{ width: '48px', height: '48px', backgroundColor: '#16a34a' }}
-          >
-            <Award size={24} aria-hidden="true" />
-          </span>
-          <div>
-            <h2 className="h6 fw-bold mb-1">Certificados de Finisher</h2>
-            <p className="small text-secondary mb-0">
-              Genera y envía por correo electrónico los certificados oficiales a los socios que finalizaron la carrera.
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="btn d-inline-flex align-items-center gap-2 text-white fw-semibold border-0"
-          style={{ backgroundColor: '#087f3f' }}
-          disabled={enviando || certificadosEnviados}
-          onClick={() => setMostrarConfirmacion(true)}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#066b35')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#087f3f')}
-        >
-          {enviando ? (
-            <span className="spinner-border spinner-border-sm" aria-hidden="true" />
-          ) : (
-            <Send size={14} aria-hidden="true" />
-          )}
-          {enviando ? 'Enviando...' : certificadosEnviados ? 'Certificados enviados' : 'Enviar Certificados'}
-        </button>
-      </section>
-
-      {/* =========================
-          CONFIRMAR ENVÍO
-      ========================= */}
-      {mostrarConfirmacion && (
-        <>
-          <div className="modal d-block" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="titulo-envio">
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content shadow">
-                <div className="modal-header">
-                  <h2 className="modal-title h5" id="titulo-envio">Enviar certificados</h2>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    aria-label="Cerrar"
-                    onClick={() => setMostrarConfirmacion(false)}
-                  />
-                </div>
-                <div className="modal-body">
-                  Se enviará el certificado por correo a los socios que finalizaron la carrera.
-                  Los certificados solo se pueden enviar una vez.
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() => setMostrarConfirmacion(false)}
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-sm text-white fw-semibold border-0" 
-                    style={{ backgroundColor: '#087f3f' }}
-                    onClick={handleEnviarCertificados}
-                  >
-                    Enviar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-backdrop show" />
-        </>
-      )}
     </main>
   );
 };
