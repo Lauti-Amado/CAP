@@ -24,7 +24,7 @@ export const corredorFormSchema = z
   .object({
     nombre: texto,
     apellido: texto,
-    genero: z.enum(['Femenino', 'Masculino'], { error: 'Seleccioná el género' }),
+    genero: z.enum(['Femenino', 'Masculino', 'Otro'], { error: 'Seleccioná el género' }),
     fechaNacimiento: z
       .string()
       .min(1, 'Ingresá la fecha de nacimiento')
