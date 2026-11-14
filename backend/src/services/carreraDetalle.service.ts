@@ -14,13 +14,21 @@ export async function obtenerDetalle(carreraId: string): Promise<CarreraDetalleD
     });
     if (!carrera) throw new ErrorNoEncontrado("Carrera no encontrada.");
 
-    const [cantidadInscriptos, cantidadKitsEntregados, cantidadClasificados] = await Promise.all([
+    const [cantidadInscriptos, cantidadInscriptosConfirmados, cantidadKitsEntregados, cantidadClasificados] = await Promise.all([
         // Las anuladas liberan su lugar
         prisma.inscripcion.count({ where: { idCarrera: carreraId, estado: { not: "Anulada" } } }),
+        // Solo las pagas o con kit retirado
+        prisma.inscripcion.count({ where: { idCarrera: carreraId, estado: { in: ["Pagada", "Confirmada"] } } }),
         prisma.entregaKit.count({ where: { inscripcion: { idCarrera: carreraId } } }),
         // Clasificados: los que ya tienen resultado cargado
         prisma.resultado.count({ where: { clasificacion: { inscripcion: { idCarrera: carreraId } } } }),
     ]);
 
-    return { ...toCarreraDto(carrera), cantidadInscriptos, cantidadKitsEntregados, cantidadClasificados };
+    return {
+        ...toCarreraDto(carrera),
+        cantidadInscriptos,
+        cantidadInscriptosConfirmados,
+        cantidadKitsEntregados,
+        cantidadClasificados,
+    };
 }
