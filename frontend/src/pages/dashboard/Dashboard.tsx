@@ -2,13 +2,12 @@
 import { useState } from 'react'
 import { Button, Card, Col, Container, ProgressBar, Row,} from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
-import { Archive, BarChart3, CalendarDays, CloudCheck, Footprints, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, type LucideIcon,} from 'lucide-react'
+import { Archive, BarChart3, CalendarDays, CloudCheck, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, type LucideIcon,} from 'lucide-react'
 import type { DashboardActivity } from '../../types/dashboard'
 import type { EstadoSincronizacion } from '../../types/sincronizacion'
 import { useDashboard } from '../../hooks/useDashboard'
 
 const quickActions = [
-  { label: 'Ver carreras', icon: Footprints, path: '/administrador/carreras' },
   { label: 'Ver Resultados', icon: BarChart3, path: '/clasificador/resultados' },
   { label: 'Grand Prix', icon: Trophy, path: '/clasificador/grand-prix' },
 ]
