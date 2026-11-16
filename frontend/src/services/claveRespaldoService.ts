@@ -7,3 +7,6 @@ export const listarCuentasConClaves = () =>
 
 export const listarClavesDeCuenta = (usuarioId: string) =>
   apiFetch<ClaveRespaldo[]>(`/claves-respaldo?usuarioId=${usuarioId}`)
+
+export const reemplazarClavesDeCuenta = (usuarioId: string) =>
+  apiFetch<ClaveRespaldo[]>(`/claves-respaldo?usuarioId=${usuarioId}`, { method: 'PUT' })
