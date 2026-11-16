@@ -1,11 +1,10 @@
 //frontend/src/pages/inscripciones/Inscripciones.tsx
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Container, Form, Row, Col } from 'react-bootstrap'
+import { Badge, Button, Col, Container, Form, InputGroup, Row } from 'react-bootstrap'
 import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
-import './Inscripciones.css'
 import { Tabla, type Columna } from '../../components/tabla/Tabla'
-import type { Inscripcion, FiltrosInscripciones } from '../../types/inscripcion'
+import type { Inscripcion, /*FiltrosInscripciones*/ } from '../../types/inscripcion'
 
 // MOCK TEMPORAL
 import { inscripcionesMock } from './inscripcionesMock'
@@ -14,6 +13,18 @@ const INSCRIPCIONES_POR_PAGINA = 10
 
 // "34.567.890" y "34567890" tienen que matchear
 const soloDigitos = (valor: string) => valor.replace(/\D/g, '')
+
+const colorTipo: Record<string, string> = { Socio: 'primary', 'No socio': 'secondary' }
+const colorPago: Record<string, string> = { Pagado: 'success', Pendiente: 'warning' }
+const colorEstado: Record<string, string> = { Confirmada: 'success', 'En Proceso': 'warning', Anulada: 'danger' }
+
+function Pill({ texto, color = 'secondary' }: { texto: string; color?: string }) {
+  return (
+    <Badge pill bg={`${color}-subtle`} text={`${color}-emphasis`}>
+      {texto}
+    </Badge>
+  )
+}
 
 function Inscripciones() {
   const [dni, setDni] = useState('')
@@ -28,7 +39,7 @@ function Inscripciones() {
   const { nombreCarrera } = useParams();
 
   // TODO BACKEND: usar filtros en la consulta real al backend
-  /* const _filtros: FiltrosInscripciones = {
+   /*const _filtros: FiltrosInscripciones = {
     dni,
     carrera,
     distancia,
@@ -99,50 +110,29 @@ function Inscripciones() {
     {
       titulo: 'Tipo',
       key: 'tipo',
-      render: (inscripcion) => (
-        <span
-          className={`inscripciones__badge inscripciones__badge--tipo-${inscripcion.tipo
-            .toLowerCase()
-            .replace(/\s+/g, '-')}`}
-        >
-          {inscripcion.tipo}
-        </span>
-      ),
+      render: (inscripcion) => <Pill texto={inscripcion.tipo} color={colorTipo[inscripcion.tipo]} />,
     },
     {
       titulo: 'Pago',
       key: 'pago',
-      render: (inscripcion) => (
-        <span
-          className={`inscripciones__badge inscripciones__badge--pago-${inscripcion.pago.toLowerCase()}`}
-        >
-          {inscripcion.pago}
-        </span>
-      ),
+      render: (inscripcion) => <Pill texto={inscripcion.pago} color={colorPago[inscripcion.pago]} />,
     },
     {
       titulo: 'Estado',
       key: 'estado',
-      render: (inscripcion) => (
-        <span
-          className={`inscripciones__badge inscripciones__badge--estado-${inscripcion.estado
-            .toLowerCase()
-            .replace(/\s+/g, '-')}`}
-        >
-          {inscripcion.estado}
-        </span>
-      ),
+      render: (inscripcion) => <Pill texto={inscripcion.estado} color={colorEstado[inscripcion.estado]} />,
     },
     {
       titulo: 'Acciones',
       key: 'acciones',
       render: (inscripcion: Inscripcion) => (
-        <div className="inscripciones__acciones">
-          <div className="inscripciones__acciones-superiores">
+        <div className="d-flex flex-column align-items-center gap-1">
+          <div className="d-flex gap-1">
             <Button
               type="button"
               variant="outline-primary"
               size="sm"
+              className="d-inline-flex p-1"
               aria-label="Ver detalle de inscripción"
               title="Ver detalle"
               onClick={() =>
@@ -156,6 +146,7 @@ function Inscripciones() {
               type="button"
               variant="outline-danger"
               size="sm"
+              className="d-inline-flex p-1"
               aria-label="Eliminar inscripción"
               title="Eliminar inscripción"
             >
@@ -165,8 +156,9 @@ function Inscripciones() {
 
           <Button
             type="button"
-            className="inscripciones__dar-kit"
+            variant="success"
             size="sm"
+            className="rounded-pill px-3"
             onClick={() =>
               navigate(
                 `/clasificador/entrega-kits/${nombreCarrera}/${encodeURIComponent(inscripcion.dni)}`,
@@ -182,33 +174,33 @@ function Inscripciones() {
   ]
 
   return (
-    <Container fluid className="inscripciones">
-      <header className="inscripciones__encabezado">
+    <Container fluid className="p-4">
+      <header className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
         <div>
-          <h1>Inscripciones</h1>
-          <p>
-            Gestiona las inscripciones de todas las carreras activas y
-            publicadas.
+          <h1 className="h2 fw-bold mb-1">Inscripciones</h1>
+          <p className="small text-secondary mb-0">
+            Gestiona las inscripciones de todas las carreras activas y publicadas.
           </p>
         </div>
 
         <Button
           type="button"
-          className="inscripciones__nueva"
-          onClick={() =>
-            navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)
-          }
+          variant="success"
+          className="d-inline-flex align-items-center justify-content-center gap-2"
+          onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)}
         >
           <UserRoundPlus size={15} />
-          <span>Nueva inscripción</span>
+          Nueva inscripción
         </Button>
       </header>
 
-      <Form className="inscripciones__filtros" onSubmit={(event) => event.preventDefault()}>
+      <Form className="mb-3" onSubmit={(event) => event.preventDefault()}>
         <Row className="g-3 align-items-center">
           <Col xs={12} sm={6} lg={2}>
-            <div className="inscripciones__buscador">
-              <Search size={14} />
+            <InputGroup size="sm">
+              <InputGroup.Text className="bg-white">
+                <Search size={14} aria-hidden="true" />
+              </InputGroup.Text>
               <Form.Control
                 type="text"
                 value={dni}
@@ -219,12 +211,13 @@ function Inscripciones() {
                 placeholder="Buscar por DNI"
                 aria-label="Buscar por DNI"
               />
-            </div>
+            </InputGroup>
           </Col>
 
           <Col xs={12} sm={6} lg>
             <Form.Select
               value={carrera}
+              size='sm'
               aria-label="Filtrar por carrera"
               onChange={(event) => {
                 setCarrera(event.target.value)
@@ -243,6 +236,7 @@ function Inscripciones() {
           <Col xs={12} sm={6} lg>
             <Form.Select
               value={distancia}
+              size='sm'
               aria-label="Filtrar por distancia"
               onChange={(event) => {
                 setDistancia(event.target.value)
@@ -261,6 +255,7 @@ function Inscripciones() {
           <Col xs={12} sm={6} lg>
             <Form.Select
               value={pago}
+              size='sm'
               aria-label="Filtrar por pago"
               onChange={(event) => {
                 setPago(event.target.value)
@@ -279,6 +274,7 @@ function Inscripciones() {
           <Col xs={12} sm={6} lg>
             <Form.Select
               value={estado}
+              size='sm'
               aria-label="Filtrar por estado"
               onChange={(event) => {
                 setEstado(event.target.value)
@@ -297,6 +293,7 @@ function Inscripciones() {
           <Col xs={12} sm={6} lg>
             <Form.Select
               value={anio}
+              size='sm'
               aria-label="Filtrar por año"
               onChange={(event) => {
                 setAnio(event.target.value)
@@ -314,7 +311,6 @@ function Inscripciones() {
         </Row>
       </Form>
 
-      <section className="inscripciones__tabla">
         <Tabla
           columnas={columnas}
           datos={inscripciones}
@@ -326,9 +322,8 @@ function Inscripciones() {
           mostrarNumeros={false}
           textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripcionesFiltradas.length} inscripciones`}
         />
-      </section>
-    </Container>
-  )
+      </Container>
+    )
 }
 
 export default Inscripciones

@@ -3,11 +3,9 @@ import { useState } from 'react'
 import { Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Modal, Row, ToggleButton, ToggleButtonGroup,} from 'react-bootstrap'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, CreditCard, Eye, Footprints, Plus, Search, UserRoundPlus } from 'lucide-react'
-
 import { contactoEmergenciaSchema, inscripcionPaso1Schema } from '../../schemas/inscripcionSchema'
 import { validar, type ErroresFormulario } from '../../utils/validar'
 import type { ContactoEmergencia } from '../../types/inscripcion'
-import './NuevaInscripcion.css'
 
 // MOCK TEMPORAL
 //
@@ -335,7 +333,7 @@ function NuevaInscripcion() {
   const hoyISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 
   return (
-    <Container as="main" className="tema-inscripcion py-4">
+    <Container as="main" className="py-4">
       <Row className="justify-content-center">
         <Col xs={12} xl={10}>
           {/* ENCABEZADO */}
@@ -722,7 +720,7 @@ function NuevaInscripcion() {
               {paso === 3 && (
                 <>
                   <div className="text-center mb-4">
-                    <span className="tema-inscripcion__ok d-inline-flex rounded-circle text-white p-2 mb-2">
+                    <span className="d-inline-flex rounded-circle bg-success text-white p-2 mb-2">
                       <Check size={22} aria-hidden="true" />
                     </span>
 
@@ -733,7 +731,7 @@ function NuevaInscripcion() {
                   <Row className="g-3 justify-content-center">
                     {/* CORREDOR */}
                     <Col md={6} lg={5}>
-                      <Card className="tema-inscripcion__borde-ok h-100 border-start border-success border-3">
+                      <Card className="h-100 border-start border-success border-3">
                         <Card.Header className="d-flex align-items-center gap-2 bg-transparent fw-bold">
                           <UserRoundPlus size={16} className="text-success" aria-hidden="true" />
                           Corredor
@@ -853,7 +851,7 @@ function NuevaInscripcion() {
       {/* =====================================================
           MODAL NUEVO CONTACTO
       ===================================================== */}
-      <Modal className="tema-inscripcion" show={mostrarModalContacto} onHide={() => setMostrarModalContacto(false)} centered>
+      <Modal show={mostrarModalContacto} onHide={() => setMostrarModalContacto(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title as="h2" className="h5 fw-bold">
             Nuevo contacto de emergencia
