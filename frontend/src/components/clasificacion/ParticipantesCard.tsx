@@ -1,4 +1,4 @@
-
+//frontend/src/components/clasificacion/ParticipantesCard.tsx
 import { useState } from 'react'
 import {
   Button,

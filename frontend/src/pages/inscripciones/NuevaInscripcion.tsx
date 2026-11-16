@@ -1,8 +1,9 @@
 //frontend/src/pages/inscripciones/NuevaInscripcion.tsx
 import { useState } from 'react'
-import { Button, Form } from 'react-bootstrap'
+import { Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Modal, Row, ToggleButton, ToggleButtonGroup,} from 'react-bootstrap'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Check, Eye, Plus, Search, UserRoundPlus, X, Footprints, CreditCard,} from 'lucide-react'
+import { ArrowLeft, Check, CreditCard, Eye, Footprints, Plus, Search, UserRoundPlus } from 'lucide-react'
+
 import { contactoEmergenciaSchema, inscripcionPaso1Schema } from '../../schemas/inscripcionSchema'
 import { validar, type ErroresFormulario } from '../../utils/validar'
 import type { ContactoEmergencia } from '../../types/inscripcion'
@@ -16,9 +17,7 @@ import './NuevaInscripcion.css'
 // TODO BACKEND:
 // Reemplazar estas fuentes por consultas reales
 // al backend.
-
 import { contactosEmergenciaMock, carreraInscripcionMock, distanciasInscripcionMock, productosDinamicosMock, variantesProductoMock, cantidadesProductoMock,} from './nuevaInscripcionMock'
-
 
 type DatosCorredor = {
   nombre: string
@@ -32,11 +31,93 @@ type DatosCorredor = {
   vencimientoAptoMedico: string
 }
 
+/* =====================================================
+   COMPONENTES AUXILIARES
+===================================================== */
+
+const PASOS = ['Datos del corredor', 'Datos de inscripción', 'Confirmación']
+
+function Pasos({ actual }: { actual: number }) {
+  return (
+    <Card className="mb-4">
+      <Card.Body className="d-flex align-items-center gap-3 overflow-auto py-3">
+        {PASOS.map((titulo, indice) => {
+          const numero = indice + 1
+          const completado = actual > numero
+          const activo = actual === numero
+          const resaltado = completado || activo
+
+          return (
+            <div key={titulo} className={`d-flex align-items-center gap-2 ${indice < PASOS.length - 1 ? 'flex-grow-1' : ''}`}>
+              <Badge pill bg={resaltado ? 'success' : 'light'} text={resaltado ? undefined : 'dark'}>
+                {completado ? <Check size={12} aria-hidden="true" /> : numero}
+              </Badge>
+
+              <span className={`small fw-semibold text-nowrap ${activo ? 'text-success' : 'text-secondary'}`}>
+                {titulo}
+              </span>
+
+              {indice < PASOS.length - 1 && <div className="flex-grow-1 border-top ms-2" />}
+            </div>
+          )
+        })}
+      </Card.Body>
+    </Card>
+  )
+}
+
+type CampoTextoProps = {
+  id: string
+  etiqueta: string
+  valor: string
+  onCambio: (valor: string) => void
+  error?: string
+  obligatorio?: boolean
+  placeholder?: string
+  tipo?: 'text' | 'date'
+  modo?: 'numeric' | 'tel'
+  min?: string
+}
+
+function CampoTexto({ id, etiqueta, valor, onCambio, error, obligatorio, placeholder, tipo = 'text', modo, min }: CampoTextoProps) {
+  return (
+    <Form.Group controlId={id}>
+      <Form.Label className="small fw-semibold">
+        {etiqueta} {obligatorio && <span className="text-danger">*</span>}
+      </Form.Label>
+
+      <Form.Control
+        type={tipo}
+        inputMode={modo}
+        min={min}
+        value={valor}
+        placeholder={placeholder}
+        isInvalid={!!error}
+        onChange={(e) => onCambio(e.target.value)}
+      />
+
+      <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
+    </Form.Group>
+  )
+}
+
+function DatoResumen({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="small text-uppercase text-secondary">{etiqueta}</div>
+      <strong>{children}</strong>
+    </div>
+  )
+}
+
+/* =====================================================
+   PANTALLA
+===================================================== */
 
 function NuevaInscripcion() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { nombreCarrera } = useParams();
+  const { nombreCarrera } = useParams()
 
   /*
    * Si se llega a esta pantalla desde el modal
@@ -50,84 +131,49 @@ function NuevaInscripcion() {
   const dniInicial = searchParams.get('dni') ?? ''
 
   const [paso, setPaso] = useState(1)
+  const [inscripcionConfirmada, setInscripcionConfirmada] = useState(false)
 
-  const [inscripcionConfirmada, setInscripcionConfirmada] =
-    useState(false)
+  const [datosCorredor, setDatosCorredor] = useState<DatosCorredor>({
+    nombre: '',
+    apellido: '',
+    genero: '',
+    fechaNacimiento: '',
+    dni: dniInicial,
+    telefono: '',
+    discapacidad: '',
+    aptoMedico: false,
+    vencimientoAptoMedico: '',
+  })
 
-  const [datosCorredor, setDatosCorredor] =
-    useState<DatosCorredor>({
-      nombre: '',
-      apellido: '',
-      genero: '',
-      fechaNacimiento: '',
-      dni: dniInicial,
-      telefono: '',
-      discapacidad: '',
-      aptoMedico: false,
-      vencimientoAptoMedico: '',
-    })
-
-
-  /* =====================================================
-     CONTACTO DE EMERGENCIA
-  ===================================================== */
+  /* ---------- Contacto de emergencia ---------- */
 
   const [dniContacto, setDniContacto] = useState('')
-
-  const [contactoEmergencia, setContactoEmergencia] =
-    useState<ContactoEmergencia | null>(null)
-
-  const [mostrarModalContacto, setMostrarModalContacto] =
-    useState(false)
-
-  const [nuevoContacto, setNuevoContacto] =
-    useState<ContactoEmergencia>({
-      nombre: '',
-      apellido: '',
-      dni: '',
-      telefono: '',
-    })
+  const [contactoEmergencia, setContactoEmergencia] = useState<ContactoEmergencia | null>(null)
+  const [mostrarModalContacto, setMostrarModalContacto] = useState(false)
+  const [nuevoContacto, setNuevoContacto] = useState<ContactoEmergencia>({
+    nombre: '',
+    apellido: '',
+    dni: '',
+    telefono: '',
+  })
 
   const [mostrarErrores, setMostrarErrores] = useState(false)
   const [erroresContacto, setErroresContacto] = useState<ErroresFormulario>({})
 
+  /* ---------- Datos de la inscripción ---------- */
 
-  /* =====================================================
-     DATOS DE INSCRIPCIÓN
-  ===================================================== */
+  const [distanciaSeleccionada, setDistanciaSeleccionada] = useState('')
+  const [productoDinamico, setProductoDinamico] = useState<'si' | 'no'>('no')
+  const [varianteProducto, setVarianteProducto] = useState('')
+  const [cantidadProducto, setCantidadProducto] = useState('1')
 
-  const [distanciaSeleccionada, setDistanciaSeleccionada] =
-    useState('')
-
-  const [productoDinamico, setProductoDinamico] =
-    useState<'si' | 'no'>('no')
-
-  const [varianteProducto, setVarianteProducto] =
-    useState('')
-
-  const [cantidadProducto, setCantidadProducto] =
-    useState('1')
-
-
-  /* =====================================================
-     DATOS DEL CORREDOR
-  ===================================================== */
-
-  const actualizarDato = (
-    campo: keyof DatosCorredor,
-    valor: string | boolean
-  ) => {
-    setDatosCorredor((anterior) => ({
-      ...anterior,
-      [campo]: valor,
-    }))
+  const actualizarDato = (campo: keyof DatosCorredor, valor: string | boolean) => {
+    setDatosCorredor((anterior) => ({ ...anterior, [campo]: valor }))
   }
-
 
   const volverAInscripciones = () => {
     navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
-
 
   /* =====================================================
      BÚSQUEDA DE CONTACTO
@@ -142,46 +188,33 @@ function NuevaInscripcion() {
    *
    * GET /api/contactos-emergencia?dni={dni}
    */
-
   const buscarContactoEmergencia = () => {
     const dni = dniContacto.trim()
 
-    if (!dni) {
-      return
-    }
+    if (!dni) return
 
-    const contactoEncontrado =
-      contactosEmergenciaMock.find(
-        (contacto) => contacto.dni === dni
-      )
+    const contactoEncontrado = contactosEmergenciaMock.find((contacto) => contacto.dni === dni)
 
     if (contactoEncontrado) {
       setContactoEmergencia(contactoEncontrado)
       return
     }
 
-    setNuevoContacto({
-      nombre: '',
-      apellido: '',
-      dni,
-      telefono: '',
-    })
+    setNuevoContacto({ nombre: '', apellido: '', dni, telefono: '' })
     setErroresContacto({})
     setMostrarModalContacto(true)
   }
-
 
   const abrirModalNuevoContacto = () => {
-    setNuevoContacto({
-      nombre: '',
-      apellido: '',
-      dni: dniContacto.trim(),
-      telefono: '',
-    })
+    setNuevoContacto({ nombre: '', apellido: '', dni: dniContacto.trim(), telefono: '' })
     setErroresContacto({})
     setMostrarModalContacto(true)
   }
 
+  const actualizarContacto = (campo: keyof ContactoEmergencia, valor: string) => {
+    setNuevoContacto((anterior) => ({ ...anterior, [campo]: valor }))
+    setErroresContacto((anteriores) => ({ ...anteriores, [campo]: '' }))
+  }
 
   /*
    * TODO BACKEND:
@@ -190,12 +223,6 @@ function NuevaInscripcion() {
    *
    * Actualmente solamente se guarda en el estado local.
    */
-
-  const actualizarContacto = (campo: keyof ContactoEmergencia, valor: string) => {
-    setNuevoContacto((anterior) => ({ ...anterior, [campo]: valor }))
-    setErroresContacto((anteriores) => ({ ...anteriores, [campo]: '' }))
-  }
-
   const guardarNuevoContacto = () => {
     const validacion = validar(contactoEmergenciaSchema, nuevoContacto)
 
@@ -209,7 +236,6 @@ function NuevaInscripcion() {
     setMostrarModalContacto(false)
   }
 
-
   /* =====================================================
      VALIDACIÓN PASO 1
   ===================================================== */
@@ -220,11 +246,9 @@ function NuevaInscripcion() {
   })
 
   // Los errores se muestran recién después de intentar continuar
-  const errorPaso1 = (campo: string) =>
-    mostrarErrores ? validacionPaso1.errores[campo] : undefined
+  const errorPaso1 = (campo: string) => (mostrarErrores ? validacionPaso1.errores[campo] : undefined)
 
-  const errorContactoPaso1 =
-    errorPaso1('contactoEmergencia') ?? errorPaso1('contactoEmergencia.dni')
+  const errorContactoPaso1 = errorPaso1('contactoEmergencia') ?? errorPaso1('contactoEmergencia.dni')
 
   const continuarPaso1 = () => {
     if (!validacionPaso1.ok) {
@@ -239,56 +263,35 @@ function NuevaInscripcion() {
      DATOS DEL PASO 2
   ===================================================== */
 
-  const distanciaSeleccionadaData =
-    distanciasInscripcionMock.find(
-      (distancia) =>
-        distancia.id === distanciaSeleccionada
-    )
+  const distanciaSeleccionadaData = distanciasInscripcionMock.find(
+    (distancia) => distancia.id === distanciaSeleccionada,
+  )
 
-
-  const productoSeleccionado =
-    productosDinamicosMock[0]
-
-
-  const cantidad =
-    Number(cantidadProducto) || 1
-
-
-  const precioDistancia =
-    distanciaSeleccionadaData?.precio ?? 0
-
-
-  const precioProducto =
-    productoDinamico === 'si'
-      ? productoSeleccionado.precio * cantidad
-      : 0
-
-
-  const totalPagar =
-    precioDistancia + precioProducto
-
+  const productoSeleccionado = productosDinamicosMock[0]
+  const cantidad = Number(cantidadProducto) || 1
+  const precioDistancia = distanciaSeleccionadaData?.precio ?? 0
+  const precioProducto = productoDinamico === 'si' ? productoSeleccionado.precio * cantidad : 0
+  const totalPagar = precioDistancia + precioProducto
 
   const puedeContinuarPaso2 =
     distanciaSeleccionada !== '' &&
-    (
-      productoDinamico === 'no' ||
-      (
-        productoDinamico === 'si' &&
-        varianteProducto !== '' &&
-        cantidadProducto !== ''
-      )
-    )
+    (productoDinamico === 'no' || (varianteProducto !== '' && cantidadProducto !== ''))
 
+  const cambiarProductoDinamico = (valor: 'si' | 'no') => {
+    setProductoDinamico(valor)
+
+    if (valor === 'no') {
+      setVarianteProducto('')
+      setCantidadProducto('1')
+    }
+  }
 
   const continuarPaso2 = () => {
-    if (!puedeContinuarPaso2) {
-      return
-    }
+    if (!puedeContinuarPaso2) return
 
     setPaso(3)
     setInscripcionConfirmada(false)
   }
-
 
   /* =====================================================
      CONFIRMAR INSCRIPCIÓN
@@ -307,16 +310,13 @@ function NuevaInscripcion() {
    * contacto de emergencia y datos de inscripción,
    * y devolver la inscripción creada.
    */
-
   const confirmarInscripcion = () => {
     setInscripcionConfirmada(true)
   }
 
-
   const nuevaInscripcion = () => {
     window.location.reload()
   }
-
 
   /*
    * TODO BACKEND:
@@ -328,1335 +328,603 @@ function NuevaInscripcion() {
    *
    * Por ahora volvemos a la lista de inscripciones.
    */
-
   const verInscripcion = () => {
     navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
 
+  const hoyISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 
   return (
-    <main className="nueva-inscripcion">
-
-      {/* =========================
-          ENCABEZADO
-      ========================= */}
-
-      <div className="nueva-inscripcion__encabezado">
-
-        <Button
-          type="button"
-          onClick={volverAInscripciones}
-        >
-          <ArrowLeft size={15} />
-
-          <span>
-            Volver a inscripciones
-          </span>
-        </Button>
-
-        <h1>
-          Nueva inscripción
-        </h1>
-
-        <p>
-          Complete los datos para registrar una nueva inscripción.
-        </p>
-
-      </div>
-
-
-      {/* =========================
-          PASOS
-      ========================= */}
-
-      <div className="nueva-inscripcion__pasos">
-
-        <div
-          className={`nueva-inscripcion__paso ${
-            paso === 1 ? 'activo' : ''
-          } ${
-            paso > 1 ? 'completado' : ''
-          }`}
-        >
-
-          <span>
-            {paso > 1
-              ? <Check size={13} />
-              : '1'
-            }
-          </span>
-
-          <strong>
-            Datos del corredor
-          </strong>
-
-        </div>
-
-
-        <div className="nueva-inscripcion__separador" />
-
-
-        <div
-          className={`nueva-inscripcion__paso ${
-            paso === 2 ? 'activo' : ''
-          } ${
-            paso > 2 ? 'completado' : ''
-          }`}
-        >
-
-          <span>
-            {paso > 2
-              ? <Check size={13} />
-              : '2'
-            }
-          </span>
-
-          <strong>
-            Datos de inscripción
-          </strong>
-
-        </div>
-
-
-        <div className="nueva-inscripcion__separador" />
-
-
-        <div
-          className={`nueva-inscripcion__paso ${
-            paso === 3 ? 'activo' : ''
-          }`}
-        >
-
-          <span>
-            3
-          </span>
-
-          <strong>
-            Confirmación
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      {/* =========================
-          CONTENIDO
-      ========================= */}
-
-      <section className="nueva-inscripcion__contenido">
-
-
-        {/* =====================================================
-            PASO 1
-        ===================================================== */}
-
-        {paso === 1 && (
-          <>
-
-            <div className="nueva-inscripcion__titulo">
-
-              <h2>
-                Datos del corredor
-              </h2>
-
-              <p>
-                Ingrese los datos personales del corredor.
-              </p>
-
-            </div>
-
-
-            <div className="nueva-inscripcion__formulario">
-
-
-              {/* NOMBRE */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="nombre">
-                  Nombre <span>*</span>
-                </label>
-
-                <Form.Control
-                  id="nombre"
-                  type="text"
-                  value={datosCorredor.nombre}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'nombre',
-                      e.target.value
-                    )
-                  }
-                  placeholder="Ingrese el nombre"
-                  isInvalid={!!errorPaso1('corredor.nombre')}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errorPaso1('corredor.nombre')}
-                </Form.Control.Feedback>
-              </div>
-
-
-              {/* APELLIDO */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="apellido">
-                  Apellido <span>*</span>
-                </label>
-
-                <Form.Control
-                  id="apellido"
-                  type="text"
-                  value={datosCorredor.apellido}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'apellido',
-                      e.target.value
-                    )
-                  }
-                  placeholder="Ingrese el apellido"
-                  isInvalid={!!errorPaso1('corredor.apellido')}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errorPaso1('corredor.apellido')}
-                </Form.Control.Feedback>
-              </div>
-
-
-              {/* GENERO */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="genero">
-                  Género <span>*</span>
-                </label>
-
-                <Form.Select
-                  id="genero"
-                  value={datosCorredor.genero}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'genero',
-                      e.target.value
-                    )
-                  }
-                  isInvalid={!!errorPaso1('corredor.genero')}
-                >
-
-                  <option value="" disabled>
-                    Seleccione género
-                  </option>
-
-                  <option value="Femenino">
-                    Femenino
-                  </option>
-
-                  <option value="Masculino">
-                    Masculino
-                  </option>
-
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errorPaso1('corredor.genero')}
-                </Form.Control.Feedback>
-              </div>
-
-
-              {/* FECHA */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="fechaNacimiento">
-                  Fecha de nacimiento <span>*</span>
-                </label>
-
-                <Form.Control
-                  id="fechaNacimiento"
-                  type="date"
-                  value={datosCorredor.fechaNacimiento}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'fechaNacimiento',
-                      e.target.value
-                    )
-                  }
-                  isInvalid={!!errorPaso1('corredor.fechaNacimiento')}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errorPaso1('corredor.fechaNacimiento')}
-                </Form.Control.Feedback>
-              </div>
-
-
-              {/* DNI */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="dni">
-                  DNI <span>*</span>
-                </label>
-
-                <Form.Control
-                  id="dni"
-                  type="text"
-                  inputMode="numeric"
-                  value={datosCorredor.dni}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'dni',
-                      e.target.value
-                    )
-                  }
-                  placeholder="Ej. 12345678"
-                  isInvalid={!!errorPaso1('corredor.dni')}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errorPaso1('corredor.dni')}
-                </Form.Control.Feedback>
-              </div>
-
-
-              {/* TELEFONO */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="telefono">
-                  Número de teléfono <span>*</span>
-                </label>
-
-                <Form.Control
-                  id="telefono"
-                  type="text"
-                  inputMode="tel"
-                  value={datosCorredor.telefono}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'telefono',
-                      e.target.value
-                    )
-                  }
-                  placeholder="Ej. +54 9 11 1234-5678"
-                  isInvalid={!!errorPaso1('corredor.telefono')}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errorPaso1('corredor.telefono')}
-                </Form.Control.Feedback>
-              </div>
-
-
-              {/* DISCAPACIDAD */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label htmlFor="discapacidad">
-                  Discapacidad
-                </label>
-
-                <Form.Select
-                  id="discapacidad"
-                  value={datosCorredor.discapacidad}
-                  onChange={(e) =>
-                    actualizarDato(
-                      'discapacidad',
-                      e.target.value
-                    )
-                  }
-                >
-
-                  <option value="">
-                    Seleccione discapacidad
-                  </option>
-
-                  <option value="Ninguna">
-                    Ninguna
-                  </option>
-
-                  <option value="Visual">
-                    Visual
-                  </option>
-
-                  <option value="Silla de ruedas">
-                    Silla de ruedas
-                  </option>
-
-                  <option value="Otra">
-                    Otra
-                  </option>
-
-                </Form.Select>
-
-              </div>
-
-
-              {/* APTO MEDICO */}
-
-              <div className="nueva-inscripcion__campo">
-
-                <label>
-                  Apto médico
-                </label>
-
-                <label className="nueva-inscripcion__checkbox">
-
-                  <Form.Check
-                    type="checkbox"
-                    checked={datosCorredor.aptoMedico}
-                    onChange={(e) =>
-                      actualizarDato(
-                        'aptoMedico',
-                        e.currentTarget.checked
-                      )
-                    }
-                  />
-
-                  <span>
-                    Apto médico aprobado
-                  </span>
-
-                </label>
-
-                </div>
-                {datosCorredor.aptoMedico && (
-                <div className="nueva-inscripcion__campo">
-                  <label htmlFor="vencimientoAptoMedico">
-                    Fecha de vencimiento del apto médico
-                  </label>
-
-                  <Form.Control
-                    id="vencimientoAptoMedico"
-                    type="date"
-                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-                      .toISOString()
-                      .slice(0, 10)}
-                    value={datosCorredor.vencimientoAptoMedico}
-                    onChange={(e) =>
-                      actualizarDato('vencimientoAptoMedico', e.target.value)
-                    }
-                    isInvalid={!!errorPaso1('corredor.vencimientoAptoMedico')}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errorPaso1('corredor.vencimientoAptoMedico')}
-                  </Form.Control.Feedback>
-                </div>
-              )}
-
-            </div>
-
-
-            {/* CONTACTO DE EMERGENCIA */}
-
-            <div className="nueva-inscripcion__emergencia">
-
-              <div className="nueva-inscripcion__emergencia-titulo">
-
-                <h3>
-                  Contacto de emergencia <span>*</span>
-                </h3>
-
-                <p>
-                  Busque un contacto existente por DNI o cree uno nuevo.
-                </p>
-
-              </div>
-
-
-              <div className="nueva-inscripcion__emergencia-buscador">
-
-                <div className="nueva-inscripcion__buscador">
-
-                  <Search size={15} />
-
-                  <Form.Control
-                    type="text"
-                    inputMode="numeric"
-                    value={dniContacto}
-                    onChange={(e) =>
-                      setDniContacto(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Buscar por DNI"
-                  />
-
-                </div>
-
-
-                <Button
-                  type="button"
-                  onClick={buscarContactoEmergencia}
-                >
-                  <Search size={14} />
-                  Buscar
-                </Button>
-
-
-                <Button
-                  type="button"
-                  className="nueva-inscripcion__crear-contacto"
-                  onClick={abrirModalNuevoContacto}
-                >
-                  <UserRoundPlus size={14} />
-                  Nuevo contacto
-                </Button>
-
-              </div>
-
-
-              {contactoEmergencia && (
-
-                <div className="nueva-inscripcion__contacto-encontrado">
-
-                  <div className="nueva-inscripcion__contacto-principal">
-
-                    <span>
-                      Contacto seleccionado
-                    </span>
-
-                    <strong>
-                      {contactoEmergencia.nombre}{' '}
-                      {contactoEmergencia.apellido}
-                    </strong>
-
+    <Container as="main" className="tema-inscripcion py-4">
+      <Row className="justify-content-center">
+        <Col xs={12} xl={10}>
+          {/* ENCABEZADO */}
+          <header className="mb-4">
+            <Button
+              type="button"
+              variant="link"
+              className="d-inline-flex align-items-center gap-1 p-0 text-success text-decoration-none small"
+              onClick={volverAInscripciones}
+            >
+              <ArrowLeft size={15} aria-hidden="true" />
+              Volver a inscripciones
+            </Button>
+
+            <h1 className="h3 fw-bold mt-2 mb-1">Nueva inscripción</h1>
+            <p className="text-secondary small mb-0">Complete los datos para registrar una nueva inscripción.</p>
+          </header>
+
+          <Pasos actual={paso} />
+
+          <Card>
+            <Card.Body className="p-4">
+              {/* =====================================================
+                  PASO 1
+              ===================================================== */}
+              {paso === 1 && (
+                <>
+                  <div className="border-bottom pb-3 mb-4">
+                    <h2 className="h5 fw-bold mb-1">Datos del corredor</h2>
+                    <p className="text-secondary small mb-0">Ingrese los datos personales del corredor.</p>
                   </div>
 
+                  <Row className="g-3">
+                    <Col md={6}>
+                      <CampoTexto
+                        id="nombre"
+                        etiqueta="Nombre"
+                        obligatorio
+                        placeholder="Ingrese el nombre"
+                        valor={datosCorredor.nombre}
+                        onCambio={(valor) => actualizarDato('nombre', valor)}
+                        error={errorPaso1('corredor.nombre')}
+                      />
+                    </Col>
 
-                  <div className="nueva-inscripcion__contacto-dato">
+                    <Col md={6}>
+                      <CampoTexto
+                        id="apellido"
+                        etiqueta="Apellido"
+                        obligatorio
+                        placeholder="Ingrese el apellido"
+                        valor={datosCorredor.apellido}
+                        onCambio={(valor) => actualizarDato('apellido', valor)}
+                        error={errorPaso1('corredor.apellido')}
+                      />
+                    </Col>
 
-                    <span>
-                      DNI
-                    </span>
+                    <Col md={6}>
+                      <Form.Group controlId="genero">
+                        <Form.Label className="small fw-semibold">
+                          Género <span className="text-danger">*</span>
+                        </Form.Label>
 
-                    <strong>
-                      {contactoEmergencia.dni}
-                    </strong>
-
-                  </div>
-
-
-                  <div className="nueva-inscripcion__contacto-dato">
-
-                    <span>
-                      Teléfono
-                    </span>
-
-                    <strong>
-                      {contactoEmergencia.telefono}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              )}
-              {errorContactoPaso1 && (
-                <div className="text-danger small mt-2" role="alert">
-                  {errorContactoPaso1}
-                </div>
-              )}
-
-            </div>
-
-
-            <div className="nueva-inscripcion__acciones">
-
-              <Button
-                type="button"
-                onClick={continuarPaso1}
-              >
-                Continuar
-              </Button>
-
-            </div>
-
-          </>
-        )}
-
-
-        {/* =====================================================
-            PASO 2
-        ===================================================== */}
-
-        {paso === 2 && (
-          <>
-
-            <div className="nueva-inscripcion__titulo">
-
-              <h2>
-                Datos de la inscripción
-              </h2>
-
-              <p>
-                Complete los datos correspondientes a la carrera.
-              </p>
-
-            </div>
-
-
-            <div className="nueva-inscripcion__paso2-layout">
-
-
-              <div className="nueva-inscripcion__paso2-formulario">
-
-
-                {/* DISTANCIA */}
-
-                <div className="nueva-inscripcion__paso2-seccion">
-
-                  <label className="nueva-inscripcion__paso2-label">
-                    Distancia <span>*</span>
-                  </label>
-
-
-                  <div className="nueva-inscripcion__distancias">
-
-                    {distanciasInscripcionMock.map(
-                      (distancia) => (
-
-                        <Button
-                          key={distancia.id}
-                          type="button"
-                          className={`nueva-inscripcion__distancia ${
-                            distanciaSeleccionada === distancia.id
-                              ? 'seleccionada'
-                              : ''
-                          }`}
-                          onClick={() =>
-                            setDistanciaSeleccionada(
-                              distancia.id
-                            )
-                          }
+                        <Form.Select
+                          value={datosCorredor.genero}
+                          isInvalid={!!errorPaso1('corredor.genero')}
+                          onChange={(e) => actualizarDato('genero', e.target.value)}
                         >
+                          <option value="" disabled>Seleccione género</option>
+                          <option value="Femenino">Femenino</option>
+                          <option value="Masculino">Masculino</option>
+                        </Form.Select>
 
-                          <strong>
-                            {distancia.nombre}
-                          </strong>
+                        <Form.Control.Feedback type="invalid">
+                          {errorPaso1('corredor.genero')}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
 
-                          <span>
-                            {distancia.descripcion}
-                          </span>
+                    <Col md={6}>
+                      <CampoTexto
+                        id="fechaNacimiento"
+                        etiqueta="Fecha de nacimiento"
+                        obligatorio
+                        tipo="date"
+                        valor={datosCorredor.fechaNacimiento}
+                        onCambio={(valor) => actualizarDato('fechaNacimiento', valor)}
+                        error={errorPaso1('corredor.fechaNacimiento')}
+                      />
+                    </Col>
 
-                        </Button>
+                    <Col md={6}>
+                      <CampoTexto
+                        id="dni"
+                        etiqueta="DNI"
+                        obligatorio
+                        modo="numeric"
+                        placeholder="Ej. 12345678"
+                        valor={datosCorredor.dni}
+                        onCambio={(valor) => actualizarDato('dni', valor)}
+                        error={errorPaso1('corredor.dni')}
+                      />
+                    </Col>
 
-                      )
+                    <Col md={6}>
+                      <CampoTexto
+                        id="telefono"
+                        etiqueta="Número de teléfono"
+                        obligatorio
+                        modo="tel"
+                        placeholder="Ej. +54 9 11 1234-5678"
+                        valor={datosCorredor.telefono}
+                        onCambio={(valor) => actualizarDato('telefono', valor)}
+                        error={errorPaso1('corredor.telefono')}
+                      />
+                    </Col>
+
+                    <Col md={6}>
+                      <Form.Group controlId="discapacidad">
+                        <Form.Label className="small fw-semibold">Discapacidad</Form.Label>
+
+                        <Form.Select
+                          value={datosCorredor.discapacidad}
+                          onChange={(e) => actualizarDato('discapacidad', e.target.value)}
+                        >
+                          <option value="">Seleccione discapacidad</option>
+                          <option value="Ninguna">Ninguna</option>
+                          <option value="Visual">Visual</option>
+                          <option value="Silla de ruedas">Silla de ruedas</option>
+                          <option value="Otra">Otra</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={6}>
+                      <div className="small fw-semibold mb-2">Apto médico</div>
+
+                      <Form.Check
+                        type="checkbox"
+                        id="aptoMedico"
+                        label="Apto médico aprobado"
+                        checked={datosCorredor.aptoMedico}
+                        onChange={(e) => actualizarDato('aptoMedico', e.currentTarget.checked)}
+                      />
+                    </Col>
+
+                    {datosCorredor.aptoMedico && (
+                      <Col md={6}>
+                        <CampoTexto
+                          id="vencimientoAptoMedico"
+                          etiqueta="Fecha de vencimiento del apto médico"
+                          tipo="date"
+                          min={hoyISO}
+                          valor={datosCorredor.vencimientoAptoMedico}
+                          onCambio={(valor) => actualizarDato('vencimientoAptoMedico', valor)}
+                          error={errorPaso1('corredor.vencimientoAptoMedico')}
+                        />
+                      </Col>
+                    )}
+                  </Row>
+
+                  {/* CONTACTO DE EMERGENCIA */}
+                  <div className="border-top mt-4 pt-4">
+                    <h3 className="h6 fw-bold mb-1">
+                      Contacto de emergencia <span className="text-danger">*</span>
+                    </h3>
+                    <p className="text-secondary small">Busque un contacto existente por DNI o cree uno nuevo.</p>
+
+                    <InputGroup className="flex-wrap">
+                      <InputGroup.Text>
+                        <Search size={15} aria-hidden="true" />
+                      </InputGroup.Text>
+
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        value={dniContacto}
+                        placeholder="Buscar por DNI"
+                        aria-label="DNI del contacto de emergencia"
+                        onChange={(e) => setDniContacto(e.target.value)}
+                      />
+
+                      <Button
+                        type="button"
+                        variant="outline-secondary"
+                        className="d-inline-flex align-items-center gap-1"
+                        onClick={buscarContactoEmergencia}
+                      >
+                        <Search size={14} aria-hidden="true" />
+                        Buscar
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="success"
+                        className="d-inline-flex align-items-center gap-1"
+                        onClick={abrirModalNuevoContacto}
+                      >
+                        <UserRoundPlus size={14} aria-hidden="true" />
+                        Nuevo contacto
+                      </Button>
+                    </InputGroup>
+
+                    {contactoEmergencia && (
+                      <Card bg="success-subtle" className="border-success-subtle mt-3">
+                        <Card.Body className="py-2">
+                          <Row xs={1} sm={3} className="g-2">
+                            <Col>
+                              <DatoResumen etiqueta="Contacto seleccionado">
+                                {contactoEmergencia.nombre} {contactoEmergencia.apellido}
+                              </DatoResumen>
+                            </Col>
+                            <Col>
+                              <DatoResumen etiqueta="DNI">{contactoEmergencia.dni}</DatoResumen>
+                            </Col>
+                            <Col>
+                              <DatoResumen etiqueta="Teléfono">{contactoEmergencia.telefono}</DatoResumen>
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
                     )}
 
+                    {errorContactoPaso1 && (
+                      <div className="text-danger small mt-2" role="alert">
+                        {errorContactoPaso1}
+                      </div>
+                    )}
                   </div>
 
-                </div>
+                  <div className="d-flex justify-content-end gap-2 border-top mt-4 pt-3">
+                    <Button type="button" variant="success" onClick={continuarPaso1}>
+                      Continuar
+                    </Button>
+                  </div>
+                </>
+              )}
 
+              {/* =====================================================
+                  PASO 2
+              ===================================================== */}
+              {paso === 2 && (
+                <>
+                  <div className="border-bottom pb-3 mb-4">
+                    <h2 className="h5 fw-bold mb-1">Datos de la inscripción</h2>
+                    <p className="text-secondary small mb-0">Complete los datos correspondientes a la carrera.</p>
+                  </div>
 
-                {/* PRODUCTO DINÁMICO */}
+                  <Row className="g-4">
+                    <Col lg={8} className="order-2 order-lg-1">
+                      {/* DISTANCIA */}
+                      <div className="mb-4">
+                        <div className="small fw-semibold mb-2">
+                          Distancia <span className="text-danger">*</span>
+                        </div>
 
-                <div className="nueva-inscripcion__paso2-seccion">
+                        <Row xs={1} sm={3} className="g-2">
+                          {distanciasInscripcionMock.map((distancia) => (
+                            <Col key={distancia.id}>
+                              <Button
+                                type="button"
+                                variant={distanciaSeleccionada === distancia.id ? 'success' : 'outline-success'}
+                                className="w-100 py-3 d-flex flex-column align-items-center"
+                                onClick={() => setDistanciaSeleccionada(distancia.id)}
+                              >
+                                <span className="fs-4 fw-bold lh-1 mb-1">{distancia.nombre}</span>
+                                <small>{distancia.descripcion}</small>
+                              </Button>
+                            </Col>
+                          ))}
+                        </Row>
+                      </div>
 
-                  <label className="nueva-inscripcion__paso2-label">
-                    Producto dinámico
-                  </label>
+                      {/* PRODUCTO DINÁMICO */}
+                      <div className="mb-3">
+                        <div className="small fw-semibold mb-2">Producto dinámico</div>
 
+                        <ToggleButtonGroup
+                          type="radio"
+                          name="productoDinamico"
+                          value={productoDinamico}
+                          onChange={cambiarProductoDinamico}
+                          className="w-100"
+                        >
+                          <ToggleButton id="producto-si" value="si" variant="outline-success">
+                            Sí
+                          </ToggleButton>
+                          <ToggleButton id="producto-no" value="no" variant="outline-success">
+                            No
+                          </ToggleButton>
+                        </ToggleButtonGroup>
+                      </div>
 
-                  <div className="nueva-inscripcion__producto-opciones">
+                      {productoDinamico === 'si' && (
+                        <Row className="g-2">
+                          <Col sm={6}>
+                            <Form.Group controlId="varianteProducto">
+                              <Form.Label className="small fw-semibold">Variante del producto</Form.Label>
 
-                    <Button
-                      type="button"
-                      className={`nueva-inscripcion__producto-opcion ${
-                        productoDinamico === 'si'
-                          ? 'seleccionada'
-                          : ''
-                      }`}
-                      onClick={() =>
-                        setProductoDinamico('si')
-                      }
-                    >
+                              <Form.Select value={varianteProducto} onChange={(e) => setVarianteProducto(e.target.value)}>
+                                <option value="">Seleccione variante</option>
+                                {variantesProductoMock.map((variante) => (
+                                  <option key={variante} value={variante}>
+                                    {variante}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
 
-                      <span className="nueva-inscripcion__radio">
+                          <Col sm={6}>
+                            <Form.Group controlId="cantidadProducto">
+                              <Form.Label className="small fw-semibold">Cantidad</Form.Label>
 
-                        {productoDinamico === 'si' && (
-                          <span />
-                        )}
+                              <Form.Select value={cantidadProducto} onChange={(e) => setCantidadProducto(e.target.value)}>
+                                {cantidadesProductoMock.map((opcion) => (
+                                  <option key={opcion} value={opcion}>
+                                    {opcion}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                      )}
+                    </Col>
 
-                      </span>
+                    {/* RESUMEN */}
+                    <Col lg={4} className="order-1 order-lg-2">
+                      <Card>
+                        <Card.Header as="h3" className="h6 fw-bold mb-0">
+                          Resumen
+                        </Card.Header>
 
-                      Sí
+                        <ListGroup variant="flush">
+                          <ListGroup.Item>
+                            <DatoResumen etiqueta="Corredor">
+                              {datosCorredor.nombre} {datosCorredor.apellido}
+                            </DatoResumen>
+                            <small className="text-secondary">DNI: {datosCorredor.dni}</small>
+                          </ListGroup.Item>
 
+                          <ListGroup.Item>
+                            <DatoResumen etiqueta="Carrera">{carreraInscripcionMock.nombre}</DatoResumen>
+                            <small className="text-secondary">Edición {carreraInscripcionMock.edicion}</small>
+                          </ListGroup.Item>
+
+                          <ListGroup.Item>
+                            <DatoResumen etiqueta="Distancia">
+                              {distanciaSeleccionadaData ? distanciaSeleccionadaData.nombre : 'Sin seleccionar'}
+                            </DatoResumen>
+                          </ListGroup.Item>
+
+                          <ListGroup.Item>
+                            <DatoResumen etiqueta="Adicionales">
+                              {productoDinamico === 'si' ? `${cantidad} ${productoSeleccionado.nombre}` : 'Ninguno'}
+                            </DatoResumen>
+                          </ListGroup.Item>
+
+                          <ListGroup.Item>
+                            <div className="small text-uppercase text-secondary">Total a pagar</div>
+                            <strong className="fs-4 text-success">${totalPagar.toLocaleString('es-AR')}</strong>
+                          </ListGroup.Item>
+                        </ListGroup>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <div className="d-flex justify-content-end gap-2 border-top mt-4 pt-3">
+                    <Button type="button" variant="outline-secondary" onClick={() => setPaso(1)}>
+                      Volver
                     </Button>
 
-
-                    <Button
-                      type="button"
-                      className={`nueva-inscripcion__producto-opcion ${
-                        productoDinamico === 'no'
-                          ? 'seleccionada'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        setProductoDinamico('no')
-                        setVarianteProducto('')
-                        setCantidadProducto('1')
-                      }}
-                    >
-
-                      <span className="nueva-inscripcion__radio">
-
-                        {productoDinamico === 'no' && (
-                          <span />
-                        )}
-
-                      </span>
-
-                      No
-
+                    <Button type="button" variant="success" disabled={!puedeContinuarPaso2} onClick={continuarPaso2}>
+                      Continuar
                     </Button>
-
                   </div>
+                </>
+              )}
 
-                </div>
-
-
-                {/* VARIANTE Y CANTIDAD */}
-
-                {productoDinamico === 'si' && (
-
-                  <div className="nueva-inscripcion__producto-detalle">
-
-                    <div className="nueva-inscripcion__campo">
-
-                      <label htmlFor="varianteProducto">
-                        Variante del producto
-                      </label>
-
-                      <Form.Select
-                        id="varianteProducto"
-                        value={varianteProducto}
-                        onChange={(e) =>
-                          setVarianteProducto(
-                            e.target.value
-                          )
-                        }
-                      >
-
-                        <option value="">
-                          Seleccione variante
-                        </option>
-
-                        {variantesProductoMock.map(
-                          (variante) => (
-
-                            <option
-                              key={variante}
-                              value={variante}
-                            >
-                              {variante}
-                            </option>
-
-                          )
-                        )}
-
-                      </Form.Select>
-
-                    </div>
-
-
-                    <div className="nueva-inscripcion__campo">
-
-                      <label htmlFor="cantidadProducto">
-                        Cantidad
-                      </label>
-
-                      <Form.Select
-                        id="cantidadProducto"
-                        value={cantidadProducto}
-                        onChange={(e) =>
-                          setCantidadProducto(
-                            e.target.value
-                          )
-                        }
-                      >
-
-                        {cantidadesProductoMock.map(
-                          (cantidad) => (
-
-                            <option
-                              key={cantidad}
-                              value={cantidad}
-                            >
-                              {cantidad}
-                            </option>
-
-                          )
-                        )}
-
-                      </Form.Select>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-              {/* RESUMEN */}
-
-              <aside className="nueva-inscripcion__resumen">
-
-                <div className="nueva-inscripcion__resumen-titulo">
-
-                  <h3>
-                    Resumen
-                  </h3>
-
-                </div>
-
-
-                <div className="nueva-inscripcion__resumen-contenido">
-
-                  <div className="nueva-inscripcion__resumen-bloque">
-
-                    <span>
-                      Corredor
+              {/* =====================================================
+                  PASO 3 - CONFIRMACIÓN
+              ===================================================== */}
+              {paso === 3 && (
+                <>
+                  <div className="text-center mb-4">
+                    <span className="tema-inscripcion__ok d-inline-flex rounded-circle text-white p-2 mb-2">
+                      <Check size={22} aria-hidden="true" />
                     </span>
 
-                    <strong>
-                      {datosCorredor.nombre}{' '}
-                      {datosCorredor.apellido}
-                    </strong>
-
-                    <small>
-                      DNI: {datosCorredor.dni}
-                    </small>
-
+                    <h2 className="h4 fw-bold mb-1">Confirmar inscripción</h2>
+                    <p className="text-secondary small mb-0">Revisa los detalles antes de finalizar el registro.</p>
                   </div>
 
+                  <Row className="g-3 justify-content-center">
+                    {/* CORREDOR */}
+                    <Col md={6} lg={5}>
+                      <Card className="tema-inscripcion__borde-ok h-100 border-start border-success border-3">
+                        <Card.Header className="d-flex align-items-center gap-2 bg-transparent fw-bold">
+                          <UserRoundPlus size={16} className="text-success" aria-hidden="true" />
+                          Corredor
+                        </Card.Header>
 
-                  <div className="nueva-inscripcion__resumen-bloque">
+                        <Card.Body className="d-flex flex-column gap-3">
+                          <DatoResumen etiqueta="Nombre completo">
+                            {datosCorredor.nombre} {datosCorredor.apellido}
+                          </DatoResumen>
+                          <DatoResumen etiqueta="DNI">{datosCorredor.dni}</DatoResumen>
+                        </Card.Body>
+                      </Card>
+                    </Col>
 
-                    <span>
-                      Carrera
-                    </span>
+                    {/* CARRERA */}
+                    <Col md={6} lg={5}>
+                      <Card className="h-100 border-start border-success border-3">
+                        <Card.Header className="d-flex align-items-center gap-2 bg-transparent fw-bold">
+                          <Footprints size={16} className="text-success" aria-hidden="true" />
+                          Carrera
+                        </Card.Header>
 
-                    <strong>
-                      {carreraInscripcionMock.nombre}
-                    </strong>
+                        <Card.Body className="d-flex flex-column gap-3">
+                          <DatoResumen etiqueta="Evento">{carreraInscripcionMock.nombre}</DatoResumen>
 
-                    <small>
-                      Edición {carreraInscripcionMock.edicion}
-                    </small>
+                          <Row>
+                            <Col>
+                              <DatoResumen etiqueta="Distancia">{distanciaSeleccionadaData?.nombre}</DatoResumen>
+                            </Col>
+                            <Col>
+                              <DatoResumen etiqueta="Tipo">{distanciaSeleccionadaData?.descripcion}</DatoResumen>
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+                    </Col>
 
+                    {/* DETALLES DE PAGO */}
+                    <Col xs={12} lg={10}>
+                      <Card className="border-start border-secondary border-3">
+                        <Card.Header className="d-flex align-items-center gap-2 bg-transparent fw-bold">
+                          <CreditCard size={16} className="text-success" aria-hidden="true" />
+                          Detalles de pago
+                        </Card.Header>
+
+                        <Card.Body>
+                          <Row className="align-items-center g-3">
+                            <Col xs={6} md={4}>
+                              <div className="small text-uppercase text-secondary mb-1">Estado</div>
+                              <Badge pill bg="success-subtle" text="success-emphasis">
+                                ● Pagado
+                              </Badge>
+                            </Col>
+
+                            <Col xs={6} md={4}>
+                              <DatoResumen etiqueta="Método">Pago presencial</DatoResumen>
+                            </Col>
+
+                            <Col md={4} className="text-md-end">
+                              <div className="small text-uppercase text-secondary">Total a pagar</div>
+                              <strong className="fs-4 text-success">${totalPagar.toLocaleString('es-AR')}</strong>
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <div className="d-flex flex-wrap justify-content-center gap-2 mt-4">
+                    {!inscripcionConfirmada ? (
+                      <>
+                        <Button type="button" variant="outline-secondary" onClick={() => setPaso(2)}>
+                          Volver
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="success"
+                          className="d-inline-flex align-items-center gap-1"
+                          onClick={confirmarInscripcion}
+                        >
+                          <Check size={14} aria-hidden="true" />
+                          Confirmar inscripción
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline-secondary"
+                          className="d-inline-flex align-items-center gap-1"
+                          onClick={verInscripcion}
+                        >
+                          <Eye size={14} aria-hidden="true" />
+                          Ver inscripción
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="success"
+                          className="d-inline-flex align-items-center gap-1"
+                          onClick={nuevaInscripcion}
+                        >
+                          <Plus size={14} aria-hidden="true" />
+                          Nueva inscripción
+                        </Button>
+                      </>
+                    )}
                   </div>
-
-
-                  <div className="nueva-inscripcion__resumen-bloque">
-
-                    <span>
-                      Distancia
-                    </span>
-
-                    <strong>
-                      {distanciaSeleccionadaData
-                        ? distanciaSeleccionadaData.nombre
-                        : 'Sin seleccionar'}
-                    </strong>
-
-                  </div>
-
-
-                  <div className="nueva-inscripcion__resumen-bloque">
-
-                    <span>
-                      Adicionales
-                    </span>
-
-                    <strong>
-                      {productoDinamico === 'si'
-                        ? `${cantidad} ${productoSeleccionado.nombre}`
-                        : 'Ninguno'}
-                    </strong>
-
-                  </div>
-
-
-                  <div className="nueva-inscripcion__resumen-total">
-
-                    <span>
-                      Total a pagar
-                    </span>
-
-                    <strong>
-                      ${totalPagar.toLocaleString('es-AR')}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              </aside>
-
-            </div>
-
-
-            <div className="nueva-inscripcion__acciones">
-
-              <Button
-                type="button"
-                onClick={() => setPaso(1)}
-              >
-                Volver
-              </Button>
-
-              <Button
-                type="button"
-                onClick={continuarPaso2}
-                disabled={!puedeContinuarPaso2}
-              >
-                Continuar
-              </Button>
-
-            </div>
-
-          </>
-        )}
-
-
-        {/* =====================================================
-            PASO 3 - CONFIRMACIÓN
-        ===================================================== */}
-
-        {paso === 3 && (
-
-          <div className="nueva-inscripcion__confirmacion">
-
-            {/* =========================
-                ENCABEZADO CONFIRMACIÓN
-            ========================= */}
-
-            <div className="nueva-inscripcion__confirmacion-encabezado">
-
-              <div className="nueva-inscripcion__confirmacion-icono">
-
-                <Check size={22} />
-
-              </div>
-
-              <h2>
-                Confirmar inscripción
-              </h2>
-
-              <p>
-                Revisa los detalles antes de finalizar el registro.
-              </p>
-
-            </div>
-
-
-            {/* =========================
-                TARJETAS
-            ========================= */}
-
-            <div className="nueva-inscripcion__confirmacion-grid">
-
-
-              {/* CORREDOR */}
-
-              <div className="nueva-inscripcion__confirmacion-card">
-
-                <div className="nueva-inscripcion__confirmacion-card-header">
-
-                  <div className="nueva-inscripcion__confirmacion-card-icono">
-
-                    <UserRoundPlus size={14} />
-
-                  </div>
-
-                  <h3>
-                    Corredor
-                  </h3>
-
-                </div>
-
-
-                <div className="nueva-inscripcion__confirmacion-datos">
-
-                  <div>
-
-                    <span>
-                      Nombre completo
-                    </span>
-
-                    <strong>
-                      {datosCorredor.nombre}{' '}
-                      {datosCorredor.apellido}
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      DNI
-                    </span>
-
-                    <strong>
-                      {datosCorredor.dni}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              {/* CARRERA */}
-
-              <div className="nueva-inscripcion__confirmacion-card">
-
-                <div className="nueva-inscripcion__confirmacion-card-header">
-
-                  <div className="nueva-inscripcion__confirmacion-card-icono">
-
-                    <Footprints size={14} />
-
-                  </div>
-
-                  <h3>
-                    Carrera
-                  </h3>
-
-                </div>
-
-
-                <div className="nueva-inscripcion__confirmacion-datos">
-
-                  <div>
-
-                    <span>
-                      Evento
-                    </span>
-
-                    <strong>
-                      {carreraInscripcionMock.nombre}
-                    </strong>
-
-                  </div>
-
-
-                  <div className="nueva-inscripcion__confirmacion-datos-doble">
-
-                    <div>
-
-                      <span>
-                        Distancia
-                      </span>
-
-                      <strong>
-                        {distanciaSeleccionadaData?.nombre}
-                      </strong>
-
-                    </div>
-
-
-                    <div>
-
-                      <span>
-                        Tipo
-                      </span>
-
-                      <strong>
-                        {distanciaSeleccionadaData?.descripcion}
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              {/* DETALLES DE PAGO */}
-
-              <div className="nueva-inscripcion__confirmacion-card nueva-inscripcion__confirmacion-card--pago">
-
-                <div className="nueva-inscripcion__confirmacion-card-header">
-
-                  <div className="nueva-inscripcion__confirmacion-card-icono">
-
-                    <CreditCard size={14} />
-
-                  </div>
-
-                  <h3>
-                    Detalles de pago
-                  </h3>
-
-                </div>
-
-
-                <div className="nueva-inscripcion__confirmacion-pago">
-
-                  <div>
-
-                    <span>
-                      Estado
-                    </span>
-
-                    <strong className="nueva-inscripcion__estado-pagado">
-
-                      <span />
-
-                      Pagado
-
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      Método
-                    </span>
-
-                    <strong>
-                      Pago presencial
-                    </strong>
-
-                  </div>
-
-
-                  <div className="nueva-inscripcion__confirmacion-total">
-
-                    <span>
-                      Total a pagar
-                    </span>
-
-                    <strong>
-                      ${totalPagar.toLocaleString('es-AR')}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            {/* =========================
-                ACCIONES
-            ========================= */}
-
-            {!inscripcionConfirmada ? (
-
-              <div className="nueva-inscripcion__confirmacion-acciones">
-
-                <Button
-                  type="button"
-                  className="nueva-inscripcion__confirmacion-volver"
-                  onClick={() => setPaso(2)}
-                >
-                  Volver
-                </Button>
-
-
-                <Button
-                  type="button"
-                  className="nueva-inscripcion__confirmacion-confirmar"
-                  onClick={confirmarInscripcion}
-                >
-
-                  <Check size={14} />
-
-                  Confirmar inscripción
-
-                </Button>
-
-              </div>
-
-            ) : (
-
-              <div className="nueva-inscripcion__confirmacion-acciones">
-
-                <Button
-                  type="button"
-                  className="nueva-inscripcion__confirmacion-ver"
-                  onClick={verInscripcion}
-                >
-
-                  <Eye size={14} />
-
-                  Ver inscripción
-
-                </Button>
-
-
-                <Button
-                  type="button"
-                  className="nueva-inscripcion__confirmacion-nueva"
-                  onClick={nuevaInscripcion}
-                >
-
-                  <Plus size={14} />
-
-                  Nueva inscripción
-
-                </Button>
-
-              </div>
-
-            )}
-
-          </div>
-
-        )}
-
-      </section>
-
+                </>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       {/* =====================================================
           MODAL NUEVO CONTACTO
       ===================================================== */}
+      <Modal className="tema-inscripcion" show={mostrarModalContacto} onHide={() => setMostrarModalContacto(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title as="h2" className="h5 fw-bold">
+            Nuevo contacto de emergencia
+          </Modal.Title>
+        </Modal.Header>
 
-      {mostrarModalContacto && (
+        <Modal.Body>
+          <Row className="g-3">
+            <Col xs={6}>
+              <CampoTexto
+                id="contactoNombre"
+                etiqueta="Nombre"
+                obligatorio
+                placeholder="Ej. Juan"
+                valor={nuevoContacto.nombre}
+                onCambio={(valor) => actualizarContacto('nombre', valor)}
+                error={erroresContacto.nombre}
+              />
+            </Col>
 
-        <div
-          className="nueva-inscripcion__modal-overlay"
-          onClick={() =>
-            setMostrarModalContacto(false)
-          }
-        >
+            <Col xs={6}>
+              <CampoTexto
+                id="contactoApellido"
+                etiqueta="Apellido"
+                obligatorio
+                placeholder="Ej. Pérez"
+                valor={nuevoContacto.apellido}
+                onCambio={(valor) => actualizarContacto('apellido', valor)}
+                error={erroresContacto.apellido}
+              />
+            </Col>
 
-          <div
-            className="nueva-inscripcion__modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
+            <Col xs={6}>
+              <CampoTexto
+                id="contactoDni"
+                etiqueta="DNI"
+                obligatorio
+                modo="numeric"
+                placeholder="Ej. 12345678"
+                valor={nuevoContacto.dni}
+                onCambio={(valor) => actualizarContacto('dni', valor)}
+                error={erroresContacto.dni}
+              />
+            </Col>
 
-            <div className="nueva-inscripcion__modal-header">
+            <Col xs={6}>
+              <CampoTexto
+                id="contactoTelefono"
+                etiqueta="Número de teléfono"
+                obligatorio
+                modo="tel"
+                placeholder="Ej. +54 9 11 1234567"
+                valor={nuevoContacto.telefono}
+                onCambio={(valor) => actualizarContacto('telefono', valor)}
+                error={erroresContacto.telefono}
+              />
+            </Col>
+          </Row>
+        </Modal.Body>
 
-              <h2>
-                Nuevo contacto de emergencia
-              </h2>
+        <Modal.Footer>
+          <Button type="button" variant="outline-secondary" onClick={() => setMostrarModalContacto(false)}>
+            Cancelar
+          </Button>
 
-              <Button
-                type="button"
-                onClick={() =>
-                  setMostrarModalContacto(false)
-                }
-                aria-label="Cerrar"
-              >
-                <X size={15} />
-              </Button>
-
-            </div>
-
-
-            <div className="nueva-inscripcion__modal-formulario">
-              <div className="nueva-inscripcion__modal-campo">
-                <label htmlFor="contactoNombre">
-                  Nombre <span>*</span>
-                </label>
-                <Form.Control
-                  id="contactoNombre"
-                  type="text"
-                  value={nuevoContacto.nombre}
-                  onChange={(e) => actualizarContacto('nombre', e.target.value)}
-                  placeholder="Ej. Juan"
-                  isInvalid={!!erroresContacto.nombre}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {erroresContacto.nombre}
-                </Form.Control.Feedback>
-              </div>
-              <div className="nueva-inscripcion__modal-campo">
-                <label htmlFor="contactoApellido">
-                  Apellido <span>*</span>
-                </label>
-                <Form.Control
-                  id="contactoApellido"
-                  type="text"
-                  value={nuevoContacto.apellido}
-                  onChange={(e) => actualizarContacto('apellido', e.target.value)}
-                  placeholder="Ej. Pérez"
-                  isInvalid={!!erroresContacto.apellido}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {erroresContacto.apellido}
-                </Form.Control.Feedback>
-              </div>
-              <div className="nueva-inscripcion__modal-campo">
-                <label htmlFor="contactoDni">
-                  DNI <span>*</span>
-                </label>
-                <Form.Control
-                  id="contactoDni"
-                  type="text"
-                  inputMode="numeric"
-                  value={nuevoContacto.dni}
-                  onChange={(e) => actualizarContacto('dni', e.target.value)}
-                  placeholder="Ej. 12345678"
-                  isInvalid={!!erroresContacto.dni}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {erroresContacto.dni}
-                </Form.Control.Feedback>
-              </div>
-              <div className="nueva-inscripcion__modal-campo">
-                <label htmlFor="contactoTelefono">
-                  Número de teléfono <span>*</span>
-                </label>
-                <Form.Control
-                  id="contactoTelefono"
-                  type="text"
-                  inputMode="tel"
-                  value={nuevoContacto.telefono}
-                  onChange={(e) => actualizarContacto('telefono', e.target.value)}
-                  placeholder="Ej. +54 9 11 1234567"
-                  isInvalid={!!erroresContacto.telefono}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {erroresContacto.telefono}
-                </Form.Control.Feedback>
-              </div>
-            </div>
-
-
-            <div className="nueva-inscripcion__modal-acciones">
-
-              <Button
-                type="button"
-                className="nueva-inscripcion__modal-cancelar"
-                onClick={() =>
-                  setMostrarModalContacto(false)
-                }
-              >
-                Cancelar
-              </Button>
-
-
-              <Button
-                type="button"
-                className="nueva-inscripcion__modal-guardar"
-                onClick={guardarNuevoContacto}
-              >
-                Guardar
-              </Button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-    </main>
+          <Button type="button" variant="success" onClick={guardarNuevoContacto}>
+            Guardar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   )
 }
 
