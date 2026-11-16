@@ -3,17 +3,15 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { PackageCheck, Info, CircleCheck } from 'lucide-react'
 import { Alert, Container, Row, Col, Card, Form, Button, InputGroup, Spinner} from 'react-bootstrap'
-
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
-
 import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
 import { ApiError } from '../../services/apiService'
 import { buscarCorredorPorDni, registrarEntregaKit,} from '../../services/entregaKitService'
-
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import type { CorredorEntregaKitDTO } from '../../types/entregaKits'
-
 import { dorsalSchema } from '../../schemas/kitSchema'
-import { validar } from '../../utils/validar'
+import type { DorsalForm } from '../../schemas/kitSchema'
 
 function DetalleCorredor() {
   const { dni, nombreCarrera } = useParams<{
@@ -29,13 +27,23 @@ function DetalleCorredor() {
     ? '← Volver a inscripciones'
     : '← Volver al buscador'
   const { carreraSeleccionada } = useSeleccionarCarrera()
-
   const [corredor, setCorredor] = useState<CorredorEntregaKitDTO | null>(null)
-  const [dorsal, setDorsal] = useState('')
   const [cargando, setCargando] = useState(true)
   const [entregando, setEntregando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [entregaConfirmada, setEntregaConfirmada] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<DorsalForm>({
+    resolver: zodResolver(dorsalSchema),
+    mode: 'onChange',
+    defaultValues: { dorsal: '' },
+  })
+
+  const dorsalRegistro = register('dorsal')
 
   useEffect(() => {
     if (!dni || !carreraSeleccionada) return
@@ -84,14 +92,10 @@ function DetalleCorredor() {
       )
     }
 
-  const validacionDorsal = validar(dorsalSchema, { dorsal })
-
   const puedeEntregar =
-    Boolean(corredor?.habilitadoParaRetirarKit) &&
-    validacionDorsal.ok &&
-    !entregando
+    Boolean(corredor?.habilitadoParaRetirarKit) && isValid && !entregando
 
-  async function entregarKit() {
+  async function entregarKit(datos: DorsalForm) {
     if (!corredor || !puedeEntregar) return
 
     setEntregando(true)
@@ -100,7 +104,7 @@ function DetalleCorredor() {
     try {
       const entrega = await registrarEntregaKit(
         corredor.inscripcionId,
-        dorsal.trim()
+        datos.dorsal
       )
 
       setCorredor((actual) =>
@@ -222,7 +226,12 @@ function DetalleCorredor() {
               )}
             </Card.Header>
 
-            <Card.Body className="d-flex flex-column p-4">
+            <Card.Body
+              as="form"
+              onSubmit={handleSubmit(entregarKit)}
+              noValidate
+              className="d-flex flex-column p-4"
+            >
               <Card.Subtitle className="text-center text-secondary small fw-semibold mb-3">
                 DATOS DEL KIT ASIGNADO
               </Card.Subtitle>
@@ -251,21 +260,23 @@ function DetalleCorredor() {
                             type="text"
                             inputMode="numeric"
                             autoComplete="off"
-                            value={dorsal}
+                            {...dorsalRegistro}
                             onChange={(event) => {
-                              setDorsal(event.target.value.replace(/\D/g, ''))
+                              event.target.value = event.target.value.replace(/\D/g, '')
+                              void dorsalRegistro.onChange(event)
                               setEntregaConfirmada(false)
                             }}
                             placeholder="125"
-                            disabled={!corredor.habilitadoParaRetirarKit || entregando}
-                            isInvalid={dorsal !== '' && !validacionDorsal.ok}
+                            disabled={!corredor.habilitadoParaRetirarKit}
+                            readOnly={entregando}
+                            isInvalid={!!errors.dorsal}
                             aria-label="Número de dorsal a asignar"
                             className="fw-bold"
                           />
                         </InputGroup>
 
-                        {dorsal !== '' && !validacionDorsal.ok && (
-                          <div className="text-danger small mt-1">{validacionDorsal.errores.dorsal}</div>
+                        {errors.dorsal && (
+                          <div className="text-danger small mt-1">{errors.dorsal.message}</div>
                         )}
                       </div>
                     </Col>
@@ -306,12 +317,11 @@ function DetalleCorredor() {
 
               <div className="text-center mt-auto pt-4">
                 <Button
-                  type="button"
+                  type="submit"
                   variant="success"
                   size="lg"
                   className="d-inline-flex align-items-center gap-2 rounded-pill px-4"
                   disabled={!puedeEntregar}
-                  onClick={() => void entregarKit()}
                 >
                   <PackageCheck size={17} />
                   {entregando ? 'Registrando entrega...' : entregaConfirmada ? 'Kit entregado' : 'Entregar kit'}
