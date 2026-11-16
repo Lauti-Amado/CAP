@@ -1,17 +1,7 @@
 //frontend/src/pages/carreras/Carreras.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Alert,
-  Button,
-  ButtonGroup,
-  Card,
-  Col,
-  Container,
-  Form,
-  Row,
-  Spinner,
-} from 'react-bootstrap'
+import { Alert, Button, ButtonGroup, Card, Col, Container, Form, Pagination, Row, Spinner } from 'react-bootstrap'
 import CarreraCard from '../../components/carreras/CarreraCard'
 import { Tabla } from '../../components/tabla/Tabla'
 import { useCarrera } from '../../context/CarreraContext'
@@ -94,53 +84,15 @@ function Carreras() {
   }
 
   return (
-    <Container
-      fluid
-      as="main"
-      className="px-4 py-4"
-      style={{
-        minHeight: '100vh',
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* =========================
-          ENCABEZADO
-      ========================= */}
+    <Container fluid as="main" className="p-4">
       <header className="mb-4">
-        <h1
-          style={{
-            margin: 0,
-            fontSize: '30px',
-            fontWeight: 700,
-            color: '#172033',
-          }}
-        >
-          Listado de Carreras
-        </h1>
-        <p
-          className="mt-2 text-secondary"
-          style={{
-            margin: '10px 0 0',
-            color: '#6b7280',
-            fontSize: '14px',
-          }}
-        >
+        <h1 className="h2 fw-bold mb-0">Listado de Carreras</h1>
+        <p className="mt-2 mb-0 small text-secondary">
           Consulta las carreras disponibles y configura sus clasificaciones.
         </p>
       </header>
 
-      {/* =========================
-          FILTROS Y VISTAS
-      ========================= */}
-      <Card
-        as="section"
-        className="mb-4 border shadow-none"
-        style={{
-          borderColor: '#e5e7eb',
-          borderRadius: '10px',
-          backgroundColor: '#ffffff',
-        }}
-      >
+      <Card as="section" className="mb-4 shadow-sm">
         <Card.Body className="p-3">
           <Row className="g-3 align-items-center">
             <Col xs={12} md>
@@ -150,13 +102,6 @@ function Carreras() {
                 placeholder="Buscar carrera..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                style={{
-                  backgroundColor: '#F9F9FF',
-                  borderColor: '#d1d5db',
-                  borderRadius: '8px',
-                  fontSize:'0.9rem',
-                  padding: '9px 14px',
-                }}
               />
             </Col>
 
@@ -165,21 +110,10 @@ function Carreras() {
                 aria-label="Filtrar por año"
                 value={filtroAnio}
                 onChange={(e) => setFiltroAnio(e.target.value)}
-                style={{
-                  minWidth: '170px',
-                  backgroundColor: '#F9F9FF',
-                  borderColor: '#d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '0.9rem',
-                  padding: '9px 12px',
-                  cursor: 'pointer',
-                }}
               >
                 <option value="todos">Todos los años</option>
                 {aniosDisponibles.map((anio) => (
-                  <option key={anio} value={anio}>
-                    {anio}
-                  </option>
+                  <option key={anio} value={anio}>{anio}</option>
                 ))}
               </Form.Select>
             </Col>
@@ -189,76 +123,33 @@ function Carreras() {
                 aria-label="Filtrar por estado"
                 value={filtroEstado}
                 onChange={(e) => setFiltroEstado(e.target.value)}
-                style={{
-                  minWidth: '170px',
-                  backgroundColor: '#F9F9FF',
-                  borderColor: '#d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  padding: '9px 12px',
-                  cursor: 'pointer',
-                }}
               >
                 <option value="todos">Todos los estados</option>
                 {estadosDisponibles.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
-                  </option>
+                  <option key={estado} value={estado}>{estado}</option>
                 ))}
               </Form.Select>
             </Col>
 
             <Col xs={12} md="auto" className="d-flex justify-content-md-end">
-              <ButtonGroup
-                aria-label="Selector de vista"
-                style={{
-                  border: '1px solid #d1d5db',
-                  borderRadius: '7px',
-                  overflow: 'hidden',
-                }}
-              >
+              <ButtonGroup aria-label="Selector de vista">
                 <Button
                   type="button"
-                  variant="light"
-                  className="px-3"
-                  onClick={() => setVista('cards')}
+                  variant="outline-success"
+                  active={vista === 'cards'}
                   aria-label="Vista de tarjetas"
                   aria-pressed={vista === 'cards'}
-                  style={{
-                    backgroundColor: vista === 'cards' ? '#dcfce7' : '#ffffff',
-                    color: vista === 'cards' ? '#15803d' : '#4b5563',
-                    fontWeight: vista === 'cards' ? 700 : 400,
-                    border: 'none',
-                    borderRadius: 0,
-                    height: '38px',
-                    width: '42px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                  onClick={() => setVista('cards')}
                 >
                   ▦
                 </Button>
                 <Button
                   type="button"
-                  variant="light"
-                  className="px-3"
-                  onClick={() => setVista('tabla')}
+                  variant="outline-success"
+                  active={vista === 'tabla'}
                   aria-label="Vista de tabla"
                   aria-pressed={vista === 'tabla'}
-                  style={{
-                    backgroundColor: vista === 'tabla' ? '#dcfce7' : '#ffffff',
-                    color: vista === 'tabla' ? '#15803d' : '#4b5563',
-                    fontWeight: vista === 'tabla' ? 700 : 400,
-                    border: 'none',
-                    borderLeft: '1px solid #d1d5db',
-                    borderRadius: 0,
-                    height: '38px',
-                    width: '42px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                  onClick={() => setVista('tabla')}
                 >
                   ▤
                 </Button>
@@ -303,85 +194,27 @@ function Carreras() {
                   ))}
                 </Row>
 
-                <div
-                  className="d-flex justify-content-center align-items-center gap-2 mt-4 pb-2"
-                >
-                  <Button
-                    type="button"
-                    variant="outline-secondary"
+                <Pagination className="justify-content-center mt-4 mb-0">
+                  <Pagination.Prev
                     disabled={paginaActual === 1}
-                    onClick={() => setPaginaActual((pagina) => pagina - 1)}
                     aria-label="Página anterior"
-                    style={{
-                      width: '34px',
-                      height: '34px',
-                      padding: 0,
-                      borderRadius: '50%',
-                      borderColor: '#d5ddd7',
-                      color: '#374151',
-                      backgroundColor: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '15px',
-                    }}
-                  >
-                    ‹
-                  </Button>
-
-                  {Array.from({ length: totalPaginas }, (_, index) => {
-                    const pagina = index + 1
-                    const activa = paginaActual === pagina
-
-                    return (
-                      <Button
-                        key={pagina}
-                        type="button"
-                        onClick={() => setPaginaActual(pagina)}
-                        aria-current={activa ? 'page' : undefined}
-                        style={{
-                          width: '34px',
-                          height: '34px',
-                          padding: 0,
-                          borderRadius: '50%',
-                          border: activa ? '1px solid #087f3d' : '1px solid #d5ddd7',
-                          backgroundColor: activa ? '#087f3d' : '#ffffff',
-                          color: activa ? '#ffffff' : '#374151',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '13px',
-                          fontWeight: activa ? 700 : 400,
-                        }}
-                      >
-                        {pagina}
-                      </Button>
-                    )
-                  })}
-
-                  <Button
-                    type="button"
-                    variant="outline-secondary"
+                    onClick={() => setPaginaActual((pagina) => pagina - 1)}
+                  />
+                  {Array.from({ length: totalPaginas }, (_, index) => (
+                    <Pagination.Item
+                      key={index + 1}
+                      active={paginaActual === index + 1}
+                      onClick={() => setPaginaActual(index + 1)}
+                    >
+                      {index + 1}
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Next
                     disabled={paginaActual === totalPaginas}
-                    onClick={() => setPaginaActual((pagina) => pagina + 1)}
                     aria-label="Página siguiente"
-                    style={{
-                      width: '34px',
-                      height: '34px',
-                      padding: 0,
-                      borderRadius: '50%',
-                      borderColor: '#d5ddd7',
-                      color: '#374151',
-                      backgroundColor: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '15px',
-                    }}
-                  >
-                    ›
-                  </Button>
-                </div>
+                    onClick={() => setPaginaActual((pagina) => pagina + 1)}
+                  />
+                </Pagination>
               </>
             )}
 
