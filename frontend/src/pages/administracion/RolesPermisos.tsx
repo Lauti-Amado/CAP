@@ -8,6 +8,8 @@ import { ApiError } from '../../services/apiService'
 import { actualizarRolesUsuario, obtenerUsuario } from '../../services/usuarioGestionService'
 import { useAuth } from '../../context/AuthContext'
 import { opcionesRol } from './opcionesRol'
+import { rolesUsuarioSchema } from '../../schemas/rolSchema'
+import { validar } from '../../utils/validar'
 
 function RolesPermisos() {
   const { id } = useParams<{ id: string }>()
@@ -84,6 +86,8 @@ function RolesPermisos() {
     rolesSeleccionados.length !== usuario.roles.length ||
     rolesSeleccionados.some((rol) => !usuario.roles.includes(rol))
 
+  const validacionRoles = validar(rolesUsuarioSchema, { roles: rolesSeleccionados })
+
   // marca o desmarca un rol (un usuario puede tener varios)
   const alternarRol = (rol: RolUsuario) => {
     if (rolProtegido(rol)) return
@@ -93,10 +97,12 @@ function RolesPermisos() {
   }
 
   const guardarCambios = async () => {
+    if (!validacionRoles.ok) return
+
     setGuardando(true)
     setError(null)
     try {
-      await actualizarRolesUsuario(usuario.id, rolesSeleccionados)
+      await actualizarRolesUsuario(usuario.id, validacionRoles.datos.roles)
       volverAAdministracion()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudieron guardar los cambios')
@@ -188,6 +194,12 @@ function RolesPermisos() {
                 </ListGroup>
               </div>
 
+              {!validacionRoles.ok && (
+                <div className="text-danger small mb-3" role="alert">
+                  {validacionRoles.errores['roles']}
+                </div>
+              )}
+
               {esPropio && (
                 <p className="text-secondary small">
                   Estás editando tu propio usuario: no podés quitarte el rol de Administrador.
@@ -203,7 +215,7 @@ function RolesPermisos() {
                 <button
                   type="button"
                   className="btn btn-sm btn-success"
-                  disabled={rolesSeleccionados.length === 0 || !huboCambios || guardando}
+                  disabled={!validacionRoles.ok || !huboCambios || guardando}
                   onClick={guardarCambios}
                 >
                   {guardando ? 'Guardando...' : 'Guardar cambios'}
