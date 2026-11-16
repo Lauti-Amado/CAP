@@ -115,7 +115,21 @@ model ClaveRespaldo {
 
     fechaHoraCreacion DateTime @default(now())
 
+    usos              UsoClaveRespaldo[]
+
     @@index([usuarioId, estado])
+}
+
+//Un registro por cada vez que se usó una clave: sin conexión dos equipos pueden aceptar la misma, y al sincronizar quedan los dos usos
+model UsoClaveRespaldo {
+    id            String @id @default(uuid())
+
+    claveId       String
+    clave         ClaveRespaldo @relation(fields: [claveId], references: [id], onDelete: Cascade)
+
+    fechaHoraUso  DateTime @default(now())
+
+    @@index([claveId])
 }
 
 

@@ -1,12 +1,16 @@
 //backend/src/services/claveRespaldo.service.ts
 import { prisma } from "../config/prisma";
-import type { ClaveRespaldo, Prisma } from "../generated/prisma/client";
+import type { Prisma } from "../generated/prisma/client";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import type { ClaveRespaldoDTO, CuentaClavesDTO } from "../dtos/claveRespaldo.dto";
 import { cifrarClave, descifrarClave, generarClave, hashearClave } from "../utils/claveRespaldo.util";
+import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 
 const CLAVES_POR_CUENTA = 8;
 const DIAS_HISTORIAL = 7;
+
+const incluirUsos = { _count: { select: { usos: true } } } satisfies Prisma.ClaveRespaldoInclude;
+type ClaveConUsos = Prisma.ClaveRespaldoGetPayload<{ include: typeof incluirUsos }>;
 
 //Cuentas que pueden usar claves: clasificadores activos que no son administradores
 //(los administradores ingresan siempre con su contraseña)
@@ -18,12 +22,22 @@ const cuentaElegible = {
     },
 } satisfies Prisma.UsuarioWhereInput;
 
-function toDto(c: ClaveRespaldo): ClaveRespaldoDTO {
+//Si no se puede descifrar (por ejemplo, la generó otro sistema con otro secreto) se informa como null
+function leerClave(valor: string): string | null {
+    try {
+        return descifrarClave(valor);
+    } catch {
+        return null;
+    }
+}
+
+function toDto(c: ClaveConUsos): ClaveRespaldoDTO {
     return {
         id: c.id,
-        clave: descifrarClave(c.claveCifrada),
+        clave: leerClave(c.claveCifrada),
         estado: c.estado,
         fechaHoraUso: c.fechaHoraUso,
+        usos: c._count.usos,
     };
 }
 
@@ -53,7 +67,6 @@ export async function listarPorCuenta(usuarioId: string): Promise<ClaveRespaldoD
     if (existe === 0) throw new ErrorNoEncontrado("Usuario no encontrado.");
 
     const desde = new Date(Date.now() - DIAS_HISTORIAL * 24 * 60 * 60 * 1000);
-
     const claves = await prisma.claveRespaldo.findMany({
         where: {
             usuarioId,
@@ -62,19 +75,22 @@ export async function listarPorCuenta(usuarioId: string): Promise<ClaveRespaldoD
                 { estado: "Utilizada", fechaHoraUso: { gte: desde } },
             ],
         },
+        include: incluirUsos,
         orderBy: [{ fechaHoraCreacion: "asc" }, { id: "asc" }],
     });
 
     return claves.map(toDto);
 }
 
-async function crearClaves(usuarioId: string, cantidad: number): Promise<void> {
-    for (let i = 0; i < cantidad; i++) {
-        const clave = generarClave();
-        await prisma.claveRespaldo.create({
-            data: { usuarioId, claveCifrada: cifrarClave(clave), claveHash: hashearClave(clave) },
-        });
-    }
+function nuevaClave(usuarioId: string) {
+    const clave = generarClave();
+    return { usuarioId, claveCifrada: cifrarClave(clave), claveHash: hashearClave(clave) };
+}
+
+async function crearClaves(usuarioId: string, cantidad: number): Promise<void> {   // MODIFICADO
+    await prisma.claveRespaldo.createMany({
+        data: Array.from({ length: cantidad }, () => nuevaClave(usuarioId)),
+    });
 }
 
 //Si una cuenta tiene menos claves disponibles que `minimo`, repone hasta CLAVES_POR_CUENTA.
@@ -112,9 +128,34 @@ export async function consumir(clave: string, usuarioId: string): Promise<boolea
     if (elegible === 0) return false;
 
     //El where con estado evita que dos pedidos simultáneos usen la misma clave
-    const { count } = await prisma.claveRespaldo.updateMany({
-        where: { id: registro.id, estado: "Disponible" },
-        data: { estado: "Utilizada", fechaHoraUso: new Date() },
+    return prisma.$transaction(async (tx) => {
+        const { count } = await tx.claveRespaldo.updateMany({
+            where: { id: registro.id, estado: "Disponible" },
+            data: { estado: "Utilizada", fechaHoraUso: new Date() },
+        });
+        if (count !== 1) return false;
+
+        await tx.usoClaveRespaldo.create({ data: { claveId: registro.id } });   // NUEVO
+        return true;
     });
-    return count === 1;
+}
+
+//Anula las claves disponibles de una cuenta (por ejemplo, si se perdieron) y genera un juego nuevo
+export async function reemplazar(usuarioId: string): Promise<ClaveRespaldoDTO[]> {
+    const elegible = await prisma.usuario.count({ where: { id: usuarioId, ...cuentaElegible } });
+    if (elegible === 0) {
+        throw new ErrorReglaDeNegocio("La cuenta no puede usar claves de respaldo: debe ser un clasificador activo.");
+    }
+
+    await prisma.$transaction(async (tx) => {
+        await tx.claveRespaldo.updateMany({
+            where: { usuarioId, estado: "Disponible" },
+            data: { estado: "Invalidada" },
+        });
+        await tx.claveRespaldo.createMany({
+            data: Array.from({ length: CLAVES_POR_CUENTA }, () => nuevaClave(usuarioId)),
+        });
+    });
+
+    return listarPorCuenta(usuarioId);
 }
