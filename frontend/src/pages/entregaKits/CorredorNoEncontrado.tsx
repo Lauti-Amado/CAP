@@ -1,7 +1,6 @@
 //frontend/src/pages/entregaKits/CorredorNoEncontrado.tsx
 import { Modal, Button } from 'react-bootstrap'
 import { AlertTriangle } from 'lucide-react'
-import './CorredorNoEncontrado.css'
 
 type CorredorNoEncontradoProps = {
   dni: string
@@ -16,56 +15,44 @@ function CorredorNoEncontrado({
 }: CorredorNoEncontradoProps) {
   return (
     <Modal
-      show={true}
+      show
       onHide={onVolver}
       centered
+      size="sm"
       backdrop="static"
       keyboard={false}
-      dialogClassName="corredor-no-encontrado__dialog"
-      contentClassName="corredor-no-encontrado"
       aria-labelledby="corredor-no-encontrado-titulo"
     >
-      <Modal.Body>
-        <div className="corredor-no-encontrado__icono">
+      <Modal.Body className="text-center p-4">
+        <span className="d-inline-flex rounded-circle bg-danger-subtle text-danger p-3 mb-3">
           <AlertTriangle size={28} />
-        </div>
+        </span>
 
-        <h1 id="corredor-no-encontrado-titulo">
+        <h1 id="corredor-no-encontrado-titulo" className="h5 fw-bold">
           Corredor no encontrado
         </h1>
 
-        <p>
-          No se encontró ningún corredor inscripto con el DNI{' '}
-          <strong>{dni}</strong>. Verifique el número ingresado o
-          proceda a realizar una nueva inscripción.
+        <p className="small text-secondary">
+          No se encontró ningún corredor inscripto con el DNI <strong className="text-body">{dni}</strong>.
+          Verifique el número ingresado o proceda a realizar una nueva inscripción.
         </p>
 
-        <div className="corredor-no-encontrado__datos">
-          <div>
-            <span>DNI ingresado:</span>
+        <div className="bg-body-tertiary rounded p-3 mb-3 small d-flex flex-column gap-2 text-start">
+          <div className="d-flex justify-content-between">
+            <span className="text-secondary">DNI ingresado:</span>
             <strong>{dni}</strong>
           </div>
-
-          <div>
-            <span>Estado:</span>
-            <strong>No inscripto</strong>
+          <div className="d-flex justify-content-between">
+            <span className="text-secondary">Estado:</span>
+            <strong className="text-danger">No inscripto</strong>
           </div>
         </div>
 
-        <div className="corredor-no-encontrado__acciones">
-          <Button
-            type="button"
-            variant="success"
-            onClick={onInscribir}
-          >
+        <div className="d-grid gap-2">
+          <Button type="button" variant="success" onClick={onInscribir}>
             Inscribir corredor
           </Button>
-
-          <Button
-            type="button"
-            variant="outline-secondary"
-            onClick={onVolver}
-          >
+          <Button type="button" variant="outline-secondary" onClick={onVolver}>
             Ingresar otro DNI
           </Button>
         </div>

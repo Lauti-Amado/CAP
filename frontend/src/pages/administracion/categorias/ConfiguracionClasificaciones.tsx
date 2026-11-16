@@ -2,27 +2,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Container,
-  Modal,
-  Row,
-  Spinner
-} from 'react-bootstrap';
-
+import { Alert, Button, Card, Col, Container, Modal, Row, Spinner} from 'react-bootstrap';
 import { ApiError } from '../../../services/apiService';
-import {
-  eliminarCategoria,
-  listarCategorias
-} from '../../../services/categoriaService';
-
+import { eliminarCategoria, listarCategorias} from '../../../services/categoriaService';
 import type { CategoriaDTO } from '../../../types/categoria';
-
-import '../Administracion.css';
 
 const esCategoriaProtegida = (nombre: string) =>
   ['Edad CAP', 'Discapacidades', 'Sexo'].some(
