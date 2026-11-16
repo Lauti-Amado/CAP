@@ -6,7 +6,6 @@ import { Alert, Button, Card, Col, Container, Form, Row, Spinner} from 'react-bo
 import { ApiError } from '../../../services/apiService';
 import { actualizarCategoria, crearCategoria, obtenerCategoria} from '../../../services/categoriaService';
 import type { CriterioCategoria, DatosCategoria} from '../../../types/categoria';
-import '../Administracion.css';
 import { categoriaSchema } from '../../../schemas/categoriaSchema';
 import { validar } from '../../../utils/validar';
 

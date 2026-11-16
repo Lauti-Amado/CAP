@@ -1,13 +1,13 @@
 //frontend/src/pages/administracion/RolesPermisos.tsx
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Badge, ListGroup } from 'react-bootstrap'
 import { Check } from 'lucide-react'
 import type { RolUsuario, UsuarioAdministracion } from '../../types/administracion'
 import { ApiError } from '../../services/apiService'
 import { actualizarRolesUsuario, obtenerUsuario } from '../../services/usuarioGestionService'
 import { useAuth } from '../../context/AuthContext'
 import { opcionesRol } from './opcionesRol'
-import './Administracion.css'
 
 function RolesPermisos() {
   const { id } = useParams<{ id: string }>()
@@ -116,12 +116,21 @@ function RolesPermisos() {
           <section className="card h-100">
             <div className="card-body">
               <div className="d-flex align-items-center gap-3 pb-3 mb-3 border-bottom">
-                <span className="admin-avatar">{iniciales}</span>
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success fw-bold"
+                  style={{ width: 44, height: 44 }}
+                >
+                  {iniciales}
+                </span>
                 <div>
                   <div className="fw-bold">{usuario.nombre}</div>
-                  <span className={`admin-pill ${usuario.estado === 'Activo' ? 'admin-badge--activo' : 'admin-badge--inactivo'}`}>
+                  <Badge
+                    pill
+                    bg={usuario.estado === 'Activo' ? 'success-subtle' : 'secondary-subtle'}
+                    text={usuario.estado === 'Activo' ? 'success-emphasis' : 'secondary-emphasis'}
+                  >
                     {usuario.estado}
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
@@ -145,33 +154,38 @@ function RolesPermisos() {
                 Seleccione los roles que definirán los permisos y accesos del usuario en la plataforma.
               </p>
 
-              <div className="d-grid gap-2 pb-3 mb-3 border-bottom" role="group" aria-label="Roles">
-                {opcionesRol.map(({ rol, descripcion }) => {
-                  const seleccionado = rolesSeleccionados.includes(rol)
-                  const bloqueado = rolProtegido(rol)
-                  return (
-                    <button
-                      type="button"
-                      key={rol}
-                      role="checkbox"
-                      aria-checked={seleccionado}
-                      disabled={bloqueado}
-                      title={bloqueado ? 'No podés quitarte tu propio rol de Administrador' : undefined}
-                      className={`admin-rol d-flex justify-content-between align-items-center${seleccionado ? ' admin-rol--seleccionado' : ''}`}
-                      onClick={() => alternarRol(rol)}
-                    >
-                      <span>
-                        <span className="admin-rol__titulo d-block fw-bold small">{rol}</span>
-                        <span className="d-block text-secondary small">{descripcion}</span>
-                      </span>
-                      {seleccionado && (
-                        <span className="admin-rol__check">
-                          <Check size={12} aria-hidden="true" />
+              <div className="pb-3 mb-3 border-bottom">
+                <ListGroup role="group" aria-label="Roles">
+                  {opcionesRol.map(({ rol, descripcion }) => {
+                    const seleccionado = rolesSeleccionados.includes(rol)
+                    const bloqueado = rolProtegido(rol)
+                    return (
+                      <ListGroup.Item
+                        key={rol}
+                        as="button"
+                        type="button"
+                        action
+                        role="checkbox"
+                        aria-checked={seleccionado}
+                        disabled={bloqueado}
+                        variant={seleccionado ? 'success' : undefined}
+                        title={bloqueado ? 'No podés quitarte tu propio rol de Administrador' : undefined}
+                        className="d-flex justify-content-between align-items-center"
+                        onClick={() => alternarRol(rol)}
+                      >
+                        <span>
+                          <span className="d-block fw-bold small">{rol}</span>
+                          <span className="d-block text-secondary small">{descripcion}</span>
                         </span>
-                      )}
-                    </button>
-                  )
-                })}
+                        {seleccionado && (
+                          <Badge pill bg="success">
+                            <Check size={12} aria-hidden="true" />
+                          </Badge>
+                        )}
+                      </ListGroup.Item>
+                    )
+                  })}
+                </ListGroup>
               </div>
 
               {esPropio && (
@@ -188,7 +202,7 @@ function RolesPermisos() {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-sm admin-btn-primary"
+                  className="btn btn-sm btn-success"
                   disabled={rolesSeleccionados.length === 0 || !huboCambios || guardando}
                   onClick={guardarCambios}
                 >
