@@ -12,3 +12,5 @@ export const dorsalSchema = z.object({
     .regex(/^\d{1,5}$/, 'El dorsal debe ser un número de hasta 5 dígitos')
     .refine((valor) => Number(valor) > 0, 'El dorsal debe ser mayor a cero'),
 })
+
+export type DorsalForm = z.infer<typeof dorsalSchema>
