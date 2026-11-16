@@ -1,4 +1,4 @@
-
+//frontend/src/pages/administracion/categorias/ConfiguracionClasificaciones.tsx
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Plus, Trash2 } from 'lucide-react';

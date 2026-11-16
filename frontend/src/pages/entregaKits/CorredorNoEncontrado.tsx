@@ -1,4 +1,4 @@
-
+//frontend/src/pages/entregaKits/CorredorNoEncontrado.tsx
 import { Modal, Button } from 'react-bootstrap'
 import { AlertTriangle } from 'lucide-react'
 import './CorredorNoEncontrado.css'

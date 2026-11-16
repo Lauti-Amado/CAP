@@ -7,7 +7,7 @@ import './Certificates.css'
 import ConfirmacionModal from '../../components/modales/ConfirmacionModal'
 import { ApiError } from '../../services/apiService'
 import { activarPlantilla, actualizarPlantilla, crearPlantilla, eliminarPlantilla, listarPlantillas,} from '../../services/plantillasCertificadoService'
-import { plantillaCertificadoSchema } from '../../schemas/plantillacertificadoSchema'
+import { plantillaCertificadoSchema } from '../../schemas/plantillaCertificadoSchema'
 import { validar } from '../../utils/validar'
 
 const textoError = (error: unknown, defecto: string) =>
