@@ -1,72 +1,120 @@
 //backend/src/services/claveRespaldo.service.ts
 import { prisma } from "../config/prisma";
-import type { ClaveRespaldo } from "../generated/prisma/client";
-import type { ClaveRespaldoDTO } from "../dtos/claveRespaldo.dto";
+import type { ClaveRespaldo, Prisma } from "../generated/prisma/client";
+import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
+import type { ClaveRespaldoDTO, CuentaClavesDTO } from "../dtos/claveRespaldo.dto";
 import { cifrarClave, descifrarClave, generarClave, hashearClave } from "../utils/claveRespaldo.util";
 
-const CANTIDAD_CLAVES = 8;
+const CLAVES_POR_CUENTA = 8;
+const DIAS_HISTORIAL = 7;
+
+//Cuentas que pueden usar claves: clasificadores activos que no son administradores
+//(los administradores ingresan siempre con su contraseña)
+const cuentaElegible = {
+    estado: "Activo",
+    roles: {
+        some: { rolAdministrativo: { rol: "Clasificador" } },
+        none: { rolAdministrativo: { rol: "Administrador" } },
+    },
+} satisfies Prisma.UsuarioWhereInput;
 
 function toDto(c: ClaveRespaldo): ClaveRespaldoDTO {
     return {
         id: c.id,
-        numero: c.numero,
         clave: descifrarClave(c.claveCifrada),
         estado: c.estado,
         fechaHoraUso: c.fechaHoraUso,
     };
 }
 
-//Devuelve el lote vigente (el último generado)
-export async function listar(): Promise<ClaveRespaldoDTO[]> {
-    const { _max } = await prisma.claveRespaldo.aggregate({ _max: { lote: true } });
-    if (_max.lote === null) return [];
+//Las cuentas con la cantidad de claves disponibles de cada una
+export async function listarCuentas(): Promise<CuentaClavesDTO[]> {
+    const usuarios = await prisma.usuario.findMany({
+        where: cuentaElegible,
+        include: {
+            persona: true,
+            _count: { select: { clavesRespaldo: { where: { estado: "Disponible" } } } },
+        },
+        orderBy: [{ persona: { apellido: "asc" } }, { persona: { nombre: "asc" } }],
+    });
+
+    return usuarios.map((u) => ({
+        id: u.id,
+        nombre: `${u.persona.nombre} ${u.persona.apellido}`,
+        dni: u.persona.dni,
+        correo: u.email,
+        disponibles: u._count.clavesRespaldo,
+    }));
+}
+
+//Las disponibles de una cuenta y las que usó en la última semana
+export async function listarPorCuenta(usuarioId: string): Promise<ClaveRespaldoDTO[]> {
+    const existe = await prisma.usuario.count({ where: { id: usuarioId } });
+    if (existe === 0) throw new ErrorNoEncontrado("Usuario no encontrado.");
+
+    const desde = new Date(Date.now() - DIAS_HISTORIAL * 24 * 60 * 60 * 1000);
 
     const claves = await prisma.claveRespaldo.findMany({
-        where: { lote: _max.lote },
-        orderBy: { numero: "asc" },
+        where: {
+            usuarioId,
+            OR: [
+                { estado: "Disponible" },
+                { estado: "Utilizada", fechaHoraUso: { gte: desde } },
+            ],
+        },
+        orderBy: [{ fechaHoraCreacion: "asc" }, { id: "asc" }],
     });
+
     return claves.map(toDto);
 }
 
-//Invalida las claves disponibles y crea un lote nuevo
-export async function generar(usuarioId: string): Promise<ClaveRespaldoDTO[]> {
-    await prisma.$transaction(async (tx) => {
-        const { _max } = await tx.claveRespaldo.aggregate({ _max: { lote: true } });
-        const lote = (_max.lote ?? 0) + 1;
-
-        await tx.claveRespaldo.updateMany({
-            where: { estado: "Disponible" },
-            data: { estado: "Invalidada" },
+async function crearClaves(usuarioId: string, cantidad: number): Promise<void> {
+    for (let i = 0; i < cantidad; i++) {
+        const clave = generarClave();
+        await prisma.claveRespaldo.create({
+            data: { usuarioId, claveCifrada: cifrarClave(clave), claveHash: hashearClave(clave) },
         });
-
-        for (let numero = 1; numero <= CANTIDAD_CLAVES; numero++) {
-            const clave = generarClave();
-            await tx.claveRespaldo.create({
-                data: {
-                    lote,
-                    numero,
-                    claveCifrada: cifrarClave(clave),
-                    claveHash: hashearClave(clave),
-                    creadaPorId: usuarioId,
-                },
-            });
-        }
-    });
-
-    return listar();
+    }
 }
 
-//Consume la clave de forma atómica. Devuelve false si no existe o ya no está disponible
+//Si una cuenta tiene menos claves disponibles que `minimo`, repone hasta CLAVES_POR_CUENTA.
+//No anula las existentes. Devuelve cuántas creó.
+export async function garantizarClaves(minimo: number): Promise<number> {
+    const cuentas = await prisma.usuario.findMany({
+        where: cuentaElegible,
+        select: {
+            id: true,
+            _count: { select: { clavesRespaldo: { where: { estado: "Disponible" } } } },
+        },
+    });
+
+    let creadas = 0;
+    for (const cuenta of cuentas) {
+        const disponibles = cuenta._count.clavesRespaldo;
+        if (disponibles >= minimo) continue;
+
+        const faltantes = CLAVES_POR_CUENTA - disponibles;
+        await crearClaves(cuenta.id, faltantes);
+        creadas += faltantes;
+    }
+    return creadas;
+}
+
+//Consume la clave de forma atómica. Devuelve false si no existe, ya no está disponible,
+//pertenece a otra cuenta o la cuenta no puede usar claves
 export async function consumir(clave: string, usuarioId: string): Promise<boolean> {
     const registro = await prisma.claveRespaldo.findUnique({
         where: { claveHash: hashearClave(clave) },
     });
-    if (!registro || registro.estado !== "Disponible") return false;
+    if (!registro || registro.estado !== "Disponible" || registro.usuarioId !== usuarioId) return false;
+
+    const elegible = await prisma.usuario.count({ where: { id: usuarioId, ...cuentaElegible } });
+    if (elegible === 0) return false;
 
     //El where con estado evita que dos pedidos simultáneos usen la misma clave
     const { count } = await prisma.claveRespaldo.updateMany({
         where: { id: registro.id, estado: "Disponible" },
-        data: { estado: "Utilizada", usadaPorId: usuarioId, fechaHoraUso: new Date() },
+        data: { estado: "Utilizada", fechaHoraUso: new Date() },
     });
     return count === 1;
 }

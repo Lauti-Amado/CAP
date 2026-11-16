@@ -76,8 +76,7 @@ model Usuario {
 
     compras Compra[]
 
-    clavesCreadas ClaveRespaldo[] @relation("ClaveCreadaPor")
-    clavesUsadas  ClaveRespaldo[] @relation("ClaveUsadaPor")
+    clavesRespaldo ClaveRespaldo[]
 
     fechaHoraCreacion     DateTime @default(now())
     fechaHoraModificacion DateTime @updatedAt
@@ -106,22 +105,17 @@ model UsuarioRol { //Se crea una tabla explícita para no hacer conflicto con Po
 model ClaveRespaldo {
     id                String @id @default(uuid())
 
-    lote              Int     //Cada "Generar nuevas claves" crea un lote nuevo
-    numero            Int     //Posición dentro del lote (1 a 8)
     claveCifrada      String  //AES-256-GCM: el administrador puede volver a verla
     claveHash         String @unique //HMAC-SHA256: para validar sin descifrar
     estado            EstadoClaveRespaldo @default(Disponible)
-
-    creadaPorId       String
-    creadaPor         Usuario @relation("ClaveCreadaPor", fields: [creadaPorId], references: [id])
-
-    usadaPorId        String?
-    usadaPor          Usuario? @relation("ClaveUsadaPor", fields: [usadaPorId], references: [id])
     fechaHoraUso      DateTime?
+
+    usuarioId         String //Dueño de la clave: solo sirve para ingresar a esa cuenta
+    usuario           Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
     fechaHoraCreacion DateTime @default(now())
 
-    @@unique([lote, numero])
+    @@index([usuarioId, estado])
 }
 
 
