@@ -21,8 +21,9 @@
 
 | Método | Ruta | Propósito |
 |---|---|---|
-| `GET` | `/api/claves-respaldo` | Consultar el lote vigente de claves |
-| `POST` | `/api/claves-respaldo` | Anular las claves disponibles y generar un lote nuevo de 8 |
+| `GET` | `/api/claves-respaldo/cuentas` | Listar las cuentas de clasificadores con la cantidad de claves disponibles de cada una |
+| `GET` | `/api/claves-respaldo?usuarioId={id}` | Consultar las claves de respaldo de una cuenta |
+| `PUT` | `/api/claves-respaldo?usuarioId={id}` | Anular las claves disponibles de una cuenta y generar un juego nuevo de 8 |
 
 #### Carreras
 | Método | Ruta | Propósito |

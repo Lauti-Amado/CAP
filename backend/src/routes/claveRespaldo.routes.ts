@@ -7,10 +7,13 @@ const router = Router();
 
 router.use(authenticate, authorize("Administrador"));
 
-//Ver el lote vigente
-router.get("/", claveController.listar);
+//Cuentas de clasificadores con su cantidad de claves disponibles
+router.get("/cuentas", claveController.listarCuentas);
 
-//Invalidar el lote actual y generar uno nuevo
-router.post("/", claveController.generar);
+//Claves de una cuenta (?usuarioId=...)
+router.get("/", claveController.listarPorCuenta);
+
+//Anular las claves disponibles de una cuenta y generar un juego nuevo
+router.put("/", claveController.reemplazar);
 
 export default router;
