@@ -1,8 +1,8 @@
 //frontend/src/pages/clasificacion/modales/NoLargoCorredorModal.tsx
 import { UserMinus } from 'lucide-react'
 import ConfirmacionModal from '../../../components/modales/ConfirmacionModal'
+import { Badge, ListGroup } from 'react-bootstrap'
 import type { ResumenCorredor } from '../../../types/clasificacion'
-import './ModalesClasificacion.css'
 
 type NoLargoCorredorModalProps = {
   corredores: ResumenCorredor[]
@@ -29,21 +29,26 @@ function NoLargoCorredorModal({ corredores, onConfirmar, onCancelar }: NoLargoCo
       onConfirmar={onConfirmar}
       onCancelar={onCancelar}
     >
-      <section className="modal-resumen">
-        <h3 className="modal-resumen__titulo">
+      <section className="bg-body-tertiary border rounded p-3">
+        <h3 className="h6 fw-bold text-success mb-3">
           {unico ? 'Resumen del Corredor' : 'Corredores seleccionados'}
         </h3>
-        <ul className="modal-lista">
-          {corredores.map((corredor) => (
-            <li key={corredor.id} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-              <span>
-                <strong>{corredor.dorsal}</strong> {corredor.nombre}
-                <span className="d-block text-secondary small">DNI {corredor.dni} · {corredor.categoria}</span>
-              </span>
-              <span className="modal-pill modal-pill--gris">No largó</span>
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
+          <ListGroup variant="flush">
+            {corredores.map((corredor) => (
+              <ListGroup.Item
+                key={corredor.id}
+                className="d-flex justify-content-between align-items-center bg-transparent px-0"
+              >
+                <span>
+                  <strong>{corredor.dorsal}</strong> {corredor.nombre}
+                  <span className="d-block text-secondary small">DNI {corredor.dni} · {corredor.categoria}</span>
+                </span>
+                <Badge pill bg="secondary-subtle" text="secondary-emphasis">No largó</Badge>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        </div>
       </section>
     </ConfirmacionModal>
   )

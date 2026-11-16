@@ -1,8 +1,8 @@
 //frontend/src/pages/clasificacion/modales/DescalificarCorredorModal.tsx
 import { ArrowRight, UserX } from 'lucide-react'
 import ConfirmacionModal from '../../../components/modales/ConfirmacionModal'
+import { Badge, ListGroup } from 'react-bootstrap'
 import type { EstadoClasificacion, ResumenCorredor } from '../../../types/clasificacion'
-import './ModalesClasificacion.css'
 
 type DescalificarCorredorModalProps = {
   corredores: ResumenCorredor[]
@@ -10,11 +10,16 @@ type DescalificarCorredorModalProps = {
   onCancelar: () => void
 }
 
-const clasePill: Record<EstadoClasificacion, string> = {
-  Oficial: 'modal-pill--verde',
-  'En revisión': 'modal-pill--ambar',
-  Descalificado: 'modal-pill--rojo',
-  'No largó': 'modal-pill--gris',
+const colorEstado: Record<EstadoClasificacion, string> = {
+  Oficial: 'success',
+  'En revisión': 'warning',
+  Descalificado: 'danger',
+  'No largó': 'secondary',
+}
+
+function PillEstado({ estado }: { estado: EstadoClasificacion }) {
+  const color = colorEstado[estado]
+  return <Badge pill bg={`${color}-subtle`} text={`${color}-emphasis`}>{estado}</Badge>
 }
 
 function DescalificarCorredorModal({ corredores, onConfirmar, onCancelar }: DescalificarCorredorModalProps) {
@@ -41,55 +46,58 @@ function DescalificarCorredorModal({ corredores, onConfirmar, onCancelar }: Desc
       onCancelar={onCancelar}
     >
       {unico && (
-        <section className="modal-resumen">
-          <h3 className="modal-resumen__titulo">Resumen del Corredor</h3>
+        <section className="bg-body-tertiary border rounded p-3">
+          <h3 className="h6 fw-bold text-success mb-3">Resumen del Corredor</h3>
 
           <div className="row g-2">
             <div className="col-6">
-              <div className="modal-resumen__etiqueta">Dorsal</div>
-              <div className="modal-resumen__valor">{unico.dorsal}</div>
+              <div className="small text-secondary">Dorsal</div>
+              <div className="fw-bold">{unico.dorsal}</div>
             </div>
             <div className="col-6">
-              <div className="modal-resumen__etiqueta">Corredor</div>
-              <div className="modal-resumen__valor">{unico.nombre}</div>
+              <div className="small text-secondary">Corredor</div>
+              <div className="fw-bold">{unico.nombre}</div>
             </div>
             <div className="col-6">
-              <div className="modal-resumen__etiqueta">DNI</div>
-              <div className="modal-resumen__valor">{unico.dni}</div>
+              <div className="small text-secondary">DNI</div>
+              <div className="fw-bold">{unico.dni}</div>
             </div>
             <div className="col-6">
-              <div className="modal-resumen__etiqueta">Categoría</div>
-              <div className="modal-resumen__valor">{unico.categoria}</div>
+              <div className="small text-secondary">Categoría</div>
+              <div className="fw-bold">{unico.categoria}</div>
             </div>
           </div>
 
           <div className="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
             <div>
-              <div className="modal-resumen__etiqueta">Estado actual</div>
-              <span className={`modal-pill ${clasePill[unico.estado]}`}>{unico.estado}</span>
+              <div className="small text-secondary">Estado actual</div>
+              <PillEstado estado={unico.estado} />
             </div>
             <ArrowRight size={14} className="text-secondary" aria-hidden="true" />
             <div className="text-end">
-              <div className="modal-resumen__etiqueta">Estado posterior</div>
-              <span className={`modal-pill ${clasePill.Descalificado}`}>Descalificado</span>
+              <div className="small text-secondary">Estado posterior</div>
+              <PillEstado estado="Descalificado" />
             </div>
           </div>
         </section>
       )}
 
       {cantidad > 1 && (
-        <section className="modal-resumen">
-          <h3 className="modal-resumen__titulo">Corredores seleccionados</h3>
-          <ul className="modal-lista">
-            {corredores.map((corredor) => (
-              <li key={corredor.id} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span>
-                  <strong>{corredor.dorsal}</strong> {corredor.nombre}
-                </span>
-                <span className={`modal-pill ${clasePill[corredor.estado]}`}>{corredor.estado}</span>
-              </li>
-            ))}
-          </ul>
+        <section className="bg-body-tertiary border rounded p-3">
+          <h3 className="h6 fw-bold text-success mb-3">Corredores seleccionados</h3>
+          <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
+            <ListGroup variant="flush">
+              {corredores.map((corredor) => (
+                <ListGroup.Item
+                  key={corredor.id}
+                  className="d-flex justify-content-between align-items-center bg-transparent px-0"
+                >
+                  <span><strong>{corredor.dorsal}</strong> {corredor.nombre}</span>
+                  <PillEstado estado={corredor.estado} />
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </div>
         </section>
       )}
     </ConfirmacionModal>
