@@ -1,14 +1,9 @@
 //frontend/src/pages/login/login.tsx
-import './Login.css';
-
-import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
 import { ArrowRight, Mail, Eye, EyeOff, Lock } from 'lucide-react';
-
 import { useAuth } from '../../context/AuthContext';
-
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../schemas/usuarioSchema';
@@ -50,106 +45,94 @@ export default function Login() {
     const ToggleIcon = showPassword ? Eye : EyeOff;
 
     return (
-        <Container fluid className="login-wrapper">
-            <Card className="login-card">
-                <Card.Body>
-                    {/* LOGO */}
-                    <div className="logo-container">
-                        <img
-                            src="/images/logo-cap.png"
-                            alt="Logo CAP Gestión"
-                            className="logo-image"
-                        />
-                    </div>
-
-                    {/* TITULO */}
-                    <div className="header-text">
-                        <h1>CAP Gestión</h1>
-                        <h2>Sistema de administración de carreras</h2>
-                    </div>
-
-                    {/* FORMULARIO (noValidate: los mensajes los da zod, no el navegador) */}
-                    <Form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="login-form"
-                        noValidate
-                    >
-                        {/* Input Correo */}
-                        <Form.Group className="form-field" controlId="loginEmail">
-                            <Form.Label>Correo electrónico</Form.Label>
-                            <div className="input-wrapper">
-                                <Mail className="input-icon left-icon" />
-                                <Form.Control
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    isInvalid={!!errors.email}
-                                    {...register('email')}
+        <Container className="min-vh-100 d-flex align-items-center justify-content-center py-4">
+            <Row className="w-100 justify-content-center">
+                <Col xs={12} sm={9} md={7} lg={5} xl={4}>
+                    <Card className="shadow border-0 overflow-hidden">
+                        <Card.Header className="bg-success p-1 border-0" />
+                        <Card.Body className="p-4">
+                            <div className="text-center mb-3">
+                                <img
+                                    src="/images/logo-cap.png"
+                                    alt="Logo CAP Gestión"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-circle bg-light object-fit-contain"
                                 />
                             </div>
-                            {errors.email && (
-                                <Form.Control.Feedback type="invalid" className="field-error">
-                                    {errors.email.message}
-                                </Form.Control.Feedback>
-                            )}
-                        </Form.Group>
 
-                        {/* Input Contraseña */}
-                        <Form.Group className="form-field" controlId="loginPassword">
-                            {/* Acceso de contingencia con clave de respaldo */}
-                            <div className="label-row">
-                                <Form.Label>Contraseña</Form.Label>
-                                <Link to="/contingencia" className="forgot-link">
-                                    Acceso de contingencia
-                                </Link>
+                            <div className="text-center mb-4">
+                                <h1 className="h2 fw-bold mb-1">CAP Gestión</h1>
+                                <p className="text-secondary mb-0">Sistema de administración de carreras</p>
                             </div>
 
-                            <div className="input-wrapper">
-                                <Lock className="input-icon left-icon" />
-                                <Form.Control
-                                    type={showPassword ? 'text' : 'password'}
-                                    placeholder="••••••••"
-                                    isInvalid={!!errors.password}
-                                    {...register('password')}
-                                />
-                                <button
-                                    type="button"
-                                    className="toggle-password"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    aria-label={
-                                        showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
-                                    }
+                            <Form onSubmit={handleSubmit(onSubmit)} noValidate>
+                                <Form.Group className="mb-3" controlId="loginEmail">
+                                    <Form.Label className="small fw-semibold">Correo electrónico</Form.Label>
+                                    <InputGroup hasValidation>
+                                        <InputGroup.Text><Mail size={18} aria-hidden="true" /></InputGroup.Text>
+                                        <Form.Control
+                                            type="email"
+                                            placeholder="tu@email.com"
+                                            isInvalid={!!errors.email}
+                                            {...register('email')}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.email?.message}
+                                        </Form.Control.Feedback>
+                                    </InputGroup>
+                                </Form.Group>
+
+                                <Form.Group className="mb-3" controlId="loginPassword">
+                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                        <Form.Label className="small fw-semibold mb-0">Contraseña</Form.Label>
+                                        <Link to="/contingencia" className="small text-success text-decoration-none">
+                                            Acceso de contingencia
+                                        </Link>
+                                    </div>
+                                    <InputGroup hasValidation>
+                                        <InputGroup.Text><Lock size={18} aria-hidden="true" /></InputGroup.Text>
+                                        <Form.Control
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="••••••••"
+                                            isInvalid={!!errors.password}
+                                            {...register('password')}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline-secondary"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                        >
+                                            <ToggleIcon size={18} aria-hidden="true" />
+                                        </Button>
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.password?.message}
+                                        </Form.Control.Feedback>
+                                    </InputGroup>
+                                </Form.Group>
+
+                                {errorApi && (
+                                    <Alert variant="danger" className="py-2 text-center">
+                                        {errorApi}
+                                    </Alert>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    variant="success"
+                                    size="lg"
+                                    className="w-100 d-flex justify-content-center align-items-center gap-2 mt-2"
+                                    disabled={isSubmitting}
                                 >
-                                    <ToggleIcon className="input-icon right-icon" />
-                                </button>
-                            </div>
-                            {errors.password && (
-                                <Form.Control.Feedback type="invalid" className="field-error">
-                                    {errors.password.message}
-                                </Form.Control.Feedback>
-                            )}
-                        </Form.Group>
-
-                        {/* Error devuelto por la API */}
-                        {errorApi && (
-                            <Alert variant="danger" className="login-alert">
-                                {errorApi}
-                            </Alert>
-                        )}
-
-                        {/* Botón de Submit */}
-                        <Button
-                            type="submit"
-                            className="submit-button"
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Ingresando...' : 'Iniciar sesión'}
-                            <ArrowRight />
-                        </Button>
-                    </Form>
-
-                    <hr className="divider" />
-                </Card.Body>
-            </Card>
+                                    {isSubmitting ? 'Ingresando...' : 'Iniciar sesión'}
+                                    <ArrowRight size={18} aria-hidden="true" />
+                                </Button>
+                            </Form>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
         </Container>
     );
 };
