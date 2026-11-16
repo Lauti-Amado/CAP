@@ -10,7 +10,10 @@ router.use(authenticate, authorize("Administrador"));
 //Cuentas de clasificadores con su cantidad de claves disponibles
 router.get("/cuentas", claveController.listarCuentas);
 
-//Claves de una cuenta (?usuarioId=...). Las genera el sistema automáticamente
+//Claves de una cuenta (?usuarioId=...)
 router.get("/", claveController.listarPorCuenta);
+
+//Anular las claves disponibles de una cuenta y generar un juego nuevo
+router.put("/", claveController.reemplazar);
 
 export default router;

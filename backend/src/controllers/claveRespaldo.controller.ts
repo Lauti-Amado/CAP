@@ -11,3 +11,8 @@ export async function listarPorCuenta(req: Request, res: Response) {
     const { usuarioId } = clavesCuentaQuerySchema.parse(req.query);
     return res.json(await claveService.listarPorCuenta(usuarioId));
 }
+
+export async function reemplazar(req: Request, res: Response) {
+    const { usuarioId } = clavesCuentaQuerySchema.parse(req.query);
+    return res.json(await claveService.reemplazar(usuarioId));
+}
