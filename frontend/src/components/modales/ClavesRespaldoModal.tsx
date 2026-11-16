@@ -1,8 +1,8 @@
 //frontend/src/components/modales/ClavesRespaldoModal.tsx
 import { useEffect, useRef, useState } from 'react'
 import { Alert, Badge, Button, Col, Dropdown, Form, InputGroup, Modal, Row, Spinner } from 'react-bootstrap'
-import { Check, Copy, Info, KeyRound, Search } from 'lucide-react'
-import { listarClavesDeCuenta, listarCuentasConClaves } from '../../services/claveRespaldoService'
+import { Check, Copy, Info, KeyRound, RefreshCw, Search } from 'lucide-react'
+import { listarClavesDeCuenta, listarCuentasConClaves, reemplazarClavesDeCuenta } from '../../services/claveRespaldoService'
 import type { ClaveRespaldo, CuentaClaves, EstadoClaveRespaldo } from '../../types/claveRespaldo'
 
 type Props = {
@@ -32,6 +32,9 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [copiada, setCopiada] = useState<string | null>(null)
   const campoBusqueda = useRef<HTMLInputElement>(null)
+
+  const [confirmando, setConfirmando] = useState(false)
+  const [reemplazando, setReemplazando] = useState(false)
 
   const cuentaId = seleccionada?.id
 
@@ -80,15 +83,34 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
     setSeleccionada(cuenta)
     setClaves([])
     setBusqueda('')
+    setConfirmando(false)
   }
 
   const copiar = async (clave: ClaveRespaldo) => {
+    if (!clave.clave) return
     try {
       await navigator.clipboard.writeText(clave.clave)
       setCopiada(clave.id)
       setTimeout(() => setCopiada(null), 1500)
     } catch {
       setError('No se pudo copiar la clave. Copiala manualmente.')
+    }
+  }
+
+  const reemplazar = async () => {
+    if (!cuentaId) return
+    setReemplazando(true)
+    setError(null)
+    try {
+      const nuevas = await reemplazarClavesDeCuenta(cuentaId)
+      const cantidad = nuevas.filter((c) => c.estado === 'Disponible').length
+      setClaves(nuevas)
+      setCuentas((actuales) => actuales.map((c) => (c.id === cuentaId ? { ...c, disponibles: cantidad } : c)))
+      setConfirmando(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudieron reemplazar las claves')
+    } finally {
+      setReemplazando(false)
     }
   }
 
@@ -186,9 +208,36 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
           <div className="text-center py-5"><Spinner animation="border" /></div>
         ) : (
           <>
-            <div className="bg-primary-subtle rounded p-3 mb-3 fw-semibold">
-              {disponibles} de {claves.length} claves disponibles
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 bg-primary-subtle rounded p-3 mb-3">
+              <span className="fw-semibold">{disponibles} de {claves.length} claves disponibles</span>
+              <Button
+                variant="outline-danger"
+                size="sm"
+                className="d-inline-flex align-items-center gap-2"
+                disabled={reemplazando}
+                onClick={() => setConfirmando(true)}
+              >
+                <RefreshCw size={14} aria-hidden="true" />
+                Reemplazar claves
+              </Button>
             </div>
+
+            {confirmando && (
+              <Alert variant="warning" className="mb-3">
+                <p className="mb-2">
+                  ¿Anular las {disponibles} claves disponibles de <strong>{seleccionada.nombre}</strong> y
+                  generar 8 nuevas? Las anteriores dejarán de funcionar.
+                </p>
+                <div className="d-flex gap-2">
+                  <Button size="sm" variant="secondary" disabled={reemplazando} onClick={() => setConfirmando(false)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" variant="danger" disabled={reemplazando} onClick={reemplazar}>
+                    {reemplazando ? 'Reemplazando...' : 'Reemplazar claves'}
+                  </Button>
+                </div>
+              </Alert>
+            )}
 
             {claves.length === 0 ? (
               <p className="text-center text-secondary py-3 mb-0">
@@ -208,18 +257,21 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
                         <Badge bg="primary-subtle" text="primary-emphasis">
                           {String(indice + 1).padStart(2, '0')}
                         </Badge>
-                        <span
-                          className={`font-monospace fs-5 fw-bold flex-grow-1 ${
-                            usada ? 'text-decoration-line-through text-body-tertiary' : ''
-                          }`}
-                        >
-                          {c.clave}
-                        </span>
-                        <Badge
-                          pill
-                          bg={usada ? 'secondary-subtle' : 'success-subtle'}
-                          text={usada ? 'secondary-emphasis' : 'success-emphasis'}
-                        >
+                        {c.clave ? (
+                          <span
+                            className={`font-monospace fs-5 fw-bold flex-grow-1 ${
+                              usada ? 'text-decoration-line-through text-body-tertiary' : ''
+                            }`}
+                          >
+                            {c.clave}
+                          </span>
+                        ) : (
+                          <span className="text-danger fst-italic flex-grow-1">No se pudo leer</span>
+                        )}
+                        {c.usos > 1 && (
+                          <Badge pill bg="warning" text="dark">Usada {c.usos} veces</Badge>
+                        )}
+                        <Badge pill bg={usada ? 'secondary-subtle' : 'success-subtle'} text={usada ? 'secondary-emphasis' : 'success-emphasis'}>
                           {etiquetaEstado[c.estado]}
                         </Badge>
                         <Button
@@ -227,7 +279,7 @@ function ClavesRespaldoModal({ show, onCerrar }: Props) {
                           size="sm"
                           className="p-0 text-secondary"
                           aria-label={`Copiar la clave ${indice + 1}`}
-                          disabled={usada}
+                          disabled={usada || !c.clave}
                           onClick={() => copiar(c)}
                         >
                           {copiada === c.id ? <Check size={16} /> : <Copy size={16} />}
