@@ -34,8 +34,6 @@ function BuscarCorredorModal({
       show={show}
       onHide={cerrar}
       centered
-      dialogClassName="buscar-corredor-modal__dialog"
-      contentClassName="buscar-corredor-modal"
       aria-labelledby="buscar-corredor-titulo"
     >
       <Modal.Header closeButton className="border-0 pb-0" />
