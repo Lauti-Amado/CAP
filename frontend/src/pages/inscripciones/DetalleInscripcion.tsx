@@ -1,315 +1,232 @@
 //frontend/src/pages/inscripciones/DetalleInscripcion.tsx
+import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  UserRound,
-  Flag,
-  CreditCard,
-  PackageCheck,
-  Stethoscope,
-  Shirt,
-} from 'lucide-react'
-import { Button, Badge, Card, Container, Row, Col } from 'react-bootstrap'
+import { ArrowLeft, UserRound, Flag, CreditCard, PackageCheck, Stethoscope, Shirt } from 'lucide-react'
+import { Badge, Button, Card, Col, Container, ListGroup, Row } from 'react-bootstrap'
 
 import type { InscripcionDetalle } from '../../types/inscripcion'
-import './DetalleInscripcion.css'
 
 // MOCK TEMPORAL
 // Borrar cuando se conecte con el backend.
 import { inscripcionDetalleMock } from './detalleInscripcionMock'
 
+function EncabezadoTarjeta({ icono, titulo }: { icono: ReactNode; titulo: string }) {
+  return (
+    <Card.Header className="bg-body-tertiary">
+      <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
+        <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-2">{icono}</span>
+        {titulo}
+      </h2>
+    </Card.Header>
+  )
+}
+
+function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
+  return (
+    <div>
+      <small className="d-block text-secondary">{etiqueta}</small>
+      <strong className="text-break">{children}</strong>
+    </div>
+  )
+}
+
+function EstadoBadge({ texto, color }: { texto: string; color: string }) {
+  return (
+    <Badge pill bg={`${color}-subtle`} text={`${color}-emphasis`}>
+      {texto}
+    </Badge>
+  )
+}
+
 function DetalleInscripcion() {
-  const { id } = useParams<{ id: string }>()
+  const { id, nombreCarrera } = useParams<{ id: string; nombreCarrera: string }>()
   const navigate = useNavigate()
-  const { nombreCarrera } = useParams();
 
   // MOCK TEMPORAL
   // TODO BACKEND: reemplazar por GET /api/inscripciones/{id}
-  const inscripcion: InscripcionDetalle | undefined =
-    inscripcionDetalleMock.find(
-      (inscripcion) => inscripcion.id === id,
-    )
+  const inscripcion: InscripcionDetalle | undefined = inscripcionDetalleMock.find(
+    (inscripcion) => inscripcion.id === id,
+  )
 
   const volverAInscripciones = () => {
     navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
 
+  const botonVolver = (
+    <Button
+      type="button"
+      variant="link"
+      className="d-inline-flex align-items-center gap-1 p-0 mb-3 small text-success text-decoration-none"
+      onClick={volverAInscripciones}
+    >
+      <ArrowLeft size={16} aria-hidden="true" />
+      Volver a inscripciones
+    </Button>
+  )
+
   if (!inscripcion) {
     return (
-      <Container fluid className="detalle-inscripcion">
-        <Button
-          type="button"
-          variant="link"
-          className="detalle-inscripcion__volver"
-          onClick={volverAInscripciones}
-        >
-          <ArrowLeft size={16} />
-          <span>Volver a inscripciones</span>
-        </Button>
+      <Container fluid className="p-4">
+        {botonVolver}
 
-        <Card className="detalle-inscripcion__no-encontrada">
-          <Card.Body>
-            <Card.Title>Inscripción no encontrada</Card.Title>
-            <Card.Text>
-              No se encontró una inscripción asociada al identificador indicado.
-            </Card.Text>
-          </Card.Body>
-        </Card>
+        <Row>
+          <Col xs={12} md={8} lg={6}>
+            <Card>
+              <Card.Body>
+                <Card.Title as="h1" className="h5 fw-bold">Inscripción no encontrada</Card.Title>
+                <Card.Text className="text-secondary mb-0">
+                  No se encontró una inscripción asociada al identificador indicado.
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     )
   }
 
-  const kitEntregado =
-    inscripcion.entrega.estadoKit.toLowerCase() === 'entregado'
+  const kitEntregado = inscripcion.entrega.estadoKit.toLowerCase() === 'entregado'
+  const pagoPagado = inscripcion.pago.estado.toLowerCase() === 'pagado'
+  const estadoConfirmado = inscripcion.estado.toLowerCase() === 'confirmada'
+  const aptoVerificado = inscripcion.entrega.aptoMedico.toLowerCase() === 'verificado'
 
-  const pagoPagado =
-    inscripcion.pago.estado.toLowerCase() === 'pagado'
+  const { corredor, participacion, pago, entrega } = inscripcion
 
-  const estadoConfirmado =
-    inscripcion.estado.toLowerCase() === 'confirmada'
+  const datosCorredor: [string, string][] = [
+    ['NOMBRE COMPLETO', corredor.nombreCompleto],
+    ['DNI', corredor.dni],
+    ['FECHA DE NACIMIENTO', corredor.fechaNacimiento],
+    ['GÉNERO', corredor.genero],
+    ['TELÉFONO', corredor.telefono],
+    ['EMAIL', corredor.email],
+    ['DISCAPACIDAD', corredor.discapacidad],
+    ['EQUIPO / CLUB', corredor.equipoClub],
+  ]
 
-  const aptoVerificado =
-    inscripcion.entrega.aptoMedico.toLowerCase() === 'verificado'
+  const datosParticipacion: [string, string][] = [
+    ['CARRERA', inscripcion.carrera],
+    ['DISTANCIA', participacion.distancia],
+    ['TIPO', participacion.tipo],
+  ]
 
   return (
-    <Container fluid className="detalle-inscripcion">
-      <Button
-        type="button"
-        variant="link"
-        className="detalle-inscripcion__volver"
-        onClick={volverAInscripciones}
-      >
-        <ArrowLeft size={16} />
-        <span>Volver a inscripciones</span>
-      </Button>
+    <Container fluid className="p-4">
+      {botonVolver}
 
-      <header className="detalle-inscripcion__encabezado">
-        <div className="detalle-inscripcion__titulo">
-          <div className="detalle-inscripcion__titulo-principal">
-            <h1>Inscripción #{inscripcion.numero}</h1>
-
-            <Badge
-              className={`detalle-inscripcion__estado ${
-                estadoConfirmado
-                  ? 'detalle-inscripcion__estado--confirmada'
-                  : ''
-              }`}
-            >
-              {inscripcion.estado}
-            </Badge>
-          </div>
-
-          <p className="detalle-inscripcion__info">
-            <Flag size={13} />
-            <span>{inscripcion.carrera}</span>
-            <span className="detalle-inscripcion__separador">·</span>
-            <span>Fecha de inscripción: {inscripcion.fechaInscripcion}</span>
-          </p>
+      <header className="mb-4">
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <h1 className="h2 fw-bold mb-0">Inscripción #{inscripcion.numero}</h1>
+          <EstadoBadge texto={inscripcion.estado} color={estadoConfirmado ? 'success' : 'secondary'} />
         </div>
+
+        <p className="d-flex flex-wrap align-items-center gap-2 small text-secondary mb-0">
+          <Flag size={13} aria-hidden="true" />
+          <span>{inscripcion.carrera}</span>
+          <span>·</span>
+          <span>Fecha de inscripción: {inscripcion.fechaInscripcion}</span>
+        </p>
       </header>
 
-      <Row className="detalle-inscripcion__contenido">
+      <Row className="g-3">
         {/* COLUMNA PRINCIPAL */}
-        <Col xs={12} lg={8}>
-          <div className="detalle-inscripcion__principal">
-            {/* DATOS DEL CORREDOR */}
-            <Card className="detalle-inscripcion__tarjeta">
-              <Card.Header className="detalle-inscripcion__tarjeta-header">
-                <h2>
-                  <UserRound size={17} />
-                  <span>Datos del corredor</span>
-                </h2>
-              </Card.Header>
+        <Col xs={12} lg={8} className="d-flex flex-column gap-3">
+          <Card>
+            <EncabezadoTarjeta icono={<UserRound size={14} />} titulo="Datos del corredor" />
+            <Card.Body>
+              <Row xs={1} sm={2} className="g-3">
+                {datosCorredor.map(([etiqueta, valor]) => (
+                  <Col key={etiqueta}>
+                    <Dato etiqueta={etiqueta}>{valor}</Dato>
+                  </Col>
+                ))}
+              </Row>
+            </Card.Body>
+          </Card>
 
-              <Card.Body className="detalle-inscripcion__tarjeta-contenido">
-                <div className="detalle-inscripcion__datos-corredor">
-                  <div>
-                    <span>NOMBRE COMPLETO</span>
-                    <strong>{inscripcion.corredor.nombreCompleto}</strong>
-                  </div>
-
-                  <div>
-                    <span>DNI</span>
-                    <strong>{inscripcion.corredor.dni}</strong>
-                  </div>
-
-                  <div>
-                    <span>FECHA DE NACIMIENTO</span>
-                    <strong>{inscripcion.corredor.fechaNacimiento}</strong>
-                  </div>
-
-                  <div>
-                    <span>GÉNERO</span>
-                    <strong>{inscripcion.corredor.genero}</strong>
-                  </div>
-
-                  <div>
-                    <span>TELÉFONO</span>
-                    <strong>{inscripcion.corredor.telefono}</strong>
-                  </div>
-
-                  <div>
-                    <span>EMAIL</span>
-                    <strong>{inscripcion.corredor.email}</strong>
-                  </div>
-
-                  <div>
-                    <span>DISCAPACIDAD</span>
-                    <strong>{inscripcion.corredor.discapacidad}</strong>
-                  </div>
-
-                  <div>
-                    <span>EQUIPO / CLUB</span>
-                    <strong>{inscripcion.corredor.equipoClub}</strong>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-
-            {/* DATOS DE PARTICIPACIÓN */}
-            <Card className="detalle-inscripcion__tarjeta">
-              <Card.Header className="detalle-inscripcion__tarjeta-header">
-                <h2>
-                  <Flag size={17} />
-                  <span>Datos de participación</span>
-                </h2>
-              </Card.Header>
-
-              <Card.Body className="detalle-inscripcion__tarjeta-contenido">
-                <div className="detalle-inscripcion__participacion">
-                  <div>
-                    <span>CARRERA</span>
-                    <strong>{inscripcion.carrera}</strong>
-                  </div>
-
-                  <div>
-                    <span>DISTANCIA</span>
-                    <strong>{inscripcion.participacion.distancia}</strong>
-                  </div>
-
-                  <div>
-                    <span>TIPO</span>
-                    <strong>{inscripcion.participacion.tipo}</strong>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
+          <Card>
+            <EncabezadoTarjeta icono={<Flag size={14} />} titulo="Datos de participación" />
+            <Card.Body>
+              <Row xs={1} sm={3} className="g-2">
+                {datosParticipacion.map(([etiqueta, valor]) => (
+                  <Col key={etiqueta}>
+                    <div className="h-100 bg-body-tertiary border rounded p-3">
+                      <Dato etiqueta={etiqueta}>{valor}</Dato>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            </Card.Body>
+          </Card>
         </Col>
 
         {/* COLUMNA LATERAL */}
-        <Col xs={12} lg={4}>
-          <div className="detalle-inscripcion__lateral">
-            {/* PAGO */}
-            <Card className="detalle-inscripcion__tarjeta">
-              <Card.Header className="detalle-inscripcion__tarjeta-header">
-                <h2>
-                  <CreditCard size={17} />
-                  <span>Pago</span>
-                </h2>
-              </Card.Header>
+        <Col xs={12} lg={4} className="d-flex flex-column gap-3">
+          <Card>
+            <EncabezadoTarjeta icono={<CreditCard size={14} />} titulo="Pago" />
+            <Card.Body>
+              <ListGroup variant="flush">
+                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                  <span className="small text-secondary">Estado</span>
+                  <EstadoBadge texto={pago.estado} color={pagoPagado ? 'success' : 'danger'} />
+                </ListGroup.Item>
+                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                  <span className="small text-secondary">Método</span>
+                  <strong className="small">{pago.metodo}</strong>
+                </ListGroup.Item>
+                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                  <span className="fw-semibold">Total</span>
+                  <strong className="fs-5 text-success">{pago.total}</strong>
+                </ListGroup.Item>
+              </ListGroup>
 
-              <Card.Body className="detalle-inscripcion__tarjeta-contenido">
-                <div className="detalle-inscripcion__pago">
-                  <div className="detalle-inscripcion__fila-pago">
-                    <span>Estado</span>
+              <small className="d-block text-secondary mt-3 mb-2">ADICIONALES ADQUIRIDOS</small>
+              <div className="d-flex align-items-center gap-2 bg-body-tertiary border rounded p-2 small">
+                <Shirt size={15} aria-hidden="true" />
+                <strong className="fw-medium">{pago.adicionales}</strong>
+              </div>
+            </Card.Body>
+          </Card>
 
-                    <Badge
-                      className={`detalle-inscripcion__badge ${
-                        pagoPagado
-                          ? 'detalle-inscripcion__badge--pagado'
-                          : 'detalle-inscripcion__badge--pendiente'
-                      }`}
-                    >
-                      {inscripcion.pago.estado}
-                    </Badge>
-                  </div>
+          <Card>
+            <EncabezadoTarjeta icono={<PackageCheck size={14} />} titulo="Entrega y requisitos" />
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center pb-2 border-bottom">
+                <small className="text-secondary">KIT Y DORSAL</small>
+                <EstadoBadge texto={entrega.estadoKit} color={kitEntregado ? 'success' : 'danger'} />
+              </div>
 
-                  <div className="detalle-inscripcion__fila-pago">
-                    <span>Método</span>
-                    <strong>{inscripcion.pago.metodo}</strong>
-                  </div>
-
-                  <div className="detalle-inscripcion__total">
-                    <span>Total</span>
-                    <strong>{inscripcion.pago.total}</strong>
-                  </div>
-                </div>
-
-                <div className="detalle-inscripcion__adicionales">
-                  <span>ADICIONALES ADQUIRIDOS</span>
-
-                  <div className="detalle-inscripcion__adicional">
-                    <Shirt size={15} />
-                    <strong>{inscripcion.pago.adicionales}</strong>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-
-            {/* ENTREGA Y REQUISITOS */}
-            <Card className="detalle-inscripcion__tarjeta">
-              <Card.Header className="detalle-inscripcion__tarjeta-header">
-                <h2>
-                  <PackageCheck size={17} />
-                  <span>Entrega y requisitos</span>
-                </h2>
-              </Card.Header>
-
-              <Card.Body className="detalle-inscripcion__tarjeta-contenido">
-                <div className="detalle-inscripcion__kit-header">
-                  <span>KIT Y DORSAL</span>
-
-                  <Badge
-                    className={`detalle-inscripcion__badge ${
-                      kitEntregado
-                        ? 'detalle-inscripcion__badge--kit-entregado'
-                        : 'detalle-inscripcion__badge--kit-pendiente'
-                    }`}
-                  >
-                    {inscripcion.entrega.estadoKit}
-                  </Badge>
-                </div>
-
-                {kitEntregado && (
-                  <>
-                    <div className="detalle-inscripcion__kit">
-                      <div>
-                        <span>Dorsal</span>
-                        <strong>#{inscripcion.entrega.dorsal}</strong>
+              {kitEntregado && (
+                <>
+                  <Row xs={2} className="g-2 mt-1">
+                    <Col>
+                      <div className="bg-body-tertiary border rounded p-2 text-center">
+                        <small className="d-block text-secondary">Dorsal</small>
+                        <strong>#{entrega.dorsal}</strong>
                       </div>
-
-                      <div>
-                        <span>Chip RFID</span>
-                        <strong>{inscripcion.entrega.chipRfid}</strong>
+                    </Col>
+                    <Col>
+                      <div className="bg-body-tertiary border rounded p-2 text-center">
+                        <small className="d-block text-secondary">Chip RFID</small>
+                        <strong className="text-break">{entrega.chipRfid}</strong>
                       </div>
-                    </div>
+                    </Col>
+                  </Row>
 
-                    <small className="detalle-inscripcion__fecha-entrega">
-                      Entregado: {inscripcion.entrega.fechaEntrega}
-                    </small>
-                  </>
-                )}
+                  <small className="d-block text-secondary text-end mt-2">
+                    Entregado: {entrega.fechaEntrega}
+                  </small>
+                </>
+              )}
 
-                <div className="detalle-inscripcion__apto">
-                  <span className="detalle-inscripcion__apto-label">
-                    <Stethoscope size={13} />
-                    APTO MÉDICO
-                  </span>
-
-                  <Badge
-                    className={`detalle-inscripcion__badge ${
-                      aptoVerificado
-                        ? 'detalle-inscripcion__badge--verificado'
-                        : 'detalle-inscripcion__badge--pendiente'
-                    }`}
-                  >
-                    {inscripcion.entrega.aptoMedico}
-                  </Badge>
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
+              <div className="d-flex justify-content-between align-items-center border-top mt-3 pt-3">
+                <small className="d-inline-flex align-items-center gap-1 text-secondary">
+                  <Stethoscope size={13} aria-hidden="true" />
+                  APTO MÉDICO
+                </small>
+                <EstadoBadge texto={entrega.aptoMedico} color={aptoVerificado ? 'info' : 'danger'} />
+              </div>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
     </Container>
