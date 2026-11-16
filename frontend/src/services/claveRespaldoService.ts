@@ -1,9 +1,9 @@
 //frontend/src/services/claveRespaldoService.ts
 import { apiFetch } from './apiService'
-import type { ClaveRespaldo } from '../types/claveRespaldo'
+import type { ClaveRespaldo, CuentaClaves } from '../types/claveRespaldo'
 
-export const listarClavesRespaldo = () =>
-  apiFetch<ClaveRespaldo[]>('/claves-respaldo')
+export const listarCuentasConClaves = () =>
+  apiFetch<CuentaClaves[]>('/claves-respaldo/cuentas')
 
-export const generarClavesRespaldo = () =>
-  apiFetch<ClaveRespaldo[]>('/claves-respaldo', { method: 'POST' })
+export const listarClavesDeCuenta = (usuarioId: string) =>
+  apiFetch<ClaveRespaldo[]>(`/claves-respaldo?usuarioId=${usuarioId}`)
