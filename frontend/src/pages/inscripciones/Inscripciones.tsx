@@ -1,5 +1,5 @@
-
-import { useState } from 'react'
+//frontend/src/pages/inscripciones/Inscripciones.tsx
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Container, Form, Row, Col } from 'react-bootstrap'
 import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
@@ -9,6 +9,11 @@ import type { Inscripcion, FiltrosInscripciones } from '../../types/inscripcion'
 
 // MOCK TEMPORAL
 import { inscripcionesMock } from './inscripcionesMock'
+
+const INSCRIPCIONES_POR_PAGINA = 10
+
+// "34.567.890" y "34567890" tienen que matchear
+const soloDigitos = (valor: string) => valor.replace(/\D/g, '')
 
 function Inscripciones() {
   const [dni, setDni] = useState('')
@@ -23,7 +28,7 @@ function Inscripciones() {
   const { nombreCarrera } = useParams();
 
   // TODO BACKEND: usar filtros en la consulta real al backend
-  const _filtros: FiltrosInscripciones = {
+  /* const _filtros: FiltrosInscripciones = {
     dni,
     carrera,
     distancia,
@@ -31,14 +36,36 @@ function Inscripciones() {
     estado,
     anio,
     pagina: paginaActual,
-  }
+  } */
 
   // TODO: reemplazar por la consulta al backend
   // const resultado = await obtenerInscripciones(filtros)
   // const inscripciones = resultado.datos
   // const totalPaginas = resultado.totalPaginas
 
-  const inscripciones: Inscripcion[] = inscripcionesMock
+  const inscripcionesFiltradas = useMemo(() => {
+    const dniBuscado = soloDigitos(dni)
+
+    return inscripcionesMock.filter(
+      (inscripcion) =>
+        (dniBuscado === '' || soloDigitos(inscripcion.dni).includes(dniBuscado)) &&
+        (carrera === '' || inscripcion.carrera === carrera) &&
+        (distancia === '' || inscripcion.distancia === distancia) &&
+        (pago === '' || inscripcion.pago === pago) &&
+        (estado === '' || inscripcion.estado === estado) &&
+        (anio === '' || inscripcion.fecha.slice(-4) === anio),
+    )
+  }, [dni, carrera, distancia, pago, estado, anio])
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(inscripcionesFiltradas.length / INSCRIPCIONES_POR_PAGINA),
+  )
+
+  const inscripciones: Inscripcion[] = inscripcionesFiltradas.slice(
+    (paginaActual - 1) * INSCRIPCIONES_POR_PAGINA,
+    paginaActual * INSCRIPCIONES_POR_PAGINA,
+  )
 
   // Opciones de filtros temporales obtenidas del mock
   const carreras = [
@@ -177,7 +204,7 @@ function Inscripciones() {
         </Button>
       </header>
 
-      <Form className="inscripciones__filtros">
+      <Form className="inscripciones__filtros" onSubmit={(event) => event.preventDefault()}>
         <Row className="g-3 align-items-center">
           <Col xs={12} sm={6} lg={2}>
             <div className="inscripciones__buscador">
@@ -291,12 +318,13 @@ function Inscripciones() {
         <Tabla
           columnas={columnas}
           datos={inscripciones}
+          mensajeVacio="No se encontraron inscripciones."
           paginaActual={paginaActual}
           // TODO: reemplazar cuando se integre el backend
-          totalPaginas={2}
+          totalPaginas={totalPaginas}
           onCambiarPagina={setPaginaActual}
           mostrarNumeros={false}
-          textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripciones.length} inscripciones`}
+          textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripcionesFiltradas.length} inscripciones`}
         />
       </section>
     </Container>
