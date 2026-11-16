@@ -1,9 +1,8 @@
 //frontend/src/pages/clasificacion/clasificacionTiempoReal/ClasificacionTiempoReal.tsx
 import React, { useState } from 'react';
-import './ClasificacionTiempoReal.css';
 import { useNavigate } from 'react-router-dom';
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion';
-import { Alert, Button, Card, Col, Form, InputGroup, ProgressBar, Row } from 'react-bootstrap';
+import { Alert, Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, ProgressBar, Row } from 'react-bootstrap';
 import { Layers, Pencil, Search, UserMinus, UserX, Wifi } from 'lucide-react';
 import { Tabla, type Columna } from '../../../components/tabla/Tabla';
 import EstadoCarreraBadge from '../../../components/carrera/EstadoCarreraBadge';
@@ -15,6 +14,15 @@ import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera';
 import type { EstadoClasificacion, LlegadaAtleta, ResumenCorredor } from '../../../types/clasificacion';
 import { useDetalleCarrera } from '../../../hooks/useDetalleCarrera';
 import { useCarreraActual } from '../../../hooks/useCarreraActual';
+
+const badgeEstado: Record<LlegadaAtleta['estado'], { bg: string; text?: string }> = {
+  OFICIAL: { bg: 'success-subtle', text: 'success-emphasis' },
+  'EN REVISIÓN': { bg: 'warning-subtle', text: 'warning-emphasis' },
+  DESCALIFICADO: { bg: 'danger' },
+  'NO LARGÓ': { bg: 'secondary-subtle', text: 'secondary-emphasis' },
+};
+
+const colorPuesto: Record<number, string> = { 1: 'text-success', 2: 'text-info', 3: 'text-warning' };
 
 const estadoResumen: Record<LlegadaAtleta['estado'], EstadoClasificacion> = {
   OFICIAL: 'Oficial',
@@ -128,7 +136,7 @@ const ClasificacionTiempoReal: React.FC = () => {
       render: (atleta) => (
         <Form.Check
           type="checkbox"
-          className="rt-check"
+          className="mb-0"
           aria-label={`Seleccionar a ${atleta.apellidosNombres}`}
           checked={seleccionados.includes(atleta.id)}
           onChange={() => alternarSeleccion(atleta.id)}
@@ -138,25 +146,19 @@ const ClasificacionTiempoReal: React.FC = () => {
     {
       titulo: 'PUESTO',
       key: 'puesto',
-      render: (atleta) => (
-        <span className={`rt-puesto ${atleta.puesto <= 3 ? `puesto-${atleta.puesto}` : ''}`}>
-          <strong>{atleta.puesto}</strong>
-        </span>
-      ),
+      render: (atleta) => <strong className={colorPuesto[atleta.puesto] ?? ''}>{atleta.puesto}</strong>,
     },
     { titulo: 'DORSAL', key: 'dorsal', render: (atleta) => <strong>{atleta.dorsal}</strong> },
-    { titulo: 'CORREDOR', key: 'apellidosNombres', render: (atleta) => <span className="rt-runner-name">{atleta.apellidosNombres}</span> },
-    { titulo: 'DNI', key: 'dni', render: (atleta) => <span className="rt-dni">{atleta.dni}</span> },
+    { titulo: 'CORREDOR', key: 'apellidosNombres', render: (atleta) => <span className="fw-semibold">{atleta.apellidosNombres}</span> },
+    { titulo: 'DNI', key: 'dni', render: (atleta) => <span className="text-secondary">{atleta.dni}</span> },
     { titulo: 'CATEGORÍA', key: 'categoria' },
-    { titulo: 'TIEMPO', key: 'tiempo', render: (atleta) => <span className="rt-time"><strong>{atleta.tiempo}</strong></span> },
+    { titulo: 'TIEMPO', key: 'tiempo', render: (atleta) => <strong className="font-monospace">{atleta.tiempo}</strong> },
     {
       titulo: 'ESTADO',
       key: 'estado',
       render: (atleta) => {
-        if (atleta.estado === 'OFICIAL') return <span className="rt-badge-status status-oficial">OFICIAL</span>;
-        if (atleta.estado === 'EN REVISIÓN') return <span className="rt-badge-status status-revision">EN REVISIÓN</span>;
-        if (atleta.estado === 'NO LARGÓ') return <span className="rt-badge-status status-no-largo">NO LARGÓ</span>;
-        return <span className="rt-badge-status status-descalificado">DESCALIFICADO</span>;
+        const { bg, text } = badgeEstado[atleta.estado];
+        return <Badge pill bg={bg} text={text}>{atleta.estado}</Badge>;
       },
     },
   ];
@@ -165,30 +167,29 @@ const ClasificacionTiempoReal: React.FC = () => {
   const pendientesTotales = carrera ? carrera.cantidadInscriptos - carrera.cantidadClasificados : resumenMock.pendientes;
   const progreso = Math.round((llegadasTotales / (llegadasTotales + pendientesTotales)) * 100);
 
-  return (
-    <div className="rt-container">
-      <div className="rt-content">
-        {aviso && (
-          <Alert variant="success" dismissible onClose={() => setAviso(null)}>
-            {aviso}
-          </Alert>
-        )}
+ return (
+    <Container fluid="xl" className="py-4">
+      {aviso && (
+        <Alert variant="success" dismissible onClose={() => setAviso(null)}>
+          {aviso}
+        </Alert>
+      )}
 
-        {/* Cabecera */}
-        <header className="mb-3">
-          <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-            <h1 className="rt-titulo">
-              {carrera ? `Clasificación de ${carrera.nombre}` : 'Clasificación de la carrera Tres Ciudades'}
-            </h1>
-            <Button variant="outline-secondary" size="sm" onClick={() => navigate(rutas.dashboard)}>
-              Volver a Dashboard de Clasificación
-            </Button>
-          </div>
+      {/* Cabecera */}
+      <header className="mb-3">
+        <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <h1 className="h2 fw-bold mb-0">
+            {carrera ? `Clasificación de ${carrera.nombre}` : 'Clasificación de la carrera Tres Ciudades'}
+          </h1>
+          <Button variant="outline-secondary" size="sm" onClick={() => navigate(rutas.dashboard)}>
+            Volver a Dashboard de Clasificación
+          </Button>
+        </div>
 
-          <div className="d-flex align-items-center gap-3 mb-3">
-            <EstadoCarreraBadge estado={finalizada ? 'finalizada' : estado} />
-            {!finalizada && <span className="rt-reloj">{transcurrido}</span>}
-          </div>
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <EstadoCarreraBadge estado={finalizada ? 'finalizada' : estado} />
+          {!finalizada && <span className="fs-3 fw-bold font-monospace">{transcurrido}</span>}
+        </div>
 
           <div className="d-flex flex-wrap align-items-center gap-2">
             {!finalizada && (
@@ -239,63 +240,61 @@ const ClasificacionTiempoReal: React.FC = () => {
         </header>
 
         {/* Llegadas recientes */}
-        <Card className="mb-4">
-          <Card.Body>
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              <h2 className="h6 fw-bold mb-0">{finalizada ? 'Clasificación final' : 'Llegadas Recientes'}</h2>
-              <InputGroup size="sm" className="rt-buscador">
-                <InputGroup.Text className="bg-white">
-                  <Search size={14} aria-hidden="true" />
-                </InputGroup.Text>
-                <Form.Control
-                  type="text"
-                  placeholder="Buscar dorsal o DNI..."
-                  value={busqueda}
-                  onChange={(e) => setBusqueda(e.target.value)}
-                />
-              </InputGroup>
-            </div>
-
-            <div className="rt-tabla">
-              <Tabla
-                columnas={columnasLlegadas}
-                datos={llegadasFiltradas}
-                mensajeVacio="No se encontraron registros recientes."
-                paginaActual={1}
-                totalPaginas={1}
-                onCambiarPagina={() => {}}
-                textoPaginacion={`Mostrando ${llegadasFiltradas.length} resultados`}
+      <Card className="mb-4">
+        <Card.Body>
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 className="h6 fw-bold mb-0">{finalizada ? 'Clasificación final' : 'Llegadas Recientes'}</h2>
+            <InputGroup size="sm" className="w-auto">
+              <InputGroup.Text className="bg-white">
+                <Search size={14} aria-hidden="true" />
+              </InputGroup.Text>
+              <Form.Control
+                type="text"
+                placeholder="Buscar dorsal o DNI..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
               />
-            </div>
-          </Card.Body>
-        </Card>
+            </InputGroup>
+          </div>
 
-        {/* Participantes y estado del sistema */}
-        <Row className="g-3">
-          <Col xs={12} md={finalizada ? 12 : 6}>
-            <Card className="h-100">
-              <Card.Body>
-                <h3 className="h6 fw-bold mb-3">Participantes</h3>
+          <Tabla
+            columnas={columnasLlegadas}
+            datos={llegadasFiltradas}
+            mensajeVacio="No se encontraron registros recientes."
+            paginaActual={1}
+            totalPaginas={1}
+            onCambiarPagina={() => {}}
+            textoPaginacion={`Mostrando ${llegadasFiltradas.length} resultados`}
+          />
+        </Card.Body>
+      </Card>
 
-                <div className="d-flex gap-4 mb-3">
-                  <div>
-                    <span className="rt-stat-label d-block">Llegadas</span>
-                    <span className="rt-stat-val">{llegadasTotales.toLocaleString('es-AR')}</span>
-                  </div>
-                  <div>
-                    <span className="rt-stat-label d-block">Pendientes</span>
-                    <span className="rt-stat-val">{pendientesTotales.toLocaleString('es-AR')}</span>
-                  </div>
+      {/* Participantes y estado del sistema */}
+      <Row className="g-3">
+        <Col xs={12} md={finalizada ? 12 : 6}>
+          <Card className="h-100">
+            <Card.Body>
+              <h3 className="h6 fw-bold mb-3">Participantes</h3>
+
+              <div className="d-flex gap-4 mb-3">
+                <div>
+                  <small className="d-block fw-semibold text-secondary">Llegadas</small>
+                  <span className="fs-3 fw-bold">{llegadasTotales.toLocaleString('es-AR')}</span>
                 </div>
-
-                <div className="d-flex justify-content-between small text-secondary mb-1">
-                  <span>Progreso de Carrera</span>
-                  <strong>{progreso}%</strong>
+                <div>
+                  <small className="d-block fw-semibold text-secondary">Pendientes</small>
+                  <span className="fs-3 fw-bold">{pendientesTotales.toLocaleString('es-AR')}</span>
                 </div>
-                <ProgressBar now={progreso} variant="success" style={{ height: 6 }} />
-              </Card.Body>
-            </Card>
-          </Col>
+              </div>
+
+              <div className="d-flex justify-content-between small text-secondary mb-1">
+                <span>Progreso de Carrera</span>
+                <strong>{progreso}%</strong>
+              </div>
+              <ProgressBar now={progreso} variant="success" style={{ height: 6 }} />
+            </Card.Body>
+          </Card>
+        </Col>
 
         {!finalizada && (
           <Col xs={12} md={6}>
@@ -303,35 +302,35 @@ const ClasificacionTiempoReal: React.FC = () => {
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h3 className="h6 fw-bold mb-0">Estado del Sistema</h3>
-                  <span className="rt-rfid-status d-inline-flex align-items-center gap-1">
+                  <span className="d-inline-flex align-items-center gap-1 small fw-bold text-success">
                     <Wifi size={15} aria-hidden="true" />
                     Conectado
                   </span>
                 </div>
 
-                <div className="rt-last-read-box">
-                  <span className="rt-read-title">ÚLTIMA LECTURA</span>
-                  <div className="rt-read-detail">
-                    <strong>Dorsal 1899</strong> <span className="rt-time-ago">hace 3s</span>
+                <Alert variant="info" className="py-2">
+                  <small className="d-block fw-bold">ÚLTIMA LECTURA</small>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <strong>Dorsal 1899</strong>
+                    <small className="fw-semibold">hace 3s</small>
                   </div>
-                </div>
+                </Alert>
 
-                <div className="rt-antennas-status">
-                  <div className="rt-antenna-row">
+                <ListGroup variant="flush" className="small">
+                  <ListGroup.Item className="d-flex justify-content-between px-0 text-secondary">
                     <span>Antena 1</span>
-                    <span className="rt-ant-ok">OK (98%)</span>
-                  </div>
-                  <div className="rt-antenna-row">
+                    <span className="fw-semibold text-success">OK (98%)</span>
+                  </ListGroup.Item>
+                  <ListGroup.Item className="d-flex justify-content-between px-0 text-secondary">
                     <span>Antena 2</span>
-                    <span className="rt-ant-ok">OK (95%)</span>
-                  </div>
-                </div>
+                    <span className="fw-semibold text-success">OK (95%)</span>
+                  </ListGroup.Item>
+                </ListGroup>
               </Card.Body>
             </Card>
           </Col>
         )}
-        </Row>
-      </div>
+      </Row>
 
       <DescalificarCorredorModal
         corredores={corredoresADescalificar}
@@ -346,7 +345,7 @@ const ClasificacionTiempoReal: React.FC = () => {
       />
 
       {!finalizada && <CargaManualModal show={mostrarCargaManual} onCerrar={() => setMostrarCargaManual(false)} />}
-    </div>
+    </Container>
   );
 };
 
