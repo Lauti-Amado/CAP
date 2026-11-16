@@ -2,7 +2,6 @@
 import { useState, type ReactNode } from 'react'
 import { Button, Form, InputGroup } from 'react-bootstrap'
 import { PackageCheck, Search } from 'lucide-react'
-import './BuscarCorredorForm.css'
 
 type BuscarCorredorFormProps = {
   titulo: string
@@ -47,16 +46,18 @@ function BuscarCorredorForm({
   }
 
   return (
-    <div className="buscar-form">
-      <span className="buscar-form__icono">{icono}</span>
+    <div className="d-flex flex-column align-items-center text-center">
+      <span className="d-inline-flex rounded-3 bg-success-subtle text-success p-3 mb-3">
+        {icono}
+      </span>
 
-      <h2 className="buscar-form__titulo" id="buscar-corredor-titulo">
+      <h2 className="h4 fw-bold mb-2" id="buscar-corredor-titulo">
         {titulo}
       </h2>
-      <p className="buscar-form__descripcion">{descripcion}</p>
+      <p className="text-secondary mb-4">{descripcion}</p>
 
-      <Form className="buscar-form__form" onSubmit={enviar} noValidate>
-        <InputGroup>
+      <Form className="w-100" onSubmit={enviar} noValidate>
+        <InputGroup size="lg">
           <InputGroup.Text className="bg-white">
             <Search size={14} aria-hidden="true" />
           </InputGroup.Text>
@@ -80,9 +81,9 @@ function BuscarCorredorForm({
         </InputGroup>
 
         {mensaje && (
-          <p className="buscar-form__error" role="alert">
+          <Form.Control.Feedback type="invalid" className="d-block text-start" role="alert">
             {mensaje}
-          </p>
+          </Form.Control.Feedback>
         )}
       </Form>
     </div>

@@ -24,7 +24,6 @@ function FinalizarCarreraModal({
     <ConfirmacionModal
       show={show}
       encabezado="simple"
-      variante="danger-oscuro"
       titulo="¿Desea finalizar la carrera?"
       textoConfirmar="Finalizar carrera"
       iconoConfirmar={<Flag size={16} aria-hidden="true" />}

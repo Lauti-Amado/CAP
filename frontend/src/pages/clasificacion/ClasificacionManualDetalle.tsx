@@ -2,9 +2,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CircleCheck } from 'lucide-react'
-import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap'
+import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap'
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
-import '../../components/corredor/DetalleCorredor.css'
 import { corredoresClasificacionMock } from './corredoresClasificacionMock'
 import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
 import { puestoManualSchema } from '../../schemas/clasificacionSchema'
@@ -31,15 +30,10 @@ function ClasificacionManualDetalle() {
 
   if (!corredor) {
     return (
-      <Container fluid as="main" className="detalle-corredor">
-        <div className="detalle-corredor__no-encontrado">
-          <h1>Corredor no encontrado</h1>
-          <Button
-            type="button"
-            variant="link"
-            className="detalle-corredor__volver"
-            onClick={volverATiempoReal}
-          >
+      <Container fluid as="main" className="p-4">
+        <div className="d-flex flex-column align-items-start gap-3">
+          <h1 className="h3 fw-bold">Corredor no encontrado</h1>
+          <Button type="button" variant="outline-success" size="sm" onClick={volverATiempoReal}>
             ← Volver a clasificación en tiempo real
           </Button>
         </div>
@@ -68,23 +62,22 @@ function ClasificacionManualDetalle() {
 }
 
   return (
-    <Container fluid as="main" className="detalle-corredor">
-      {/* ENCABEZADO */}
-      <header className="detalle-corredor__encabezado">
-        <h1>Detalle de Corredor</h1>
+        <Container fluid as="main" className="p-4">
+      <header className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+        <h1 className="h3 fw-bold mb-0">Detalle de Corredor</h1>
 
         <Button
           type="button"
-          variant="link"
-          className="detalle-corredor__volver"
+          variant="outline-success"
+          size="sm"
+          className="align-self-end align-self-md-start text-nowrap"
           onClick={volverATiempoReal}
         >
           ← Volver a clasificación en tiempo real
         </Button>
       </header>
 
-      <Row className="detalle-corredor__contenido g-3">
-        {/* COLUMNA IZQUIERDA */}
+      <Row className="g-3">
         <Col xs={12} md={5} lg={4} xl={3}>
           <TarjetasCorredor
             nombre={corredor.nombre}
@@ -98,11 +91,12 @@ function ClasificacionManualDetalle() {
           />
         </Col>
 
-        {/* COLUMNA DERECHA */}
         <Col xs={12} md={7} lg={8} xl={9}>
-          <Card className="detalle-corredor__kit">
-            <div
-              className={`detalle-corredor__kit-header ${habilitado ? 'habilitado' : 'no-habilitado'}`}
+          <Card className="h-100 shadow-sm overflow-hidden">
+            <Card.Header
+              className={`d-flex align-items-center justify-content-center gap-2 fw-bold text-center ${
+                habilitado ? 'bg-success text-white' : 'bg-warning text-dark'
+              }`}
             >
               {habilitado ? (
                 <>
@@ -110,68 +104,82 @@ function ClasificacionManualDetalle() {
                   HABILITADO PARA CLASIFICAR
                 </>
               ) : (
-                <>NO HABILITADO PARA CLASIFICAR</>
+                'NO HABILITADO PARA CLASIFICAR'
               )}
-            </div>
+            </Card.Header>
 
-            <Card.Body className="detalle-corredor__kit-contenido">
-              <span className="detalle-corredor__kit-titulo">DATOS DE LA CLASIFICACIÓN</span>
+            <Card.Body className="d-flex flex-column p-4">
+              <Card.Subtitle className="text-center text-secondary small fw-semibold mb-3">
+                DATOS DE LA CLASIFICACIÓN
+              </Card.Subtitle>
 
-              <div className="detalle-corredor__kit-datos">
-                <div className="detalle-corredor__kit-dato">
-                  <Form.Label>DORSAL</Form.Label>
-                  <strong className="detalle-corredor__valor-grande">{corredor.dorsal}</strong>
-                </div>
+              <Row className="g-3">
+                <Col xs={12} sm={6}>
+                  <div className="h-100 border rounded bg-body-tertiary p-3 d-flex flex-column align-items-center justify-content-center">
+                    <Form.Label className="small fw-medium text-secondary">DORSAL</Form.Label>
+                    <strong className="fs-2 text-success">{corredor.dorsal}</strong>
+                  </div>
+                </Col>
 
-                <div className="detalle-corredor__kit-dato">
-                  <Form.Label>CHIP RFID</Form.Label>
-                  <strong className="detalle-corredor__chip">{corredor.chipRfid}</strong>
-                </div>
+                <Col xs={12} sm={6}>
+                  <div className="h-100 border rounded bg-body-tertiary p-3 d-flex flex-column align-items-center justify-content-center">
+                    <Form.Label className="small fw-medium text-secondary">CHIP RFID</Form.Label>
+                    <strong className="fs-3">{corredor.chipRfid}</strong>
+                  </div>
+                </Col>
 
-                <div className="detalle-corredor__kit-dato detalle-corredor__kit-dato--editable">
-                  <Form.Label htmlFor="puesto-general">Puesto General</Form.Label>
+                <Col xs={12} sm={6}>
+                  <div className="h-100 border border-primary-subtle rounded bg-primary-subtle p-3">
+                    <Form.Label htmlFor="puesto-general" className="small fw-medium text-secondary">
+                      Puesto General
+                    </Form.Label>
 
-                  <Form.Control
-                    id="puesto-general"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    className="detalle-corredor__puesto"
-                    value={puesto}
-                    placeholder="Ej. 42"
-                    disabled={!habilitado || guardado}
-                    isInvalid={puestoFueraDeRango}
-                    onChange={(event) => {
-                      setPuesto(event.target.value.replace(/\D/g, ''))
-                      setGuardado(false)
-                    }}
-                  />
+                    <Form.Control
+                      id="puesto-general"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      size="lg"
+                      className="fw-bold"
+                      value={puesto}
+                      placeholder="Ej. 42"
+                      disabled={!habilitado || guardado}
+                      isInvalid={puestoFueraDeRango}
+                      onChange={(event) => {
+                        setPuesto(event.target.value.replace(/\D/g, ''))
+                        setGuardado(false)
+                      }}
+                    />
 
-                  {puestoFueraDeRango && (
-                    <div className="text-danger small mt-1">
-                      {validacionPuesto.errores.puesto}
-                    </div>
-                  )}
-                </div>
-              </div>
+                    {puestoFueraDeRango && (
+                      <div className="text-danger small mt-1">{validacionPuesto.errores.puesto}</div>
+                    )}
+                  </div>
+                </Col>
+              </Row>
 
               {guardado && (
-                <div className="detalle-corredor__confirmacion" role="status">
-                  <CircleCheck size={17} />
-                  Clasificación simulada correctamente para el dorsal {corredor.dorsal} en el puesto{' '}
-                  {puestoNumero}.
-                </div>
+                <Alert variant="success" className="d-flex align-items-start gap-2 mt-3 mb-0" role="status">
+                  <CircleCheck size={17} className="flex-shrink-0 mt-1" />
+                  <span>
+                    Clasificación simulada correctamente para el dorsal {corredor.dorsal} en el puesto{' '}
+                    {puestoNumero}.
+                  </span>
+                </Alert>
               )}
 
-              <Button
-                type="button"
-                variant="success"
-                className="detalle-corredor__entregar"
-                disabled={!puedeGuardar}
-                onClick={guardarClasificacion}
-              >
-                {guardado ? 'Clasificación guardada' : 'Guardar clasificación'}
-              </Button>
+              <div className="text-center mt-auto pt-4">
+                <Button
+                  type="button"
+                  variant="success"
+                  size="lg"
+                  className="rounded-pill px-4"
+                  disabled={!puedeGuardar}
+                  onClick={guardarClasificacion}
+                >
+                  {guardado ? 'Clasificación guardada' : 'Guardar clasificación'}
+                </Button>
+              </div>
             </Card.Body>
           </Card>
         </Col>

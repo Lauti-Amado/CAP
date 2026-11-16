@@ -1,21 +1,23 @@
 //frontend/src/components/carrera/EstadoCarreraBadge.tsx
+import { Badge, Spinner } from 'react-bootstrap'
 import type { EstadoCronometro } from '../../hooks/useCronometroCarrera'
-import './EstadoCarreraBadge.css'
 
-const config: Record<EstadoCronometro, { texto: string; clase: string; pulso: boolean }> = {
-  'sin-iniciar': { texto: 'SIN INICIAR', clase: 'estado-carrera--gris', pulso: false },
-  'en-curso': { texto: 'EN CURSO', clase: 'estado-carrera--verde', pulso: true },
-  finalizada: { texto: 'FINALIZADA', clase: 'estado-carrera--gris', pulso: false },
+const config: Record<EstadoCronometro, { texto: string; bg: string; text: string; pulso: boolean }> = {
+  'sin-iniciar': { texto: 'SIN INICIAR', bg: 'secondary-subtle', text: 'secondary-emphasis', pulso: false },
+  'en-curso': { texto: 'EN CURSO', bg: 'success-subtle', text: 'success-emphasis', pulso: true },
+  finalizada: { texto: 'FINALIZADA', bg: 'secondary-subtle', text: 'secondary-emphasis', pulso: false },
 }
 
 function EstadoCarreraBadge({ estado }: { estado: EstadoCronometro }) {
-  const { texto, clase, pulso } = config[estado]
+  const { texto, bg, text, pulso } = config[estado]
 
   return (
-    <span className={`estado-carrera ${clase}`}>
-      {pulso && <span className="estado-carrera__punto" />}
+    <Badge pill bg={bg} text={text} className="d-inline-flex align-items-center gap-2">
+      {pulso && (
+        <Spinner animation="grow" size="sm" aria-hidden="true" style={{ width: '0.4rem', height: '0.4rem' }} />
+      )}
       {texto}
-    </span>
+    </Badge>
   )
 }
 
