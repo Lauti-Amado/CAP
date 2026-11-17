@@ -135,13 +135,13 @@ const SeleccionarCarrera = () => {
   ]);
 
   const seleccionarCarrera = (carrera: Carrera) => {
-    guardarCarrera(seccion, slugCarrera(carrera.nombre));
+    guardarCarrera(seccion, carrera);
   };
 
   // Continuar con la carrera seleccionada
   const continuarConCarrera = (carrera: Carrera) => {
     const slug = slugCarrera(`${carrera.nombre} ${new Date(carrera.fechaHoraCarrera).getFullYear().toString()}`);
-    guardarCarrera(seccion, slug);
+    guardarCarrera(seccion, carrera);
     navigate(`/clasificador/${seccion}/${slug}`);
   };
 
