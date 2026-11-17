@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
+    "electron-log": "^5.4.4",
     "react-bootstrap": "^2.10.10"
   }
 }
