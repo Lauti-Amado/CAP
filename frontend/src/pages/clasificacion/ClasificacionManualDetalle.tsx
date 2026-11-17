@@ -7,17 +7,34 @@ import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import { corredoresClasificacionMock } from './corredoresClasificacionMock'
 import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
 import { puestoManualSchema } from '../../schemas/clasificacionSchema'
-import { validar } from '../../utils/validar'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { PuestoManualForm } from '../../schemas/clasificacionSchema'
 
 // MOCK TEMPORAL
 // TODO BACKEND: cantidad real de participantes de la carrera
 const TOTAL_PARTICIPANTES = 1248
 
+// Cuando el total venga del backend, armar este schema con useMemo dentro del componente
+const puestoSchema = puestoManualSchema(TOTAL_PARTICIPANTES)
+
 function ClasificacionManualDetalle() {
   const { dni } = useParams<{ dni: string }>()
   const navigate = useNavigate()
   const rutas = useRutasClasificacion()
-  const [puesto, setPuesto] = useState('')
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<PuestoManualForm>({
+    resolver: zodResolver(puestoSchema),
+    mode: 'onChange',
+    defaultValues: { puesto: '' },
+  })
+
+  const puestoRegistro = register('puesto')
+  const puesto = watch('puesto')
   const [guardado, setGuardado] = useState(false)
 
   // MOCK TEMPORAL
@@ -44,25 +61,24 @@ function ClasificacionManualDetalle() {
   // Para clasificarlo tiene que tener la inscripción paga y el dorsal asignado
   const habilitado = corredor.estadoInscripcion === 'pagado' && corredor.dorsal !== ''
 
-  const validacionPuesto = validar(puestoManualSchema(TOTAL_PARTICIPANTES), { puesto })
   const puestoNumero = Number(puesto)
-  const puestoFueraDeRango = puesto !== '' && !validacionPuesto.ok
-  const puedeGuardar = habilitado && validacionPuesto.ok && !guardado
+  const mostrarErrorPuesto = puesto !== '' && !!errors.puesto
+  const puedeGuardar = habilitado && isValid && !guardado
 
-  const guardarClasificacion = () => {
-  if (!puedeGuardar) return
+  const guardarClasificacion = ({ puesto: puestoIngresado }: PuestoManualForm) => {
+    if (!puedeGuardar) return
 
-  // MOCK TEMPORAL: simula el guardado.
-  // TODO BACKEND: PUT /api/clasificaciones/{id}/resultado con { puestoGeneral }
-  // (responder 409 si el puesto ya fue tomado por otro corredor).
-  console.log('Guardar clasificación', { dni: corredor.dni, puestoGeneral: puestoNumero })
+    // MOCK TEMPORAL: simula el guardado.
+    // TODO BACKEND: PUT /api/clasificaciones/{id}/resultado con { puestoGeneral }
+    // (responder 409 si el puesto ya fue tomado por otro corredor).
+    console.log('Guardar clasificación', { dni: corredor.dni, puestoGeneral: Number(puestoIngresado) })
 
-  // Al guardar vuelve directo a tiempo real
-  navigate(rutas.listado, { replace: true })
-}
+    // Al guardar vuelve directo a tiempo real
+    navigate(rutas.listado, { replace: true })
+  }
 
   return (
-        <Container fluid as="main" className="p-4">
+    <Container fluid as="main" className="p-4">
       <header className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
         <h1 className="h3 fw-bold mb-0">Detalle de Corredor</h1>
 
@@ -108,7 +124,12 @@ function ClasificacionManualDetalle() {
               )}
             </Card.Header>
 
-            <Card.Body className="d-flex flex-column p-4">
+            <Card.Body
+              as="form"
+              onSubmit={handleSubmit(guardarClasificacion)}
+              noValidate
+              className="d-flex flex-column p-4"
+            >
               <Card.Subtitle className="text-center text-secondary small fw-semibold mb-3">
                 DATOS DE LA CLASIFICACIÓN
               </Card.Subtitle>
@@ -141,18 +162,19 @@ function ClasificacionManualDetalle() {
                       autoComplete="off"
                       size="lg"
                       className="fw-bold"
-                      value={puesto}
-                      placeholder="Ej. 42"
-                      disabled={!habilitado || guardado}
-                      isInvalid={puestoFueraDeRango}
+                      {...puestoRegistro}
                       onChange={(event) => {
-                        setPuesto(event.target.value.replace(/\D/g, ''))
+                        event.target.value = event.target.value.replace(/\D/g, '')
+                        void puestoRegistro.onChange(event)
                         setGuardado(false)
                       }}
+                      placeholder="Ej. 42"
+                      disabled={!habilitado || guardado}
+                      isInvalid={mostrarErrorPuesto}
                     />
 
-                    {puestoFueraDeRango && (
-                      <div className="text-danger small mt-1">{validacionPuesto.errores.puesto}</div>
+                    {mostrarErrorPuesto && (
+                      <div className="text-danger small mt-1">{errors.puesto?.message}</div>
                     )}
                   </div>
                 </Col>
@@ -170,12 +192,11 @@ function ClasificacionManualDetalle() {
 
               <div className="text-center mt-auto pt-4">
                 <Button
-                  type="button"
+                  type="submit"
                   variant="success"
                   size="lg"
                   className="rounded-pill px-4"
                   disabled={!puedeGuardar}
-                  onClick={guardarClasificacion}
                 >
                   {guardado ? 'Clasificación guardada' : 'Guardar clasificación'}
                 </Button>
