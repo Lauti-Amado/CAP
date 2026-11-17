@@ -1,4 +1,4 @@
-//frontend/src/components/corredor/TarjetasCorredor.tsx
+
 import type { ReactNode } from 'react'
 import { Badge, Card, ListGroup } from 'react-bootstrap'
 import { BadgeCheck, Banknote, UserRound } from 'lucide-react'
@@ -11,7 +11,7 @@ type TarjetasCorredorProps = {
   distancia: string
   talleRemera?: string
   clubTeam?: string
-  estadoInscripcion: EstadoVerificacion
+  estadoInscripcion?: EstadoVerificacion
   estadoAptoMedico?: EstadoVerificacion
 }
 
@@ -24,7 +24,15 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: ReactNode }) {
   )
 }
 
-function FilaEstado({ etiqueta, ok, textoOk }: { etiqueta: string; ok: boolean; textoOk: string }) {
+function FilaEstado({
+  etiqueta,
+  ok,
+  textoOk,
+}: {
+  etiqueta: string
+  ok: boolean
+  textoOk: string
+}) {
   return (
     <div className="d-flex justify-content-between align-items-center bg-body-tertiary rounded p-2 mt-2">
       <span className="small">{etiqueta}</span>
@@ -34,51 +42,74 @@ function FilaEstado({ etiqueta, ok, textoOk }: { etiqueta: string; ok: boolean; 
           {textoOk}
         </Badge>
       ) : (
-        <Badge pill bg="warning" text="dark">PENDIENTE</Badge>
+        <Badge pill bg="warning" text="dark">
+          PENDIENTE
+        </Badge>
       )}
     </div>
   )
 }
 
 function TarjetasCorredor({
-  nombre, dni, categoria, distancia, talleRemera, clubTeam, estadoInscripcion, estadoAptoMedico,
+  nombre,
+  dni,
+  categoria,
+  distancia,
+  talleRemera,
+  clubTeam,
+  estadoInscripcion,
+  estadoAptoMedico,
 }: TarjetasCorredorProps) {
   return (
     <div className="d-flex flex-column gap-3 w-100">
       <Card className="shadow-sm">
-        <Card.Body className="d-flex flex-column align-items-center">
-          <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-3 mb-2">
-            <UserRound size={30} />
-          </span>
+        <Card.Body>
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-2">
+              <UserRound size={19} />
+            </span>
+            <strong className="small">DATOS DEL CORREDOR</strong>
+          </div>
 
-          <h2 className="h5 fw-bold text-center text-break w-100 mb-1">{nombre}</h2>
-          <p className="text-secondary text-center mb-3">DNI: {dni}</p>
-
-          <ListGroup variant="flush" className="w-100 border-top">
-            <Dato etiqueta="CATEGORÍA" valor={categoria} />
-            <Dato etiqueta="DISTANCIA" valor={distancia} />
-            <Dato etiqueta="TALLE REMERA" valor={talleRemera || '—'} />
-            <Dato etiqueta="CLUB/TEAM" valor={clubTeam || '—'} />
+          <ListGroup variant="flush">
+            <Dato etiqueta="Nombre" valor={nombre} />
+            <Dato etiqueta="DNI" valor={dni} />
+            <Dato etiqueta="Categoría" valor={categoria} />
+            <Dato etiqueta="Distancia" valor={distancia} />
+            {clubTeam && <Dato etiqueta="Equipo" valor={clubTeam} />}
+            {talleRemera && <Dato etiqueta="Talle de remera" valor={talleRemera} />}
           </ListGroup>
         </Card.Body>
       </Card>
 
-      <Card className="shadow-sm">
-        <Card.Body>
-          <div className="d-flex align-items-center gap-2 mb-2">
-            <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-2">
-              <Banknote size={19} />
-            </span>
-            <strong className="small">ESTADO DE PAGO</strong>
-          </div>
+      {(estadoInscripcion || estadoAptoMedico) && (
+        <Card className="shadow-sm">
+          <Card.Body>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-2">
+                <Banknote size={19} />
+              </span>
+              <strong className="small">ESTADO DE INSCRIPCIÓN</strong>
+            </div>
 
-          <FilaEstado etiqueta="Inscripción" ok={estadoInscripcion === 'pagado'} textoOk="PAGADO" />
+            {estadoInscripcion && (
+              <FilaEstado
+                etiqueta="Inscripción"
+                ok={estadoInscripcion === 'pagado'}
+                textoOk="PAGADO"
+              />
+            )}
 
-          {estadoAptoMedico && (
-            <FilaEstado etiqueta="Apto Médico" ok={estadoAptoMedico === 'verificado'} textoOk="VERIFICADO" />
-          )}
-        </Card.Body>
-      </Card>
+            {estadoAptoMedico && (
+              <FilaEstado
+                etiqueta="Apto Médico"
+                ok={estadoAptoMedico === 'verificado'}
+                textoOk="VERIFICADO"
+              />
+            )}
+          </Card.Body>
+        </Card>
+      )}
     </div>
   )
 }

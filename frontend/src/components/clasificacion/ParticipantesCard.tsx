@@ -117,6 +117,19 @@ function ParticipantesCard({
               </div>
             </>
           )}
+          
+          {p.estado === 'DESCALIFICADO' && (
+            <Badge bg="danger">DESCALIFICADO</Badge>
+          )}
+
+          {p.estado === 'NO FINALIZÓ' && (
+            <Badge bg="warning" text="dark">NO FINALIZÓ</Badge>
+          )}
+
+          {p.estado === 'NO LARGÓ' && (
+            <Badge bg="secondary">NO LARGÓ</Badge>
+          )}
+          
         </>
       ),
     },
@@ -124,7 +137,7 @@ function ParticipantesCard({
       titulo: 'ACCIÓN',
       key: 'accion',
       render: (p) =>
-        p.estado === 'LLEGADO' ? (
+        p.estado === 'DESCALIFICADO' ? (
           <Button
             variant="link"
             size="sm"
@@ -192,6 +205,9 @@ function ParticipantesCard({
                   <option value="Pendiente">Pendiente</option>
                   <option value="En Curso">En Curso</option>
                   <option value="Llegado">Llegado</option>
+                  <option value="Descalificado">Descalificado</option>
+                  <option value="No finalizó">No finalizó</option>
+                  <option value="No largó">No largó</option>
                 </Form.Select>
               </Col>
 

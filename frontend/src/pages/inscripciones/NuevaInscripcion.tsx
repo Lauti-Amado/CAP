@@ -1,21 +1,18 @@
 //frontend/src/pages/inscripciones/NuevaInscripcion.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Modal, Row, ToggleButton, ToggleButtonGroup,} from 'react-bootstrap'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, CreditCard, Eye, Footprints, Plus, Search, UserRoundPlus } from 'lucide-react'
 import { contactoEmergenciaSchema, inscripcionPaso1Schema } from '../../schemas/inscripcionSchema'
 import { validar, type ErroresFormulario } from '../../utils/validar'
-import type { ContactoEmergencia } from '../../types/inscripcion'
-
-// MOCK TEMPORAL
-//
-// Los contactos, carrera, distancias y productos
-// se obtienen actualmente desde nuevaInscripcionMock.
-//
-// TODO BACKEND:
-// Reemplazar estas fuentes por consultas reales
-// al backend.
-import { contactosEmergenciaMock, carreraInscripcionMock, distanciasInscripcionMock, productosDinamicosMock, variantesProductoMock, cantidadesProductoMock,} from './nuevaInscripcionMock'
+import type { ContactoEmergencia, CrearInscripcionPayload, OpcionesInscripcionDTO } from '../../types/inscripcion'
+import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
+import { ApiError } from '../../services/apiService'
+import {
+  buscarContactoEmergencia as buscarContactoEmergenciaAPI,
+  crearInscripcion,
+  obtenerOpcionesInscripcion,
+} from '../../services/inscripcionService'
 
 type DatosCorredor = {
   nombre: string
@@ -116,6 +113,7 @@ function NuevaInscripcion() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { nombreCarrera } = useParams()
+  const { carreraSeleccionada } = useSeleccionarCarrera()
 
   /*
    * Si se llega a esta pantalla desde el modal
@@ -130,6 +128,54 @@ function NuevaInscripcion() {
 
   const [paso, setPaso] = useState(1)
   const [inscripcionConfirmada, setInscripcionConfirmada] = useState(false)
+  const [inscripcionCreadaId, setInscripcionCreadaId] = useState<string | null>(null)
+  const [guardando, setGuardando] = useState(false)
+  const [errorCreacion, setErrorCreacion] = useState<string | null>(null)
+
+  /* ---------- Opciones reales de la carrera ---------- */
+
+  const [opciones, setOpciones] = useState<OpcionesInscripcionDTO | null>(null)
+  const [cargandoOpciones, setCargandoOpciones] = useState(true)
+  const [errorOpciones, setErrorOpciones] = useState<string | null>(null)
+
+  useEffect(() => {
+    const carreraId = carreraSeleccionada?.id
+
+    if (!carreraId) {
+      setOpciones(null)
+      setCargandoOpciones(false)
+      setErrorOpciones('No hay una carrera seleccionada. Volvé a seleccionar la carrera.')
+      return
+    }
+
+    let cancelado = false
+
+    async function cargarOpciones(idCarrera: string) {
+    try {
+      setCargandoOpciones(true)
+      setErrorOpciones(null)
+
+      const resultado = await obtenerOpcionesInscripcion(idCarrera)
+
+      if (!cancelado) setOpciones(resultado)
+    } catch (error) {
+      if (!cancelado) {
+        setErrorOpciones(
+          error instanceof Error
+            ? error.message
+            : 'No se pudieron cargar las opciones de inscripción.'
+        )
+      }
+    } finally {
+      if (!cancelado) setCargandoOpciones(false)
+    }
+  }
+
+  void cargarOpciones(carreraId)
+    return () => {
+      cancelado = true
+    }
+  }, [carreraSeleccionada?.id])
 
   const [datosCorredor, setDatosCorredor] = useState<DatosCorredor>({
     nombre: '',
@@ -157,13 +203,17 @@ function NuevaInscripcion() {
 
   const [mostrarErrores, setMostrarErrores] = useState(false)
   const [erroresContacto, setErroresContacto] = useState<ErroresFormulario>({})
+  const [buscandoContacto, setBuscandoContacto] = useState(false)
+  const [errorBusquedaContacto, setErrorBusquedaContacto] = useState<string | null>(null)
 
   /* ---------- Datos de la inscripción ---------- */
 
   const [distanciaSeleccionada, setDistanciaSeleccionada] = useState('')
   const [productoDinamico, setProductoDinamico] = useState<'si' | 'no'>('no')
+  const [productoSeleccionadoId, setProductoSeleccionadoId] = useState('')
   const [varianteProducto, setVarianteProducto] = useState('')
   const [cantidadProducto, setCantidadProducto] = useState('1')
+  const [errorAptoMedico, setErrorAptoMedico] = useState<string | null>(null)
 
   const actualizarDato = (campo: keyof DatosCorredor, valor: string | boolean) => {
     setDatosCorredor((anterior) => ({ ...anterior, [campo]: valor }))
@@ -177,30 +227,36 @@ function NuevaInscripcion() {
      BÚSQUEDA DE CONTACTO
   ===================================================== */
 
-  /*
-   * MOCK TEMPORAL:
-   * Actualmente la búsqueda se realiza sobre
-   * contactosEmergenciaMock.
-   *
-   * TODO BACKEND:
-   *
-   * GET /api/contactos-emergencia?dni={dni}
-   */
-  const buscarContactoEmergencia = () => {
+  const buscarContactoEmergencia = async () => {
     const dni = dniContacto.trim()
 
-    if (!dni) return
-
-    const contactoEncontrado = contactosEmergenciaMock.find((contacto) => contacto.dni === dni)
-
-    if (contactoEncontrado) {
-      setContactoEmergencia(contactoEncontrado)
+    if (!/^\d{7,8}$/.test(dni)) {
+      setErrorBusquedaContacto('Ingresá un DNI válido de 7 u 8 números.')
       return
     }
 
-    setNuevoContacto({ nombre: '', apellido: '', dni, telefono: '' })
-    setErroresContacto({})
-    setMostrarModalContacto(true)
+    try {
+      setBuscandoContacto(true)
+      setErrorBusquedaContacto(null)
+
+      const contactoEncontrado = await buscarContactoEmergenciaAPI(dni)
+      setContactoEmergencia(contactoEncontrado)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        setNuevoContacto({ nombre: '', apellido: '', dni, telefono: '' })
+        setErroresContacto({})
+        setMostrarModalContacto(true)
+        return
+      }
+
+      setErrorBusquedaContacto(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo buscar el contacto de emergencia.'
+      )
+    } finally {
+      setBuscandoContacto(false)
+    }
   }
 
   const abrirModalNuevoContacto = () => {
@@ -214,13 +270,7 @@ function NuevaInscripcion() {
     setErroresContacto((anteriores) => ({ ...anteriores, [campo]: '' }))
   }
 
-  /*
-   * TODO BACKEND:
-   *
-   * POST /api/contactos-emergencia
-   *
-   * Actualmente solamente se guarda en el estado local.
-   */
+  // El contacto nuevo se envía junto con la inscripción; el backend lo crea en esa operación.
   const guardarNuevoContacto = () => {
     const validacion = validar(contactoEmergenciaSchema, nuevoContacto)
 
@@ -254,39 +304,118 @@ function NuevaInscripcion() {
       return
     }
 
+    if (datosCorredor.aptoMedico && !aptoMedicoValido) {
+      setErrorAptoMedico('El apto médico debe estar vigente hasta la fecha de la carrera.')
+      return
+    }
+
+    setErrorAptoMedico(null)
     setPaso(2)
   }
+
+  const manana = new Date()
+  manana.setDate(manana.getDate() + 1)
+  const mananaISO = new Date(manana.getTime() - manana.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 
   /* =====================================================
      DATOS DEL PASO 2
   ===================================================== */
 
-  const distanciaSeleccionadaData = distanciasInscripcionMock.find(
-    (distancia) => distancia.id === distanciaSeleccionada,
+  // Se ofrecen todas las distancias configuradas para la carrera.
+  const distanciasDisponibles = opciones?.distancias ?? []
+
+  const claveDistancia = (kilometraje: number, tipoDistancia: string) =>
+    `${kilometraje}|${tipoDistancia}`
+
+  const distanciaSeleccionadaData = distanciasDisponibles.find(
+    (distancia) => claveDistancia(distancia.kilometraje, distancia.tipoDistancia) === distanciaSeleccionada
   )
 
-  const productoSeleccionado = productosDinamicosMock[0]
+  const requiereAptoMedico = Boolean(
+    distanciaSeleccionadaData &&
+    distanciaSeleccionadaData.kilometraje >= 10 &&
+    distanciaSeleccionadaData.tipoDistancia === 'Competitiva'
+  )
+
+  const productoSeleccionado = opciones?.productos.find(
+    (producto) => producto.id === productoSeleccionadoId
+  )
+
+  const varianteSeleccionada = productoSeleccionado?.variantes.find(
+    (variante) => variante.id === varianteProducto
+  )
+
   const cantidad = Number(cantidadProducto) || 1
   const precioDistancia = distanciaSeleccionadaData?.precio ?? 0
-  const precioProducto = productoDinamico === 'si' ? productoSeleccionado.precio * cantidad : 0
+  const precioProducto = productoDinamico === 'si'
+    ? (varianteSeleccionada?.precio ?? 0) * cantidad
+    : 0
   const totalPagar = precioDistancia + precioProducto
 
-  const puedeContinuarPaso2 =
-    distanciaSeleccionada !== '' &&
-    (productoDinamico === 'no' || (varianteProducto !== '' && cantidadProducto !== ''))
+  const seleccionarDistancia = (kilometraje: number, tipoDistancia: string) => {
+    setDistanciaSeleccionada(claveDistancia(kilometraje, tipoDistancia))
+    setErrorAptoMedico(null)
+  }
+
+  const fechaCarrera = opciones ? new Date(opciones.carrera.fechaHoraCarrera) : null
+  const fechaCarreraISO = fechaCarrera
+    ? new Date(fechaCarrera.getTime() - fechaCarrera.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+    : undefined
+  const fechaMinimaApto = fechaCarreraISO && fechaCarreraISO > mananaISO
+    ? fechaCarreraISO
+    : mananaISO
+
+  const aptoMedicoValido = datosCorredor.aptoMedico &&
+    datosCorredor.vencimientoAptoMedico !== '' &&
+    datosCorredor.vencimientoAptoMedico >= fechaMinimaApto
+
+  const errorAptoMedicoVisible = datosCorredor.aptoMedico && !aptoMedicoValido
+    ? `El apto médico debe estar vigente hasta la fecha de la carrera (${fechaCarreraISO ?? 'fecha no disponible'}).`
+    : errorAptoMedico ?? undefined
+
+  const faltaAptoRequerido = requiereAptoMedico && !aptoMedicoValido
+
+  const puedeContinuarPaso2 = Boolean(
+    distanciaSeleccionadaData &&
+    (productoDinamico === 'no' || (
+      productoSeleccionadoId !== '' &&
+      varianteProducto !== '' &&
+      cantidadProducto !== '' &&
+      varianteSeleccionada &&
+      varianteSeleccionada.stock >= cantidad
+    )) &&
+    (!datosCorredor.aptoMedico || aptoMedicoValido) &&
+    (!requiereAptoMedico || aptoMedicoValido)
+  )
 
   const cambiarProductoDinamico = (valor: 'si' | 'no') => {
     setProductoDinamico(valor)
 
     if (valor === 'no') {
+      setProductoSeleccionadoId('')
       setVarianteProducto('')
       setCantidadProducto('1')
     }
   }
 
   const continuarPaso2 = () => {
+    if (requiereAptoMedico && !aptoMedicoValido) {
+      setErrorAptoMedico('Para esta distancia necesitás registrar un apto médico aprobado y vigente hasta la fecha de la carrera.')
+      setPaso(1)
+      return
+    }
+
+    if (datosCorredor.aptoMedico && !aptoMedicoValido) {
+      setErrorAptoMedico('Ingresá una fecha de vencimiento que cubra la fecha de la carrera.')
+      setPaso(1)
+      return
+    }
+
+    if (!opciones?.carrera.admiteInscripciones) return
+    if (opciones.cupo.ocupados >= opciones.cupo.maximo) return
     if (!puedeContinuarPaso2) return
 
+    setErrorAptoMedico(null)
     setPaso(3)
     setInscripcionConfirmada(false)
   }
@@ -295,42 +424,88 @@ function NuevaInscripcion() {
      CONFIRMAR INSCRIPCIÓN
   ===================================================== */
 
-  /*
-   * MOCK TEMPORAL:
-   * Actualmente la confirmación solamente cambia
-   * el estado visual de la pantalla.
-   *
-   * TODO BACKEND:
-   *
-   * POST /api/inscripciones
-   *
-   * El backend deberá recibir los datos del corredor,
-   * contacto de emergencia y datos de inscripción,
-   * y devolver la inscripción creada.
-   */
-  const confirmarInscripcion = () => {
-    setInscripcionConfirmada(true)
+  const confirmarInscripcion = async () => {
+    if (!carreraSeleccionada || !distanciaSeleccionadaData || !contactoEmergencia) {
+      setErrorCreacion('Faltan datos para registrar la inscripción.')
+      return
+    }
+
+    if (requiereAptoMedico && !aptoMedicoValido) {
+      setPaso(1)
+      setErrorAptoMedico('Para esta distancia necesitás registrar un apto médico aprobado y vigente hasta la fecha de la carrera.')
+      return
+    }
+
+    const discapacidadMapeada: Record<string, CrearInscripcionPayload['corredor']['discapacidad']> = {
+      Ninguna: undefined,
+      Visual: 'Discapacidad_visual',
+      'Silla de ruedas': 'Discapacidad_silla',
+      Otra: 'Discapacidad_general',
+    }
+
+    const productos = productoDinamico === 'si' && varianteSeleccionada
+      ? [{ varianteId: varianteSeleccionada.id, cantidad }]
+      : []
+
+    const datos: CrearInscripcionPayload = {
+      corredor: {
+        dni: datosCorredor.dni.trim(),
+        nombre: datosCorredor.nombre.trim(),
+        apellido: datosCorredor.apellido.trim(),
+        telefono: datosCorredor.telefono.trim(),
+        sexo: datosCorredor.genero as 'Femenino' | 'Masculino',
+        fechaNacimiento: datosCorredor.fechaNacimiento,
+        ...(discapacidadMapeada[datosCorredor.discapacidad]
+          ? { discapacidad: discapacidadMapeada[datosCorredor.discapacidad] }
+          : {}),
+      },
+      contactoEmergencia: {
+        dni: contactoEmergencia.dni,
+        nombre: contactoEmergencia.nombre,
+        apellido: contactoEmergencia.apellido,
+        telefono: contactoEmergencia.telefono,
+      },
+      ...(datosCorredor.aptoMedico
+        ? {
+            aptoMedico: {
+              // El certificado debe cubrir todo el día de la carrera.
+              fechaVencimiento: new Date(`${datosCorredor.vencimientoAptoMedico}T23:59:59.999`).toISOString(),
+            },
+          }
+        : {}),
+      distancia: {
+        kilometraje: distanciaSeleccionadaData.kilometraje,
+        tipoDistancia: distanciaSeleccionadaData.tipoDistancia as 'Participativa' | 'Competitiva',
+      },
+      productos,
+    }
+
+    try {
+      setGuardando(true)
+      setErrorCreacion(null)
+
+      const creada = await crearInscripcion(carreraSeleccionada.id, datos)
+      setInscripcionCreadaId(creada.id)
+      setInscripcionConfirmada(true)
+    } catch (error) {
+      setErrorCreacion(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo crear la inscripción.'
+      )
+    } finally {
+      setGuardando(false)
+    }
   }
 
   const nuevaInscripcion = () => {
     window.location.reload()
   }
 
-  /*
-   * TODO BACKEND:
-   *
-   * Cuando exista el ID real de la inscripción,
-   * "Ver inscripción" deberá navegar a:
-   *
-   * /entrega-kits/inscripciones/:id
-   *
-   * Por ahora volvemos a la lista de inscripciones.
-   */
   const verInscripcion = () => {
-    navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
+    if (!inscripcionCreadaId) return
+    navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/${inscripcionCreadaId}`)
   }
-
-  const hoyISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 
   return (
     <Container as="main" className="py-4">
@@ -353,6 +528,24 @@ function NuevaInscripcion() {
           </header>
 
           <Pasos actual={paso} />
+
+          {cargandoOpciones && (
+            <div className="alert alert-info">Cargando las distancias y productos disponibles...</div>
+          )}
+
+          {errorOpciones && <div className="alert alert-danger" role="alert">{errorOpciones}</div>}
+
+          {opciones && !opciones.carrera.admiteInscripciones && (
+            <div className="alert alert-warning" role="alert">
+              Esta carrera no admite inscripciones en este momento.
+            </div>
+          )}
+
+          {opciones && opciones.cupo.ocupados >= opciones.cupo.maximo && (
+            <div className="alert alert-warning" role="alert">
+              La carrera alcanzó el cupo máximo.
+            </div>
+          )}
 
           <Card>
             <Card.Body className="p-4">
@@ -468,32 +661,46 @@ function NuevaInscripcion() {
                       </Form.Group>
                     </Col>
 
-                    <Col md={6}>
-                      <div className="small fw-semibold mb-2">Apto médico</div>
+                  </Row>
 
-                      <Form.Check
-                        type="checkbox"
-                        id="aptoMedico"
-                        label="Apto médico aprobado"
-                        checked={datosCorredor.aptoMedico}
-                        onChange={(e) => actualizarDato('aptoMedico', e.currentTarget.checked)}
-                      />
-                    </Col>
+                  {/* APTO MÉDICO: se registra antes de seleccionar la distancia. */}
+                  <div className="border-top mt-4 pt-4">
+                    <h3 className="h6 fw-bold mb-1">Apto médico</h3>
+                    <p className="text-secondary small">
+                      Registre el apto si el corredor lo entregó y fue aprobado.
+                    </p>
+
+                    <Form.Check
+                      type="checkbox"
+                      id="aptoMedico"
+                      label="Apto médico aprobado"
+                      checked={datosCorredor.aptoMedico}
+                      onChange={(e) => {
+                        const aprobado = e.currentTarget.checked
+                        actualizarDato('aptoMedico', aprobado)
+                        if (!aprobado) actualizarDato('vencimientoAptoMedico', '')
+                        setErrorAptoMedico(null)
+                      }}
+                    />
 
                     {datosCorredor.aptoMedico && (
-                      <Col md={6}>
+                      <div className="mt-3">
                         <CampoTexto
                           id="vencimientoAptoMedico"
                           etiqueta="Fecha de vencimiento del apto médico"
+                          obligatorio
                           tipo="date"
-                          min={hoyISO}
+                          min={fechaMinimaApto}
                           valor={datosCorredor.vencimientoAptoMedico}
-                          onCambio={(valor) => actualizarDato('vencimientoAptoMedico', valor)}
-                          error={errorPaso1('corredor.vencimientoAptoMedico')}
+                          onCambio={(valor) => {
+                            actualizarDato('vencimientoAptoMedico', valor)
+                            setErrorAptoMedico(null)
+                          }}
+                          error={errorAptoMedicoVisible}
                         />
-                      </Col>
+                      </div>
                     )}
-                  </Row>
+                  </div>
 
                   {/* CONTACTO DE EMERGENCIA */}
                   <div className="border-top mt-4 pt-4">
@@ -520,10 +727,11 @@ function NuevaInscripcion() {
                         type="button"
                         variant="outline-secondary"
                         className="d-inline-flex align-items-center gap-1"
-                        onClick={buscarContactoEmergencia}
+                        onClick={() => void buscarContactoEmergencia()}
+                        disabled={buscandoContacto}
                       >
                         <Search size={14} aria-hidden="true" />
-                        Buscar
+                        {buscandoContacto ? 'Buscando...' : 'Buscar'}
                       </Button>
 
                       <Button
@@ -536,6 +744,10 @@ function NuevaInscripcion() {
                         Nuevo contacto
                       </Button>
                     </InputGroup>
+
+                    {errorBusquedaContacto && (
+                      <div className="text-danger small mt-2" role="alert">{errorBusquedaContacto}</div>
+                    )}
 
                     {contactoEmergencia && (
                       <Card bg="success-subtle" className="border-success-subtle mt-3">
@@ -591,21 +803,44 @@ function NuevaInscripcion() {
                         </div>
 
                         <Row xs={1} sm={3} className="g-2">
-                          {distanciasInscripcionMock.map((distancia) => (
-                            <Col key={distancia.id}>
-                              <Button
-                                type="button"
-                                variant={distanciaSeleccionada === distancia.id ? 'success' : 'outline-success'}
-                                className="w-100 py-3 d-flex flex-column align-items-center"
-                                onClick={() => setDistanciaSeleccionada(distancia.id)}
-                              >
-                                <span className="fs-4 fw-bold lh-1 mb-1">{distancia.nombre}</span>
-                                <small>{distancia.descripcion}</small>
-                              </Button>
-                            </Col>
-                          ))}
+                          {distanciasDisponibles.map((distancia) => {
+                            const clave = claveDistancia(distancia.kilometraje, distancia.tipoDistancia)
+                            return (
+                              <Col key={clave}>
+                                <Button
+                                  type="button"
+                                  variant={distanciaSeleccionada === clave ? 'success' : 'outline-success'}
+                                  className="w-100 py-3 d-flex flex-column align-items-center"
+                                  onClick={() => seleccionarDistancia(distancia.kilometraje, distancia.tipoDistancia)}
+                                >
+                                  <span className="fs-4 fw-bold lh-1 mb-1">{distancia.kilometraje}K</span>
+                                  <small>{distancia.tipoDistancia}</small>
+                                  <small>${distancia.precio.toLocaleString('es-AR')}</small>
+                                </Button>
+                              </Col>
+                            )
+                          })}
                         </Row>
+
+                        {distanciasDisponibles.length === 0 && (
+                          <div className="text-danger small mt-2">La carrera no tiene distancias válidas disponibles.</div>
+                        )}
+
                       </div>
+
+                      {faltaAptoRequerido && (
+                        <div className="alert alert-warning" role="alert">
+                          Esta distancia competitiva requiere un apto médico aprobado y vigente.
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="p-0 ms-1 align-baseline"
+                            onClick={() => setPaso(1)}
+                          >
+                            Volver a datos del corredor
+                          </Button>
+                        </div>
+                      )}
 
                       {/* PRODUCTO DINÁMICO */}
                       <div className="mb-3">
@@ -629,30 +864,58 @@ function NuevaInscripcion() {
 
                       {productoDinamico === 'si' && (
                         <Row className="g-2">
-                          <Col sm={6}>
-                            <Form.Group controlId="varianteProducto">
-                              <Form.Label className="small fw-semibold">Variante del producto</Form.Label>
-
-                              <Form.Select value={varianteProducto} onChange={(e) => setVarianteProducto(e.target.value)}>
-                                <option value="">Seleccione variante</option>
-                                {variantesProductoMock.map((variante) => (
-                                  <option key={variante} value={variante}>
-                                    {variante}
+                          <Col sm={4}>
+                            <Form.Group controlId="productoSeleccionado">
+                              <Form.Label className="small fw-semibold">Producto</Form.Label>
+                              <Form.Select
+                                value={productoSeleccionadoId}
+                                onChange={(e) => {
+                                  setProductoSeleccionadoId(e.target.value)
+                                  setVarianteProducto('')
+                                  setCantidadProducto('1')
+                                }}
+                              >
+                                <option value="">Seleccione producto</option>
+                                {(opciones?.productos ?? []).map((producto) => (
+                                  <option key={producto.id} value={producto.id}>
+                                    {producto.nombre}
                                   </option>
                                 ))}
                               </Form.Select>
                             </Form.Group>
                           </Col>
 
-                          <Col sm={6}>
+                          <Col sm={4}>
+                            <Form.Group controlId="varianteProducto">
+                              <Form.Label className="small fw-semibold">Variante</Form.Label>
+                              <Form.Select
+                                value={varianteProducto}
+                                disabled={!productoSeleccionado}
+                                onChange={(e) => {
+                                  setVarianteProducto(e.target.value)
+                                  setCantidadProducto('1')
+                                }}
+                              >
+                                <option value="">Seleccione variante</option>
+                                {(productoSeleccionado?.variantes ?? []).map((variante) => (
+                                  <option key={variante.id} value={variante.id} disabled={variante.stock <= 0}>
+                                    {variante.nombre} — ${variante.precio.toLocaleString('es-AR')} (stock: {variante.stock})
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+
+                          <Col sm={4}>
                             <Form.Group controlId="cantidadProducto">
                               <Form.Label className="small fw-semibold">Cantidad</Form.Label>
-
-                              <Form.Select value={cantidadProducto} onChange={(e) => setCantidadProducto(e.target.value)}>
-                                {cantidadesProductoMock.map((opcion) => (
-                                  <option key={opcion} value={opcion}>
-                                    {opcion}
-                                  </option>
+                              <Form.Select
+                                value={cantidadProducto}
+                                disabled={!varianteSeleccionada || varianteSeleccionada.stock <= 0}
+                                onChange={(e) => setCantidadProducto(e.target.value)}
+                              >
+                                {Array.from({ length: Math.min(10, varianteSeleccionada?.stock ?? 0) }, (_, i) => i + 1).map((opcion) => (
+                                  <option key={opcion} value={opcion}>{opcion}</option>
                                 ))}
                               </Form.Select>
                             </Form.Group>
@@ -677,19 +940,19 @@ function NuevaInscripcion() {
                           </ListGroup.Item>
 
                           <ListGroup.Item>
-                            <DatoResumen etiqueta="Carrera">{carreraInscripcionMock.nombre}</DatoResumen>
-                            <small className="text-secondary">Edición {carreraInscripcionMock.edicion}</small>
+                            <DatoResumen etiqueta="Carrera">{opciones?.carrera.nombre ?? 'Cargando carrera...'}</DatoResumen>
+                            <small className="text-secondary">Edición {opciones ? new Date(opciones.carrera.fechaHoraCarrera).getFullYear() : '—'}</small>
                           </ListGroup.Item>
 
                           <ListGroup.Item>
                             <DatoResumen etiqueta="Distancia">
-                              {distanciaSeleccionadaData ? distanciaSeleccionadaData.nombre : 'Sin seleccionar'}
+                              {distanciaSeleccionadaData ? `${distanciaSeleccionadaData.kilometraje}K ${distanciaSeleccionadaData.tipoDistancia}` : 'Sin seleccionar'}
                             </DatoResumen>
                           </ListGroup.Item>
 
                           <ListGroup.Item>
                             <DatoResumen etiqueta="Adicionales">
-                              {productoDinamico === 'si' ? `${cantidad} ${productoSeleccionado.nombre}` : 'Ninguno'}
+                              {productoDinamico === 'si' && productoSeleccionado && varianteSeleccionada ? `${cantidad} ${productoSeleccionado.nombre} (${varianteSeleccionada.nombre})` : 'Ninguno'}
                             </DatoResumen>
                           </ListGroup.Item>
 
@@ -707,7 +970,7 @@ function NuevaInscripcion() {
                       Volver
                     </Button>
 
-                    <Button type="button" variant="success" disabled={!puedeContinuarPaso2} onClick={continuarPaso2}>
+                    <Button type="button" variant="success" disabled={!puedeContinuarPaso2 || cargandoOpciones || !opciones?.carrera.admiteInscripciones || (opciones.cupo.ocupados >= opciones.cupo.maximo)} onClick={continuarPaso2}>
                       Continuar
                     </Button>
                   </div>
@@ -755,14 +1018,14 @@ function NuevaInscripcion() {
                         </Card.Header>
 
                         <Card.Body className="d-flex flex-column gap-3">
-                          <DatoResumen etiqueta="Evento">{carreraInscripcionMock.nombre}</DatoResumen>
+                          <DatoResumen etiqueta="Evento">{opciones?.carrera.nombre ?? '—'}</DatoResumen>
 
                           <Row>
                             <Col>
-                              <DatoResumen etiqueta="Distancia">{distanciaSeleccionadaData?.nombre}</DatoResumen>
+                              <DatoResumen etiqueta="Distancia">{distanciaSeleccionadaData ? `${distanciaSeleccionadaData.kilometraje}K` : '—'}</DatoResumen>
                             </Col>
                             <Col>
-                              <DatoResumen etiqueta="Tipo">{distanciaSeleccionadaData?.descripcion}</DatoResumen>
+                              <DatoResumen etiqueta="Tipo">{distanciaSeleccionadaData?.tipoDistancia ?? '—'}</DatoResumen>
                             </Col>
                           </Row>
                         </Card.Body>
@@ -800,6 +1063,8 @@ function NuevaInscripcion() {
                     </Col>
                   </Row>
 
+                  {errorCreacion && <div className="alert alert-danger mt-3" role="alert">{errorCreacion}</div>}
+
                   <div className="d-flex flex-wrap justify-content-center gap-2 mt-4">
                     {!inscripcionConfirmada ? (
                       <>
@@ -811,10 +1076,11 @@ function NuevaInscripcion() {
                           type="button"
                           variant="success"
                           className="d-inline-flex align-items-center gap-1"
-                          onClick={confirmarInscripcion}
+                          onClick={() => void confirmarInscripcion()}
+                          disabled={guardando}
                         >
                           <Check size={14} aria-hidden="true" />
-                          Confirmar inscripción
+                          {guardando ? 'Registrando...' : 'Confirmar inscripción'}
                         </Button>
                       </>
                     ) : (

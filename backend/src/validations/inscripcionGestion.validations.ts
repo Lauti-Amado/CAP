@@ -1,4 +1,4 @@
-//backend/src/validations/inscripcion.validations.ts
+//backend/src/validations/inscripcionGestion.validations.ts
 import { z } from "zod";
 import { Discapacidad, EstadoInscripcion, Sexo, TipoDistancia } from "../generated/prisma/client";
 
@@ -40,6 +40,9 @@ const aptoMedicoSchema = z.object({
         "El apto médico está vencido: ingresá una fecha de vencimiento futura"
     ),
 });
+export const cargarAptoMedicoSchema = aptoMedicoSchema;
+
+export type CargarAptoMedico = z.infer<typeof cargarAptoMedicoSchema>;
 
 const distanciaSchema = z.object({
     kilometraje: z.number().positive(),
