@@ -1,7 +1,12 @@
 //frontend/src/components/corredor/BuscarCorredorForm.tsx
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Button, Form, InputGroup } from 'react-bootstrap'
 import { PackageCheck, Search } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+import { dniBusquedaSchema } from '../../schemas/kitSchema'
+import type { DniBusquedaForm } from '../../schemas/kitSchema'
 
 type BuscarCorredorFormProps = {
   titulo: string
@@ -27,23 +32,19 @@ function BuscarCorredorForm({
   onBuscar,
   onCambio,
 }: BuscarCorredorFormProps) {
-  const [dni, setDni] = useState('')
-  const [errorLocal, setErrorLocal] = useState<string | null>(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<DniBusquedaForm>({
+    resolver: zodResolver(dniBusquedaSchema),
+    defaultValues: { dni: '' },
+  })
 
-  const mensaje = errorLocal ?? error
+  const dniRegistro = register('dni')
+  const mensaje = errors.dni?.message ?? error
 
-  const enviar = (evento: React.FormEvent<HTMLFormElement>) => {
-    evento.preventDefault()
-    const valor = dni.trim()
-
-    if (valor === '') {
-      setErrorLocal('Por favor, ingrese un DNI válido.')
-      return
-    }
-
-    setErrorLocal(null)
-    onBuscar(valor)
-  }
+  const enviar = ({ dni }: DniBusquedaForm) => onBuscar(dni)
 
   return (
     <div className="d-flex flex-column align-items-center text-center">
@@ -56,7 +57,7 @@ function BuscarCorredorForm({
       </h2>
       <p className="text-secondary mb-4">{descripcion}</p>
 
-      <Form className="w-100" onSubmit={enviar} noValidate>
+      <Form className="w-100" onSubmit={handleSubmit(enviar)} noValidate>
         <InputGroup size="lg">
           <InputGroup.Text className="bg-white">
             <Search size={14} aria-hidden="true" />
@@ -65,13 +66,12 @@ function BuscarCorredorForm({
             type="text"
             inputMode="numeric"
             autoFocus
-            value={dni}
+            {...dniRegistro}
             placeholder={placeholder}
             aria-label="DNI del corredor"
             isInvalid={Boolean(mensaje)}
             onChange={(evento) => {
-              setDni(evento.target.value)
-              setErrorLocal(null)
+              void dniRegistro.onChange(evento)
               onCambio?.()
             }}
           />
