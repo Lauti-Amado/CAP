@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Badge, Button, Col, Container, Form, InputGroup, Row } from 'react-bootstrap'
-import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
+import { Eye, UserRoundPlus, Search } from 'lucide-react'
 import { Tabla, type Columna } from '../../components/tabla/Tabla'
 import type { Inscripcion, /*FiltrosInscripciones*/ } from '../../types/inscripcion'
 
@@ -140,17 +140,6 @@ function Inscripciones() {
               }
             >
               <Eye size={13} />
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline-danger"
-              size="sm"
-              className="d-inline-flex p-1"
-              aria-label="Eliminar inscripción"
-              title="Eliminar inscripción"
-            >
-              <Trash2 size={13} />
             </Button>
           </div>
 
