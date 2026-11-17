@@ -1,7 +1,7 @@
 //backend/src/controllers/inscripcionGestion.controller.ts
 import type { Request, Response } from "express";
 import * as inscripcionService from "../services/inscripcionGestion.service";
-import { contactoQuerySchema, listadoQuerySchema } from "../validations/inscripcionGestion.validations";
+import { contactoQuerySchema, listadoQuerySchema, cargarAptoMedicoSchema } from "../validations/inscripcionGestion.validations";
 
 export async function listar(req: Request, res: Response) {
     const filtros = listadoQuerySchema.parse(req.query);
@@ -33,4 +33,15 @@ export async function anular(req: Request, res: Response) {
 
 export async function modificar(req: Request, res: Response) {
     return res.json(await inscripcionService.modificar(req.params.id as string, req.body));
+}
+
+export async function cargarAptoMedico(req: Request, res: Response) {
+    const datos = cargarAptoMedicoSchema.parse(req.body);
+
+    const resultado = await inscripcionService.cargarAptoMedico(
+        req.params.id as string,
+        datos
+    );
+
+    return res.status(201).json(resultado);
 }
