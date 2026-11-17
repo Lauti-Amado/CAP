@@ -38,7 +38,7 @@ app.use(cookieParser());
 app.use(cors( { origin: allowedOrigins, credentials: true } ));
 z.config(z.locales.es())
 
-app.get("/", (req, res) => {
+app.get("/{*splat}", (req, res) => {
   res.json({ message: "Backend Sistema de clasificaciones CAP funcionando" });
 });
 
