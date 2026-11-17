@@ -5,8 +5,13 @@ import { Badge, Button, Card, Col, Container, Form, InputGroup, Row } from 'reac
 import { Clock, Lock, Pencil, Save, User } from 'lucide-react'
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion'
 import { llegadasMock } from '../llegadasMock'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { resultadoClasificacionSchema } from '../../../schemas/clasificacionSchema'
-import { validar, type ErroresFormulario } from '../../../utils/validar'
+import type {
+  ResultadoClasificacionInput,
+  ResultadoClasificacionOutput,
+} from '../../../schemas/clasificacionSchema'
 
 const ModClasifCorredor: React.FC = () => {
   const { id, corredorId } = useParams()
@@ -30,23 +35,24 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
   // TODO BACKEND: GET /api/clasificaciones/{id}
   const llegada = llegadasMock.find((l) => String(l.id) === id)
 
-  const [errores, setErrores] = useState<ErroresFormulario>({})
-  const [tiempoOficial, setTiempoOficial] = useState(llegada?.tiempo ?? '01:45:23.450')
-  const [puestoGeneral, setPuestoGeneral] = useState(String(llegada?.puesto ?? 42))
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ResultadoClasificacionInput, unknown, ResultadoClasificacionOutput>({
+    resolver: zodResolver(resultadoClasificacionSchema),
+    defaultValues: {
+      tiempoOficial: llegada?.tiempo ?? '01:45:23.450',
+      puestoGeneral: String(llegada?.puesto ?? 42),
+    },
+  })
+
   const [categoria, setCategoria] = useState('Masc 35 a 39 años')
 
-  const handleGuardar = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    const validacion = validar(resultadoClasificacionSchema, { tiempoOficial, puestoGeneral })
-    if (!validacion.ok) {
-      setErrores(validacion.errores)
-      return
-    }
-
-    // TODO BACKEND: PUT /api/clasificaciones/{id}/resultado con validacion.datos
-    // ({ puestoGeneral, tiempoLlegada en milisegundos })
-    console.log('Guardando modificaciones para el registro:', id, validacion.datos)
+  // datos ya viene transformado: { puestoGeneral, tiempoLlegada en milisegundos }
+  const handleGuardar = (datos: ResultadoClasificacionOutput) => {
+    // TODO BACKEND: PUT /api/clasificaciones/{id}/resultado con datos
+    console.log('Guardando modificaciones para el registro:', id, datos)
     // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
     navigate(rutas.trasGuardar(search), { replace: true })
   }
@@ -78,7 +84,7 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
             </div>
           </header>
 
-          <Form id="form-clasificacion" onSubmit={handleGuardar} noValidate>
+          <Form id="form-clasificacion" onSubmit={handleSubmit(handleGuardar)} noValidate>
             {/* Sección 1: información del corredor (solo lectura) */}
             <Card className="mb-4">
               <Card.Header className="d-flex justify-content-between align-items-center bg-transparent">
@@ -140,20 +146,16 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                         <InputGroup hasValidation>
                           <Form.Control
                             type="text"
-                            value={tiempoOficial}
                             placeholder="HH:MM:SS.mmm"
-                            isInvalid={!!errores.tiempoOficial}
-                            onChange={(e) => {
-                              setTiempoOficial(e.target.value)
-                              setErrores({})
-                            }}
+                            {...register('tiempoOficial')}
+                            isInvalid={!!errors.tiempoOficial}
                           />
 
                           <InputGroup.Text>
                             <Clock size={16} aria-hidden="true" />
                           </InputGroup.Text>
 
-                          <Form.Control.Feedback type="invalid">{errores.tiempoOficial}</Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">{errors.tiempoOficial?.message}</Form.Control.Feedback>
                         </InputGroup>
                       </Form.Group>
                     </Col>
@@ -165,15 +167,11 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                         <Form.Control
                           type="text"
                           inputMode="numeric"
-                          value={puestoGeneral}
-                          isInvalid={!!errores.puestoGeneral}
-                          onChange={(e) => {
-                            setPuestoGeneral(e.target.value)
-                            setErrores({})
-                          }}
+                          {...register('puestoGeneral')}
+                          isInvalid={!!errors.puestoGeneral}
                         />
 
-                        <Form.Control.Feedback type="invalid">{errores.puestoGeneral}</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{errors.puestoGeneral?.message}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
 
