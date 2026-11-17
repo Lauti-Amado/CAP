@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -15,7 +14,8 @@ import { Flag } from "lucide-react";
 
 import type { Carrera } from "../../types/carrera";
 import { useCarrera } from "../../context/CarreraContext";
-import { useSeleccionarCarrera } from "../../context/SeleccionarCarreraContext";
+import { useCarreraSeleccion, type SeccionClasificador } from "../../context/SeleccionarCarreraContext";
+import { slugCarrera } from "../../utils/carrera";
 
 import CarreraSeleccionCard from "./components/CarreraSeleccionCard";
 import CarreraFiltros from "./components/CarreraFiltros";
@@ -41,25 +41,28 @@ const normalizar = (texto: string) =>
 
 const SeleccionarCarrera = () => {
   const { cargando, error, getCarreras } = useCarrera();
-
-  const {
-    carreraSeleccionada,
-    seleccionarCarrera,
-  } = useSeleccionarCarrera();
+  const { obtenerCarrera, guardarCarrera } = useCarreraSeleccion();
 
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const seccion = pathname.split("/")[2] as SeccionClasificador;
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroAnio, setFiltroAnio] = useState("");
-  const [filtroEstado, setFiltroEstado] =
-    useState<EstadoCarrera | "">("");
+  const [filtroEstado, setFiltroEstado] = useState<EstadoCarrera | "">("");
 
   // Obtener carreras
   const carreras = useMemo(
     () => getCarreras(),
     [getCarreras]
   );
+
+  // Carrera actualmente seleccionada para ESTA sección
+  const carreraSlugActual = obtenerCarrera(seccion);
+  const carreraSeleccionada = useMemo(() => {
+    if (!carreraSlugActual) return null;
+    return carreras.find((c) => slugCarrera(`${c.nombre} ${new Date(c.fechaHoraCarrera).getFullYear().toString()}`) === carreraSlugActual) ?? null;
+  }, [carreras, carreraSlugActual]);
 
   // Obtener la carrera más reciente
   const carreraReciente = useMemo(
@@ -131,13 +134,15 @@ const SeleccionarCarrera = () => {
     filtroEstado,
   ]);
 
+  const seleccionarCarrera = (carrera: Carrera) => {
+    guardarCarrera(seccion, slugCarrera(carrera.nombre));
+  };
+
   // Continuar con la carrera seleccionada
   const continuarConCarrera = (carrera: Carrera) => {
-    seleccionarCarrera(carrera);
-
-    const seccion = pathname.split("/")[2];
-
-    navigate(`/clasificador/${seccion}`);
+    const slug = slugCarrera(`${carrera.nombre} ${new Date(carrera.fechaHoraCarrera).getFullYear().toString()}`);
+    guardarCarrera(seccion, slug);
+    navigate(`/clasificador/${seccion}/${slug}`);
   };
 
   // Estado de carga
@@ -273,7 +278,7 @@ const SeleccionarCarrera = () => {
                   seleccionada={
                     carreraSeleccionada?.id === carrera.id
                   }
-                  onSeleccionar={seleccionarCarrera}
+                  onSeleccionar={continuarConCarrera}
                   onContinuar={continuarConCarrera}
                 />
               ))}

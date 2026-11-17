@@ -9,6 +9,9 @@ export function useCarreraActual(): Carrera | null {
   const { id, nombreCarrera } = useParams()
 
   if (id) return carreras.find((c) => c.id === id) ?? null
-  if (nombreCarrera) return carreras.find((c) => slugCarrera(c.nombre) === nombreCarrera) ?? null
+  if (nombreCarrera) {
+    const slugBuscado = decodeURIComponent(nombreCarrera).toLowerCase()
+    return carreras.find((c) => slugCarrera(c.nombre).toLowerCase() === slugBuscado) ?? null
+  }
   return null
 }
