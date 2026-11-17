@@ -7,6 +7,7 @@ import { toCarreraDto, type CarreraDTO } from "../dtos/carrera.dto";
 import { notificarClasificacionActualizada } from "../events/clasificacion.events";
 import * as reglas from "../rules/carrera.rules";
 import { sincronizarPendientes } from "./clasificacion.service";
+import { iniciarMonitoreoBackup, generarBackupExcel, detenerMonitoreoBackup } from "./backupService"; // 🟢 Importamos el servicio de backup
 
 const incluirCarrera = {
     lugar: { include: { localidad: true } },
@@ -34,6 +35,9 @@ export async function iniciar(carreraId: string, ahora: Date = new Date()): Prom
     // Desde acá no se entregan más kits: todos los corredores habilitados tienen su clasificación "Pendiente"
     await sincronizarPendientes(carreraId);
 
+    // 🟢 1. INTEGRACIÓN BACKUP: Arrancar el ciclo automático cada 5 minutos al iniciar la carrera
+    iniciarMonitoreoBackup(carreraId);
+
     return toCarreraDto(carrera);
 }
 
@@ -46,6 +50,12 @@ export async function finalizar(carreraId: string): Promise<CarreraDTO> {
     if (!evaluacion.permitida) throw new ErrorReglaDeNegocio(evaluacion.motivo);
 
     await sincronizarPendientes(carreraId); // idempotente: por si alguna quedó sin crear
+
+    // 🟢 2. INTEGRACIÓN BACKUP: Generar el Excel de clasificación final obligatorio justo antes de cerrar
+    await generarBackupExcel(carreraId);
+
+    // 🟢 3. INTEGRACIÓN BACKUP: Detener el temporizador de los 5 minutos en segundo plano
+    detenerMonitoreoBackup();
 
     const carrera = await prisma.$transaction(async (tx) => {
         await tx.clasificacion.updateMany({
