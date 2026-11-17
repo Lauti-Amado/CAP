@@ -134,13 +134,16 @@ const ClasificacionTiempoReal: React.FC = () => {
       titulo: '',
       key: 'seleccion',
       render: (atleta) => (
-        <Form.Check
-          type="checkbox"
-          className="mb-0"
-          aria-label={`Seleccionar a ${atleta.apellidosNombres}`}
-          checked={seleccionados.includes(atleta.id)}
-          onChange={() => alternarSeleccion(atleta.id)}
-        />
+        <div className="d-flex justify-content-center">
+          <Form.Check.Input
+            type="checkbox"
+            className="m-0"
+            style={{ width: '1.5rem', height: '1.5rem', cursor: 'pointer' }}
+            aria-label={`Seleccionar a ${atleta.apellidosNombres}`}
+            checked={seleccionados.includes(atleta.id)}
+            onChange={() => alternarSeleccion(atleta.id)}
+          />
+        </div>
       ),
     },
     {
