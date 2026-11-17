@@ -5,10 +5,11 @@ import { Search, PackageCheck, Flag } from 'lucide-react'
 import { Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Row, Spinner } from 'react-bootstrap'
 
 import CorredorNoEncontrado from './CorredorNoEncontrado'
-import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
+import { useCarreraActual } from '../../hooks/useCarreraActual'
 import { ApiError } from '../../services/apiService'
 import { buscarCorredorPorDni, obtenerEntregasRecientes } from '../../services/entregaKitService'
 import type { EntregaRecienteDTO } from '../../types/entregaKits'
+import type { Distancia } from '../../types/carrera'
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,7 +26,7 @@ function BuscarCorredor() {
 
   const navigate = useNavigate()
   const { nombreCarrera } = useParams()
-  const { carreraSeleccionada } = useSeleccionarCarrera()
+  const carreraSeleccionada = useCarreraActual()
 
   const {
     register,
@@ -104,7 +105,7 @@ function BuscarCorredor() {
   const distanciasUnicas = carreraSeleccionada
     ? [
         ...new Map(
-          carreraSeleccionada.distancias.map((distancia) => [
+          carreraSeleccionada.distancias.map((distancia: Distancia) => [
             `${distancia.kilometraje}-${distancia.tipoDistancia}`,
             distancia,
           ]),
@@ -131,7 +132,7 @@ function BuscarCorredor() {
 
                   <span className="small text-secondary">
                     {distanciasUnicas
-                      .map((distancia) => `${distancia.kilometraje}K ${distancia.tipoDistancia}`)
+                      .map((distancia: Distancia) => `${distancia.kilometraje}K ${distancia.tipoDistancia}`)
                       .join(' / ')}
                   </span>
 

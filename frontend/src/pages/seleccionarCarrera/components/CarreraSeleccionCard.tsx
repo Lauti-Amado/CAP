@@ -16,7 +16,7 @@ interface Props {
   carrera: Carrera;
   seleccionada?: boolean;
   destacada?: boolean;
-  onSeleccionar: (carrera: Carrera) => void;
+  onSeleccionar?: (carrera: Carrera) => void;
   onContinuar: (carrera: Carrera) => void;
 }
 
@@ -56,6 +56,14 @@ export default function CarreraSeleccionCard({
     .filter(Boolean)
     .join(" ");
 
+  const handleSeleccionar = () => {
+    if (onContinuar) {
+      onContinuar(carrera);
+    } else if (onSeleccionar) {
+      onSeleccionar(carrera);
+    }
+  };
+
   return (
     <Card className={clases}>
       <Card.Body>
@@ -94,19 +102,11 @@ export default function CarreraSeleccionCard({
             >
               Gestionar carrera <ArrowRight aria-hidden />
             </Button>
-          ) : seleccionada ? (
-            <Button
-              variant="success"
-              className="sc-btn sc-btn-primary"
-              onClick={() => onContinuar(carrera)}
-            >
-              Continuar <ArrowRight aria-hidden />
-            </Button>
           ) : (
             <Button
               variant="outline-success"
               className="sc-btn sc-btn-outline"
-              onClick={() => onSeleccionar(carrera)}
+              onClick={handleSeleccionar}
             >
               Seleccionar
             </Button>

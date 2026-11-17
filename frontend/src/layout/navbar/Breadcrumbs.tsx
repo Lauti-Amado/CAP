@@ -1,6 +1,7 @@
 import { useLocation, Link } from 'react-router-dom';
 import { Breadcrumb } from 'react-bootstrap';
 import { ChevronRight } from 'lucide-react';
+import { useCarreraSeleccion, type SeccionClasificador } from '../../context/SeleccionarCarreraContext';
 import './Breadcrumbs.css';
 
 const customNames: Record<string, string> = {
@@ -26,6 +27,7 @@ const formatearNombreRuta = (segment: string) => {
 
 export default function Breadcrumbs() {
   const { pathname } = useLocation();
+  const { limpiarCarrera } = useCarreraSeleccion();
   const pathSegments = pathname.split('/').filter(segment => segment !== '');
 
   if (pathSegments.length === 0) {
@@ -92,6 +94,12 @@ export default function Breadcrumbs() {
                 to={pathToNavigate}
                 className="cap-link d-flex align-items-center lh-1"
                 title={isCarreraSegment ? "Haz clic para cambiar de carrera" : undefined}
+                onClick={() => {
+                  if (isCarreraSegment) {
+                    const seccion = pathSegments[1] as SeccionClasificador;
+                    limpiarCarrera(seccion);
+                  }
+                }}
               >
                 {nombreMostrado}
               </Link>
