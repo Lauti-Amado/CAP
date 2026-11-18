@@ -1,9 +1,7 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { PUERTO } from './server.js';
-
-import { IS_DEV } from './server.js';
+import { IS_DEV, PUERTO } from './server.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,7 +41,7 @@ export function crearVentanaPrincipal(): void {
 
     //Cargar la pantalla
     if (IS_DEV) {
-        ventanaPrincipal.loadURL(`http://127.0.0.1:${PUERTO}`);
+        ventanaPrincipal.loadURL('http://localhost:5173');
         //ventanaPrincipal.webContents.openDevTools();      <-- para debuggear
     } else {
         ventanaPrincipal.loadURL(`http://127.0.0.1:${PUERTO}`);
