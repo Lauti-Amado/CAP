@@ -41,7 +41,7 @@ function EstadisticasClasificacion({ participantes, llegados, pendientes, progre
               <span>Progreso</span>
               <strong className="text-dark">{progreso}%</strong>
             </div>
-            <ProgressBar now={progreso} variant="success" style={{ height: 6 }} className="mt-3" />
+            <ProgressBar now={Math.min(100, Math.max(0, progreso))} variant="success" style={{ height: 6 }} className="mt-3"/>
           </Card.Body>
         </Card>
       </Col>

@@ -18,13 +18,12 @@ export function tiempoAMilisegundos(texto: string): number {
 const puestoTexto = z.string().trim().regex(/^\d+$/, 'Ingresá solo números')
 
 // Carga manual: solo el puesto, que tiene que existir dentro de los participantes de la carrera
-export const puestoManualSchema = (totalParticipantes: number) =>
-  z.object({
-    puesto: puestoTexto.refine(
-      (valor) => Number(valor) >= 1 && Number(valor) <= totalParticipantes,
-      `El puesto debe estar entre 1 y ${totalParticipantes.toLocaleString('es-AR')}.`,
-    ),
-  })
+export const puestoManualSchema = z.object({
+  puesto: puestoTexto.refine(
+    (valor) => Number(valor) >= 1 && Number(valor) <= INT_MAX,
+    'El puesto debe ser un número mayor a cero.',
+  ),
+})
 
 // Modificación: puesto y tiempo. Devuelve el cuerpo de PUT /api/clasificaciones/:id/resultado
 export const resultadoClasificacionSchema = z

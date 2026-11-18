@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
 import { CarreraProvider } from './context/CarreraContext';
-import { SeleccionarCarreraProvider } from './context/SeleccionarCarreraContext';
 
 import MainLayout from './layout/MainLayout';
 import { PrivateRoute } from './layout/PrivateRoute';
@@ -30,6 +29,8 @@ import ConfiguracionClasificaciones from './pages/administracion/categorias/Conf
 import NuevaCategoria from './pages/administracion/categorias/NuevaCategoria';
 import ClasificacionManualDetalle from './pages/clasificacion/ClasificacionManualDetalle';
 import ModificarClasificacionCarrera from './pages/clasificacion/ModificarClasificacionCarrera';
+import { CarreraSeleccionProvider } from './context/SeleccionarCarreraContext';
+import { SeccionRedirect } from './components/redirect/SeccionRedirect';
 
 export default function AppRoutes() {
   return (
@@ -41,16 +42,17 @@ export default function AppRoutes() {
 
         <Route element={<PrivateRoute roles={["Administrador", "Clasificador"]} />}>
           <Route element={<CarreraProvider />}>
-            <Route element={<MainLayout />}>
+            <Route element={<CarreraSeleccionProvider><MainLayout /></CarreraSeleccionProvider>}>
 
               {/*HOME------------------------------------*/}
               <Route path='home' element={<Dashboard />} />
 
               {/*CLASIFICADOR----------------------------*/}
-              <Route path='clasificador'>
+              <Route path="clasificador">
 
                 {/*Entrega de kits*/}
-                <Route path="entrega-kits" element={<SeleccionarCarreraProvider />}>
+                <Route path="entrega-kits">
+                  <Route index element={<SeccionRedirect seccion="entrega-kits" />} />
                   <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
                   <Route path=':nombreCarrera'>
                     <Route index element={<Navigate to="buscar-corredor" replace />} />
@@ -64,7 +66,8 @@ export default function AppRoutes() {
                 </Route>
 
                 {/*Clasificaciones*/}
-                <Route path="clasificaciones" element={<SeleccionarCarreraProvider />}>
+                <Route path="clasificaciones">
+                  <Route index element={<SeccionRedirect seccion="clasificaciones" />} />
                   <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
                   <Route path=':nombreCarrera'>
                     <Route index element={<Navigate to="dashboard-clasificaciones" replace />} />
@@ -77,7 +80,8 @@ export default function AppRoutes() {
                 </Route>
 
                 {/*Resultados*/}
-                <Route path="resultados" element={<SeleccionarCarreraProvider />}>
+                <Route path="resultados">
+                  <Route index element={<SeccionRedirect seccion="resultados" />} />
                   <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
                   <Route path=':nombreCarrera'>
                     <Route index element={<Navigate to="resultado" replace />} />
