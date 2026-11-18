@@ -10,13 +10,16 @@
     "dev:fullstack": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:electron": "tsc && electron .",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:electron\"",
-    "build:backend": "cd backend && npx tsc",
+    "build:backend": "cd backend && npx prisma generate && npx tsc",
+    "rebuild:electron": "npx @electron/rebuild -f -w better-sqlite3 -m backend",
+    "rebuild:node": "cd backend && npm rebuild better-sqlite3",
     "build:frontend": "cd frontend && npm run build",
     "build:electron": "tsc",
     "build": "npm run build:backend && npm run build:frontend && npm run build:electron",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && npm run rebuild:electron && electron-builder --win nsis && npm run rebuild:node"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.2.1",
     "concurrently": "^10.0.6",
     "electron": "^44.0.0",
     "electron-builder": "^24.13.3"
@@ -35,11 +38,16 @@
       "backend/node_modules/**/*",
       "backend/prisma/**/*"
     ],
+    "npmRebuild": false,
     "asarUnpack": [
+      "backend/node_modules/better-sqlite3/**",
       "backend/node_modules/@prisma/client",
       "backend/node_modules/@prisma/engines",
       "backend/node_modules/.prisma"
-    ]
+    ],
+    "win": {
+      "target": "nsis"
+    }
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
