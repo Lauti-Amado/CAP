@@ -38,7 +38,8 @@ app.use(cookieParser());
 app.use(cors( { origin: allowedOrigins, credentials: true } ));
 z.config(z.locales.es())
 
-app.get("/", (req, res) => {
+app.get("/", (req, res, next) => {
+  if (process.env.IS_PACKAGED === "true") return next();
   res.json({ message: "Backend Sistema de clasificaciones CAP funcionando" });
 });
 

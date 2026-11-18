@@ -35,19 +35,13 @@
       "electron/**/*.html",
       "frontend/dist/**/*",
       "backend/dist/**/*",
-      "backend/node_modules/**/*",
+      "backend/package.json",
       "backend/prisma/**/*"
     ],
-    "npmRebuild": false,
-    "asarUnpack": [
-      "**/*.node",
-      "backend/node_modules/@prisma/client",
-      "backend/node_modules/@prisma/engines",
-      "backend/node_modules/.prisma"
+    "extraResources": [
+      { "from": "backend/node_modules", "to": "node_modules" }
     ],
-    "win": {
-      "target": "nsis"
-    }
+    "win": { "target": "nsis" }
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
