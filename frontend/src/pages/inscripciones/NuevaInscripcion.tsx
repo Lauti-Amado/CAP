@@ -6,13 +6,13 @@ import { ArrowLeft, Check, CreditCard, Eye, Footprints, Plus, Search, UserRoundP
 import { contactoEmergenciaSchema, inscripcionPaso1Schema } from '../../schemas/inscripcionSchema'
 import { validar, type ErroresFormulario } from '../../utils/validar'
 import type { ContactoEmergencia, CrearInscripcionPayload, OpcionesInscripcionDTO } from '../../types/inscripcion'
-import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
 import { ApiError } from '../../services/apiService'
 import {
   buscarContactoEmergencia as buscarContactoEmergenciaAPI,
   crearInscripcion,
   obtenerOpcionesInscripcion,
 } from '../../services/inscripcionService'
+import { useCarreraActual } from '../../hooks/useCarreraActual'
 
 type DatosCorredor = {
   nombre: string
@@ -113,7 +113,7 @@ function NuevaInscripcion() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { nombreCarrera } = useParams()
-  const { carreraSeleccionada } = useSeleccionarCarrera()
+  const carreraSeleccionada = useCarreraActual()
 
   /*
    * Si se llega a esta pantalla desde el modal
