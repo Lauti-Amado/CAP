@@ -43,7 +43,13 @@ export type LlegadaAtleta = {
 }
 
 //No coincide con el enum del backen
-export type EstadoParticipante = 'PENDIENTE' | 'EN CURSO' | 'LLEGADO'
+export type EstadoParticipante =
+  | 'PENDIENTE'
+  | 'EN CURSO'
+  | 'LLEGADO'
+  | 'DESCALIFICADO'
+  | 'NO FINALIZÓ'
+  | 'NO LARGÓ'
 
 // Fila de la tabla de participantes del dashboard de clasificación
 export type ParticipanteClasificacion = {
