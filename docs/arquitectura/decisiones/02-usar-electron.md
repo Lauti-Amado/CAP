@@ -1,4 +1,4 @@
-# [01] - Utilizar Electron como Wrapper
+# [02] - Utilizar Electron como Wrapper
 
 - **Afecta:** frontend y backend
 - **Estado:** aplicado
