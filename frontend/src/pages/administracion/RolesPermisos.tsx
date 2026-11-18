@@ -3,13 +3,15 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Badge, ListGroup } from 'react-bootstrap'
 import { Check } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import type { RolUsuario, UsuarioAdministracion } from '../../types/administracion'
 import { ApiError } from '../../services/apiService'
 import { actualizarRolesUsuario, obtenerUsuario } from '../../services/usuarioGestionService'
 import { useAuth } from '../../context/AuthContext'
 import { opcionesRol } from './opcionesRol'
 import { rolesUsuarioSchema } from '../../schemas/rolSchema'
-import { validar } from '../../utils/validar'
+import type { RolesUsuarioForm } from '../../schemas/rolSchema'
 
 function RolesPermisos() {
   const { id } = useParams<{ id: string }>()
@@ -19,9 +21,21 @@ function RolesPermisos() {
   const [usuario, setUsuario] = useState<UsuarioAdministracion | null>(null)
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
-  const [rolesSeleccionados, setRolesSeleccionados] = useState<RolUsuario[]>([])
-  const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const {
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<RolesUsuarioForm>({
+    resolver: zodResolver(rolesUsuarioSchema),
+    mode: 'onChange',
+    defaultValues: { roles: [] },
+  })
+
+  const rolesSeleccionados = watch('roles')
 
   useEffect(() => {
     if (!id) return
@@ -31,7 +45,7 @@ function RolesPermisos() {
       .then((encontrado) => {
         if (!activo) return
         setUsuario(encontrado)
-        setRolesSeleccionados(encontrado.roles)
+        reset({ roles: encontrado.roles })
       })
       .catch((e) => {
         if (!activo) return
@@ -45,7 +59,7 @@ function RolesPermisos() {
       })
 
     return () => { activo = false }
-  }, [id])
+  }, [id, reset])
 
   const volverAAdministracion = () => navigate('/administrador/configuraciones')
 
@@ -86,27 +100,23 @@ function RolesPermisos() {
     rolesSeleccionados.length !== usuario.roles.length ||
     rolesSeleccionados.some((rol) => !usuario.roles.includes(rol))
 
-  const validacionRoles = validar(rolesUsuarioSchema, { roles: rolesSeleccionados })
-
   // marca o desmarca un rol (un usuario puede tener varios)
   const alternarRol = (rol: RolUsuario) => {
     if (rolProtegido(rol)) return
-    setRolesSeleccionados((actuales) =>
-      actuales.includes(rol) ? actuales.filter((r) => r !== rol) : [...actuales, rol]
-    )
+    const nuevosRoles = rolesSeleccionados.includes(rol)
+      ? rolesSeleccionados.filter((r) => r !== rol)
+      : [...rolesSeleccionados, rol]
+    setValue('roles', nuevosRoles, { shouldValidate: true })
   }
 
-  const guardarCambios = async () => {
-    if (!validacionRoles.ok) return
-
-    setGuardando(true)
+  // Solo se ejecuta si el schema valida
+  const guardarCambios = async (datos: RolesUsuarioForm) => {
     setError(null)
     try {
-      await actualizarRolesUsuario(usuario.id, validacionRoles.datos.roles)
+      await actualizarRolesUsuario(usuario.id, datos.roles)
       volverAAdministracion()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudieron guardar los cambios')
-      setGuardando(false)
     }
   }
 
@@ -153,7 +163,7 @@ function RolesPermisos() {
             ASIGNACIÓN DE ROL
         ========================= */}
         <div className="col-12 col-lg-8">
-          <section className="card h-100">
+          <form className="card h-100" onSubmit={handleSubmit(guardarCambios)} noValidate>
             <div className="card-body">
               <h2 className="h5 fw-bold mb-1">Asignación de Roles</h2>
               <p className="text-secondary small mb-3">
@@ -194,9 +204,9 @@ function RolesPermisos() {
                 </ListGroup>
               </div>
 
-              {!validacionRoles.ok && (
+              {errors.roles && (
                 <div className="text-danger small mb-3" role="alert">
-                  {validacionRoles.errores['roles']}
+                  {errors.roles.message ?? errors.roles.root?.message}
                 </div>
               )}
 
@@ -213,16 +223,15 @@ function RolesPermisos() {
                   Cancelar
                 </button>
                 <button
-                  type="button"
+                  type="submit"
                   className="btn btn-sm btn-success"
-                  disabled={!validacionRoles.ok || !huboCambios || guardando}
-                  onClick={guardarCambios}
+                  disabled={!isValid || !huboCambios || isSubmitting}
                 >
-                  {guardando ? 'Guardando...' : 'Guardar cambios'}
+                  {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
                 </button>
               </div>
             </div>
-          </section>
+          </form>
         </div>
       </div>
     </main>
