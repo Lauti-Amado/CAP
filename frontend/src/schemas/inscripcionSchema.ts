@@ -90,10 +90,19 @@ export const crearInscripcionPaso1Schema = (fechaCarreraISO?: string) =>
 
 export const inscripcionPaso1Schema = crearInscripcionPaso1Schema()
 
-// Paso 2: distancia y producto opcional (el stock y el cupo dependen de la carrera y se controlan en la pantalla)
+// Paso 2: distancia y producto opcional. Espeja las reglas del backend (crearInscripcionSchema):
+// kilometraje positivo, tipo de distancia válido y cantidad entera de 1 a 10.
+// El stock y el cupo dependen de la carrera y se controlan en la pantalla.
+const CANTIDAD_MAXIMA_PRODUCTO = 10
+
 export const inscripcionPaso2Schema = z
   .object({
-    distancia: z.string().min(1, 'Seleccioná una distancia.'),
+    // Clave "kilometraje|tipoDistancia" (ej. "10|Competitiva")
+    distancia: z
+      .string()
+      .min(1, 'Seleccioná una distancia.')
+      .regex(/^\d+(\.\d+)?\|(Participativa|Competitiva)$/, 'La distancia seleccionada no es válida.')
+      .refine((valor) => Number.parseFloat(valor.split('|')[0]) > 0, 'La distancia seleccionada no es válida.'),
     productoDinamico: z.enum(['si', 'no']),
     productoId: z.string(),
     varianteId: z.string(),
@@ -112,8 +121,13 @@ export const inscripcionPaso2Schema = z
       return
     }
 
-    if (!/^[1-9]\d*$/.test(datos.cantidad)) {
-      ctx.addIssue({ code: 'custom', path: ['cantidad'], message: 'Seleccioná una cantidad.' })
+    const cantidad = Number(datos.cantidad)
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > CANTIDAD_MAXIMA_PRODUCTO) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['cantidad'],
+        message: `La cantidad debe ser un número entero de 1 a ${CANTIDAD_MAXIMA_PRODUCTO}.`,
+      })
     }
   })
 
