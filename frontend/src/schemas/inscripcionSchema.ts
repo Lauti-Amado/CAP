@@ -20,56 +20,103 @@ export const contactoEmergenciaSchema = z.object({
   telefono,
 })
 
-export const corredorFormSchema = z
+// El apto médico debe cubrir hasta la fecha de la carrera (si se conoce)
+export const crearCorredorFormSchema = (fechaCarreraISO?: string) =>
+  z
+    .object({
+      nombre: texto,
+      apellido: texto,
+      genero: z.enum(['Femenino', 'Masculino'], { error: 'Seleccioná el género' }),
+      fechaNacimiento: z
+        .string()
+        .min(1, 'Ingresá la fecha de nacimiento')
+        .refine((valor) => aFecha(valor) <= new Date(), 'La fecha de nacimiento no puede ser futura'),
+      dni,
+      telefono,
+      discapacidad: z.enum(['', 'Ninguna', 'Visual', 'Silla de ruedas', 'Otra']),
+      aptoMedico: z.boolean(),
+      vencimientoAptoMedico: z.string(),
+    })
+    .superRefine((datos, ctx) => {
+      if (!datos.aptoMedico) return
+
+      if (datos.vencimientoAptoMedico === '') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['vencimientoAptoMedico'],
+          message: 'Ingresá la fecha de vencimiento del apto médico para continuar.',
+        })
+        return
+      }
+
+      if (aFecha(datos.vencimientoAptoMedico) <= hoy()) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['vencimientoAptoMedico'],
+          message: 'El apto médico está vencido. Cambiá la fecha por una futura para continuar con la inscripción.',
+        })
+        return
+      }
+
+      if (fechaCarreraISO && datos.vencimientoAptoMedico < fechaCarreraISO) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['vencimientoAptoMedico'],
+          message: `El apto médico debe estar vigente hasta la fecha de la carrera (${fechaCarreraISO}).`,
+        })
+      }
+    })
+
+export const corredorFormSchema = crearCorredorFormSchema()
+
+// Paso 1 completo: el corredor y su contacto de emergencia (que puede no estar elegido todavía)
+export const crearInscripcionPaso1Schema = (fechaCarreraISO?: string) =>
+  z
+    .object({
+      corredor: crearCorredorFormSchema(fechaCarreraISO),
+      contactoEmergencia: contactoEmergenciaSchema
+        .nullable()
+        .refine((contacto): boolean => contacto !== null, 'Buscá o creá un contacto de emergencia.'),
+    })
+    .superRefine((datos, ctx) => {
+      if (datos.contactoEmergencia && datos.corredor.dni === datos.contactoEmergencia.dni) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['contactoEmergencia', 'dni'],
+          message: 'El contacto de emergencia no puede ser el mismo corredor.',
+        })
+      }
+    })
+
+export const inscripcionPaso1Schema = crearInscripcionPaso1Schema()
+
+// Paso 2: distancia y producto opcional (el stock y el cupo dependen de la carrera y se controlan en la pantalla)
+export const inscripcionPaso2Schema = z
   .object({
-    nombre: texto,
-    apellido: texto,
-    genero: z.enum(['Femenino', 'Masculino'], { error: 'Seleccioná el género' }),
-    fechaNacimiento: z
-      .string()
-      .min(1, 'Ingresá la fecha de nacimiento')
-      .refine((valor) => aFecha(valor) <= new Date(), 'La fecha de nacimiento no puede ser futura'),
-    dni,
-    telefono,
-    discapacidad: z.enum(['', 'Ninguna', 'Visual', 'Silla de ruedas', 'Otra']),
-    aptoMedico: z.boolean(),
-    vencimientoAptoMedico: z.string(),
+    distancia: z.string().min(1, 'Seleccioná una distancia.'),
+    productoDinamico: z.enum(['si', 'no']),
+    productoId: z.string(),
+    varianteId: z.string(),
+    cantidad: z.string(),
   })
   .superRefine((datos, ctx) => {
-    if (!datos.aptoMedico) return
+    if (datos.productoDinamico === 'no') return
 
-    if (datos.vencimientoAptoMedico === '') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['vencimientoAptoMedico'],
-        message: 'Ingresá la fecha de vencimiento del apto médico para continuar.',
-      })
+    if (datos.productoId === '') {
+      ctx.addIssue({ code: 'custom', path: ['productoId'], message: 'Seleccioná un producto.' })
       return
     }
 
-    if (aFecha(datos.vencimientoAptoMedico) <= hoy()) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['vencimientoAptoMedico'],
-        message: 'El apto médico está vencido. Cambiá la fecha por una futura para continuar con la inscripción.',
-      })
+    if (datos.varianteId === '') {
+      ctx.addIssue({ code: 'custom', path: ['varianteId'], message: 'Seleccioná una variante.' })
+      return
+    }
+
+    if (!/^[1-9]\d*$/.test(datos.cantidad)) {
+      ctx.addIssue({ code: 'custom', path: ['cantidad'], message: 'Seleccioná una cantidad.' })
     }
   })
 
-// Paso 1 completo: el corredor y su contacto de emergencia (que puede no estar elegido todavía)
-export const inscripcionPaso1Schema = z
-  .object({
-    corredor: corredorFormSchema,
-    contactoEmergencia: contactoEmergenciaSchema
-      .nullable()
-      .refine((contacto) => contacto !== null, 'Buscá o creá un contacto de emergencia.'),
-  })
-  .superRefine((datos, ctx) => {
-    if (datos.contactoEmergencia && datos.corredor.dni === datos.contactoEmergencia.dni) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['contactoEmergencia', 'dni'],
-        message: 'El contacto de emergencia no puede ser el mismo corredor.',
-      })
-    }
-  })
+export type ContactoEmergenciaForm = z.infer<typeof contactoEmergenciaSchema>
+export type InscripcionPaso1Form = z.infer<typeof inscripcionPaso1Schema>
+export type InscripcionPaso2Form = z.infer<typeof inscripcionPaso2Schema>
