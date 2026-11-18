@@ -1,8 +1,8 @@
 //frontend/src/pages/inscripciones/Inscripciones.tsx
 import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Badge, Button, Col, Container, Form, InputGroup, Row } from 'react-bootstrap'
-import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
+import { Eye, Trash2, UserRoundPlus, Search, Undo2 } from 'lucide-react'
 import { Tabla, type Columna } from '../../components/tabla/Tabla'
 import type { Inscripcion, /*FiltrosInscripciones*/ } from '../../types/inscripcion'
 
@@ -36,18 +36,28 @@ function Inscripciones() {
   const [paginaActual, setPaginaActual] = useState(1)
 
   const navigate = useNavigate()
+  const location = useLocation();
   const { nombreCarrera } = useParams();
 
+  const handleIrAtras = () => {
+    const pathVolver = location.pathname.replace(/\/inscripciones\/?$/, '/buscar-corredor');
+
+    navigate({
+      pathname: pathVolver,
+      search: location.search,
+    });
+  };
+
   // TODO BACKEND: usar filtros en la consulta real al backend
-   /*const _filtros: FiltrosInscripciones = {
-    dni,
-    carrera,
-    distancia,
-    pago,
-    estado,
-    anio,
-    pagina: paginaActual,
-  } */
+  /*const _filtros: FiltrosInscripciones = {
+   dni,
+   carrera,
+   distancia,
+   pago,
+   estado,
+   anio,
+   pagina: paginaActual,
+ } */
 
   // TODO: reemplazar por la consulta al backend
   // const resultado = await obtenerInscripciones(filtros)
@@ -183,15 +193,26 @@ function Inscripciones() {
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="success"
-          className="d-inline-flex align-items-center justify-content-center gap-2"
-          onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)}
-        >
-          <UserRoundPlus size={15} />
-          Nueva inscripción
-        </Button>
+        <div className='d-flex flex-column flex-sm-row gap-3'>
+          <Button
+            type="button"
+            variant="secondary"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={handleIrAtras}
+          >
+            <Undo2 size={15} />
+            Volver a buscar corredor
+          </Button>
+          <Button
+            type="button"
+            variant="success"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)}
+          >
+            <UserRoundPlus size={15} />
+            Nueva inscripción
+          </Button>
+        </div>
       </header>
 
       <Form className="mb-3" onSubmit={(event) => event.preventDefault()}>
@@ -311,19 +332,19 @@ function Inscripciones() {
         </Row>
       </Form>
 
-        <Tabla
-          columnas={columnas}
-          datos={inscripciones}
-          mensajeVacio="No se encontraron inscripciones."
-          paginaActual={paginaActual}
-          // TODO: reemplazar cuando se integre el backend
-          totalPaginas={totalPaginas}
-          onCambiarPagina={setPaginaActual}
-          mostrarNumeros={false}
-          textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripcionesFiltradas.length} inscripciones`}
-        />
-      </Container>
-    )
+      <Tabla
+        columnas={columnas}
+        datos={inscripciones}
+        mensajeVacio="No se encontraron inscripciones."
+        paginaActual={paginaActual}
+        // TODO: reemplazar cuando se integre el backend
+        totalPaginas={totalPaginas}
+        onCambiarPagina={setPaginaActual}
+        mostrarNumeros={false}
+        textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripcionesFiltradas.length} inscripciones`}
+      />
+    </Container>
+  )
 }
 
 export default Inscripciones
