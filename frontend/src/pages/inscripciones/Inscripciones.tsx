@@ -1,7 +1,7 @@
 //frontend/src/pages/inscripciones/Inscripciones.tsx
 
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Badge,
   Button,
@@ -12,7 +12,7 @@ import {
   Row,
   Alert,
 } from 'react-bootstrap'
-import { Eye, UserRoundPlus, Search } from 'lucide-react'
+import { Eye, UserRoundPlus, Search, Undo2 } from 'lucide-react'
 
 import { Tabla, type Columna } from '../../components/tabla/Tabla'
 import { useCarrera } from '../../context/CarreraContext'
@@ -56,6 +56,7 @@ function Pill({ texto, color = 'secondary' }: { texto: string; color?: string })
 
 function Inscripciones() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { nombreCarrera } = useParams()
   const { carreras } = useCarrera()
 
@@ -239,6 +240,15 @@ function Inscripciones() {
     },
   ]
 
+  const handleIrAtras = () => {
+    const pathVolver = location.pathname.replace(/\/inscripciones\/?$/, '/buscar-corredor');
+
+    navigate({
+      pathname: pathVolver,
+      search: location.search,
+    });
+  };
+
   return (
     <Container fluid className="p-4">
       <header className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
@@ -249,17 +259,26 @@ function Inscripciones() {
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="success"
-          className="d-inline-flex align-items-center justify-content-center gap-2"
-          onClick={() =>
-            navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)
-          }
-        >
-          <UserRoundPlus size={15} />
-          Nueva inscripción
-        </Button>
+        <div className='d-flex flex-column flex-sm-row gap-3'>
+          <Button
+            type="button"
+            variant="secondary"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={handleIrAtras}
+          >
+            <Undo2 size={15} />
+            Volver a buscar corredor
+          </Button>
+          <Button
+            type="button"
+            variant="success"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)}
+          >
+            <UserRoundPlus size={15} />
+            Nueva inscripción
+          </Button>
+        </div>
       </header>
 
       <Form className="mb-3" onSubmit={(event) => event.preventDefault()}>
