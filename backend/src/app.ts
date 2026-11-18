@@ -38,7 +38,7 @@ app.use(cookieParser());
 app.use(cors( { origin: allowedOrigins, credentials: true } ));
 z.config(z.locales.es())
 
-app.get("/{*splat}", (req, res) => {
+app.get("/", (req, res) => {
   res.json({ message: "Backend Sistema de clasificaciones CAP funcionando" });
 });
 
@@ -64,7 +64,7 @@ if (isProduction) {
   app.use(express.static(frontendPath));
   
   //Servir el frontend cuando la app ingresa a una URL que no comienza con "/api"
-  app.get("*", (req, res) => {
+  app.get("/{*splat}", (req, res) => {
     if (!req.path.startsWith('/api')) res.sendFile(path.join(frontendPath, "index.html"));
     else res.status(404).json({ error: "Ruta API no encontrada" });
   });
