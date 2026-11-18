@@ -4,7 +4,7 @@ import { Tabla, type Columna } from '../../components/tabla/Tabla';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext';
+import { useCarreraActual } from '../../hooks/useCarreraActual';
 import CertificadosSocios from '../../components/certificados/CertificadosSocios';
 
 interface ResultadoAtleta {
@@ -30,7 +30,7 @@ const Resultados: React.FC = () => {
   const [totalRegistros, setTotalRegistros] = useState(0);
   const elementosPorPagina = 50;
 
-  const { carreraSeleccionada } = useSeleccionarCarrera();
+  const carreraSeleccionada = useCarreraActual();
   
   // Datos mock de atletas finalizados (simulando una base de datos)
   const resultadosMock: ResultadoAtleta[] = [
