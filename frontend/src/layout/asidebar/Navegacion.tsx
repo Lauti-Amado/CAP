@@ -1,11 +1,10 @@
+//frontend/src/layout/asidebar/Navegacion.tsx
 import { Archive, BarChart3, Footprints, LayoutDashboard, Settings, Timer, Trophy } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Nav, Button } from 'react-bootstrap';
 import type { LucideIcon } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
-import { useAuth } from '../../context/AuthContext'; // Ajustar ruta si corresponde
-
-import './Navegacion.css';
 
 type ItemNavegacion = { label: string; icon: LucideIcon; path: string };
 type SeccionNavegacion = { label: string; items: ItemNavegacion[] };
@@ -67,10 +66,11 @@ export default function Navegacion() {
     return (
         <Nav className="flex-column w-100 pb-3" aria-label="Secciones">
             {navigationFiltrada.map((section, index) => (
-                <div className="nav-section" key={section.label}>
+                <div key={section.label}>
 
-                    <div className={`section-divider mb-1 ${index === 0 ? 'mt-1' : 'mt-3'}`}>
+                    <div className={`d-flex align-items-center gap-2 px-3 mb-1 small fw-bold text-white ${index === 0 ? 'mt-1' : 'mt-3'}`}>
                         <span>{section.label}</span>
+                        <hr className="flex-grow-1 m-0 opacity-25" />
                     </div>
 
                     {section.items.map(({ label, icon: Icon, path }) => {
@@ -78,9 +78,10 @@ export default function Navegacion() {
 
                         return (
                             <Button
-                                variant="link"
-                                className={`nav-button w-100 d-flex align-items-center gap-2 rounded-0 ${isActive ? 'active' : ''}`}
                                 key={label}
+                                variant={isActive ? 'light' : 'success'}
+                                className={`w-100 d-flex align-items-center gap-2 rounded-0 border-0 px-3 py-2 small fw-semibold text-start text-nowrap ${isActive ? 'text-success' : ''}`}
+                                aria-current={isActive ? 'page' : undefined}
                                 onClick={() => navigate(path)}
                             >
                                 <Icon size={18} strokeWidth={2} aria-hidden="true" />
