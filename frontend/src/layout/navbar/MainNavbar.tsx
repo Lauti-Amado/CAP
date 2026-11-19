@@ -1,5 +1,5 @@
+//frontend/src/layout/navbar/MainNavbar.tsx
 import Breadcrumbs from './Breadcrumbs';
-import './MainNavbar.css'; // Keep this if you have custom colors/fonts, but layout is handled below
 import AccionesNavbar from './AccionesNavbar';
 
 export default function MainNavbar() {
