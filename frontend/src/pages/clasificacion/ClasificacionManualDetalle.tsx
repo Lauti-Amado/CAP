@@ -1,9 +1,10 @@
 //frontend/src/pages/clasificacion/ClasificacionManualDetalle.tsx
-
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CircleCheck } from 'lucide-react'
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
@@ -14,7 +15,7 @@ import {
   type ClasificacionDTO,
 } from '../../services/clasificacionService'
 import { puestoManualSchema } from '../../schemas/clasificacionSchema'
-import { validar } from '../../utils/validar'
+import type { PuestoManualForm } from '../../schemas/clasificacionSchema'
 import { ApiError } from '../../services/apiService'
 
 function ClasificacionManualDetalle() {
@@ -23,8 +24,22 @@ function ClasificacionManualDetalle() {
   const rutas = useRutasClasificacion()
   const carrera = useCarreraActual()
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<PuestoManualForm>({
+    resolver: zodResolver(puestoManualSchema),
+    mode: 'onChange',
+    defaultValues: { puesto: '' },
+  })
+
+  const puestoRegistro = register('puesto')
+  const puesto = watch('puesto')
+
   const [clasificacion, setClasificacion] = useState<ClasificacionDTO | null>(null)
-  const [puesto, setPuesto] = useState('')
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -64,7 +79,7 @@ function ClasificacionManualDetalle() {
         setClasificacion(encontrada)
 
         if (encontrada.resultado) {
-          setPuesto(String(encontrada.resultado.puestoGeneral))
+          reset({ puesto: String(encontrada.resultado.puestoGeneral) })
         }
       } catch (e) {
         if (cancelado) return
@@ -84,7 +99,7 @@ function ClasificacionManualDetalle() {
     return () => {
       cancelado = true
     }
-  }, [carrera?.id, dni])
+  }, [carrera?.id, dni, reset])
 
   const volverATiempoReal = () => {
     navigate(rutas.listado, { replace: true })
@@ -100,11 +115,24 @@ function ClasificacionManualDetalle() {
     )
   }
 
-  if (error || !clasificacion) {
+  if (error && !clasificacion) {
     return (
       <Container fluid as="main" className="p-4">
         <div className="d-flex flex-column align-items-start gap-3">
-          <Alert variant="danger">{error ?? 'Corredor no encontrado.'}</Alert>
+          <Alert variant="danger">{error}</Alert>
+          <Button variant="outline-success" onClick={volverATiempoReal}>
+            ← Volver a clasificación
+          </Button>
+        </div>
+      </Container>
+    )
+  }
+
+  if (!clasificacion) {
+    return (
+      <Container fluid as="main" className="p-4">
+        <div className="d-flex flex-column align-items-start gap-3">
+          <Alert variant="danger">Corredor no encontrado.</Alert>
           <Button variant="outline-success" onClick={volverATiempoReal}>
             ← Volver a clasificación
           </Button>
@@ -114,18 +142,10 @@ function ClasificacionManualDetalle() {
   }
 
   const habilitado = clasificacion.estado !== 'Descalificado'
-  const validacionPuesto = validar(
-    puestoManualSchema,
-    { puesto },
-  )
+  const mostrarErrorPuesto = puesto !== '' && !!errors.puesto
+  const puedeGuardar = habilitado && isValid && !guardando
 
-  const puestoFueraDeRango = puesto !== '' && !validacionPuesto.ok
-  const puedeGuardar =
-    habilitado &&
-    validacionPuesto.ok &&
-    !guardando
-
-  const guardarClasificacion = async () => {
+  const guardarClasificacion = async ({ puesto: puestoIngresado }: PuestoManualForm) => {
     if (!puedeGuardar || !carrera) return
 
     setGuardando(true)
@@ -135,8 +155,8 @@ function ClasificacionManualDetalle() {
     try {
       const datos =
         carrera.estado === 'Finalizada'
-          ? { puestoGeneral: Number(puesto), tiempoLlegada: null }
-          : { puestoGeneral: Number(puesto) }
+          ? { puestoGeneral: Number(puestoIngresado), tiempoLlegada: null }
+          : { puestoGeneral: Number(puestoIngresado) }
 
       await registrarResultadoClasificacion(clasificacion.id, datos)
 
@@ -144,32 +164,27 @@ function ClasificacionManualDetalle() {
         `Clasificación guardada correctamente para el dorsal ${clasificacion.dorsal}.`,
       )
 
+      // Al guardar vuelve directo a tiempo real
       navigate(rutas.listado, { replace: true })
     } catch (e) {
       setError(
-        e instanceof ApiError
-          ? e.message
-          : 'No se pudo guardar la clasificación.',
+        e instanceof ApiError ? e.message : 'No se pudo guardar la clasificación.',
       )
     } finally {
       setGuardando(false)
     }
   }
 
-  const categoria = 
-    clasificacion.resultado?.categorias
-      .map((item) => item.nombre)
-      .join(', ') || 'Sin categoría asignada'
+  const categoria =
+    clasificacion.resultado?.categorias.map((item) => item.nombre).join(', ') ||
+    'Sin categoría asignada'
+
   return (
     <Container fluid as="main" className="p-4">
       <header className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
         <h1 className="h3 fw-bold mb-0">Detalle de Corredor</h1>
 
-        <Button
-          variant="outline-success"
-          size="sm"
-          onClick={volverATiempoReal}
-        >
+        <Button variant="outline-success" size="sm" onClick={volverATiempoReal}>
           ← Volver a clasificación
         </Button>
       </header>
@@ -192,9 +207,7 @@ function ClasificacionManualDetalle() {
           <Card className="h-100 shadow-sm overflow-hidden">
             <Card.Header
               className={`d-flex align-items-center justify-content-center gap-2 fw-bold text-center ${
-                habilitado
-                  ? 'bg-success text-white'
-                  : 'bg-warning text-dark'
+                habilitado ? 'bg-success text-white' : 'bg-warning text-dark'
               }`}
             >
               {habilitado ? (
@@ -207,7 +220,12 @@ function ClasificacionManualDetalle() {
               )}
             </Card.Header>
 
-            <Card.Body className="d-flex flex-column p-4">
+            <Card.Body
+              as="form"
+              onSubmit={handleSubmit(guardarClasificacion)}
+              noValidate
+              className="d-flex flex-column p-4"
+            >
               <Card.Subtitle className="text-center text-secondary small fw-semibold mb-3">
                 DATOS DE LA CLASIFICACIÓN
               </Card.Subtitle>
@@ -229,9 +247,7 @@ function ClasificacionManualDetalle() {
                     <Form.Label className="small fw-medium text-secondary">
                       EQUIPO
                     </Form.Label>
-                    <strong className="fs-4">
-                      {clasificacion.equipo ?? '—'}
-                    </strong>
+                    <strong className="fs-4">{clasificacion.equipo ?? '—'}</strong>
                   </div>
                 </Col>
 
@@ -251,18 +267,19 @@ function ClasificacionManualDetalle() {
                       autoComplete="off"
                       size="lg"
                       className="fw-bold"
-                      value={puesto}
+                      {...puestoRegistro}
+                      onChange={(event) => {
+                        event.target.value = event.target.value.replace(/\D/g, '')
+                        void puestoRegistro.onChange(event)
+                      }}
                       placeholder="Ej. 42"
                       disabled={!habilitado || guardando}
-                      isInvalid={puestoFueraDeRango}
-                      onChange={(event) => {
-                        setPuesto(event.target.value.replace(/\D/g, ''))
-                      }}
+                      isInvalid={mostrarErrorPuesto}
                     />
 
-                    {puestoFueraDeRango && (
+                    {mostrarErrorPuesto && (
                       <div className="text-danger small mt-1">
-                        {validacionPuesto.errores.puesto}
+                        {errors.puesto?.message}
                       </div>
                     )}
                   </div>
@@ -271,11 +288,11 @@ function ClasificacionManualDetalle() {
 
               <div className="text-center mt-auto pt-4">
                 <Button
+                  type="submit"
                   variant="success"
                   size="lg"
                   className="rounded-pill px-4"
                   disabled={!puedeGuardar}
-                  onClick={() => void guardarClasificacion()}
                 >
                   {guardando ? 'Guardando...' : 'Guardar clasificación'}
                 </Button>

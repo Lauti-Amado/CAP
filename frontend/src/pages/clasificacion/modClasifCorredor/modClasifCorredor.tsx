@@ -14,6 +14,8 @@ import {
   Spinner,
 } from 'react-bootstrap'
 import { Clock, Lock, Pencil, Save, User } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion'
 import { useCarreraActual } from '../../../hooks/useCarreraActual'
@@ -23,22 +25,10 @@ import {
   type ClasificacionDTO,
 } from '../../../services/clasificacionService'
 import { resultadoClasificacionSchema } from '../../../schemas/clasificacionSchema'
-import { validar, type ErroresFormulario } from '../../../utils/validar'
-
-const tiempoAMilisegundos = (tiempo: string): number | null => {
-  const coincidencia = tiempo.match(/^(\d{2,}):([0-5]\d):([0-5]\d)\.(\d{3})$/)
-
-  if (!coincidencia) return null
-
-  const [, horas, minutos, segundos, milisegundos] = coincidencia
-
-  return (
-    Number(horas) * 3600000 +
-    Number(minutos) * 60000 +
-    Number(segundos) * 1000 +
-    Number(milisegundos)
-  )
-}
+import type {
+  ResultadoClasificacionInput,
+  ResultadoClasificacionOutput,
+} from '../../../schemas/clasificacionSchema'
 
 const milisegundosATiempo = (valor: number | null): string => {
   if (valor === null) return ''
@@ -61,9 +51,7 @@ const CampoBloqueado: React.FC<{
   valor: string
 }> = ({ id, etiqueta, valor }) => (
   <Form.Group controlId={id}>
-    <Form.Label className="small fw-semibold text-secondary">
-      {etiqueta}
-    </Form.Label>
+    <Form.Label className="small fw-semibold text-secondary">{etiqueta}</Form.Label>
     <Form.Control type="text" value={valor} disabled readOnly />
   </Form.Group>
 )
@@ -81,10 +69,20 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
   const rutas = useRutasClasificacion()
   const carrera = useCarreraActual()
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ResultadoClasificacionInput, unknown, ResultadoClasificacionOutput>({
+    resolver: zodResolver(resultadoClasificacionSchema),
+    defaultValues: {
+      tiempoOficial: '',
+      puestoGeneral: '',
+    },
+  })
+
   const [clasificacion, setClasificacion] = useState<ClasificacionDTO | null>(null)
-  const [tiempoOficial, setTiempoOficial] = useState('')
-  const [puestoGeneral, setPuestoGeneral] = useState('')
-  const [errores, setErrores] = useState<ErroresFormulario>({})
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
@@ -113,20 +111,16 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
         if (!activo) return
 
         setClasificacion(encontrada)
-        setTiempoOficial(
-          milisegundosATiempo(encontrada.resultado?.tiempoLlegada ?? null)
-        )
-        setPuestoGeneral(
-          encontrada.resultado?.puestoGeneral
+        reset({
+          tiempoOficial: milisegundosATiempo(encontrada.resultado?.tiempoLlegada ?? null),
+          puestoGeneral: encontrada.resultado?.puestoGeneral
             ? String(encontrada.resultado.puestoGeneral)
-            : ''
-        )
+            : '',
+        })
       } catch (err) {
         if (activo) {
           setError(
-            err instanceof Error
-              ? err.message
-              : 'No se pudo cargar la clasificación.'
+            err instanceof Error ? err.message : 'No se pudo cargar la clasificación.',
           )
         }
       } finally {
@@ -139,47 +133,26 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
     return () => {
       activo = false
     }
-  }, [carrera?.id, id])
+  }, [carrera?.id, id, reset])
 
-  const handleGuardar = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
+  // datos ya viene transformado: { puestoGeneral, tiempoLlegada en milisegundos }
+  const handleGuardar = async (datos: ResultadoClasificacionOutput) => {
     if (!clasificacion) return
-
-    const validacion = validar(resultadoClasificacionSchema, {
-      tiempoOficial,
-      puestoGeneral,
-    })
-
-    if (!validacion.ok) {
-      setErrores(validacion.errores)
-      return
-    }
-
-    const tiempoEnMs = tiempoAMilisegundos(tiempoOficial)
-
-    if (tiempoEnMs === null) {
-      setErrores({
-        tiempoOficial: 'Ingresá un tiempo con formato HH:MM:SS.mmm.',
-      })
-      return
-    }
 
     try {
       setGuardando(true)
       setError('')
 
       await registrarResultadoClasificacion(clasificacion.id, {
-        puestoGeneral: Number(puestoGeneral),
-        tiempoLlegada: tiempoEnMs,
+        puestoGeneral: datos.puestoGeneral,
+        tiempoLlegada: datos.tiempoLlegada,
       })
 
+      // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
       navigate(rutas.trasGuardar(search), { replace: true })
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : 'No se pudo guardar la modificación.'
+        err instanceof Error ? err.message : 'No se pudo guardar la modificación.',
       )
     } finally {
       setGuardando(false)
@@ -202,9 +175,7 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
   if (!clasificacion) {
     return (
       <Container className="py-4">
-        <Alert variant="danger">
-          {error || 'No se encontró la clasificación.'}
-        </Alert>
+        <Alert variant="danger">{error || 'No se encontró la clasificación.'}</Alert>
         <Button variant="outline-secondary" onClick={handleCancelar}>
           Volver
         </Button>
@@ -214,9 +185,8 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
 
   const corredor = clasificacion.corredor
   const categoria =
-    clasificacion.resultado?.categorias
-      .map((item) => item.nombre)
-      .join(', ') || 'Sin categoría asignada'
+    clasificacion.resultado?.categorias.map((item) => item.nombre).join(', ') ||
+    'Sin categoría asignada'
 
   return (
     <Container as="main" className="py-4">
@@ -224,9 +194,7 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
         <Col xs={12} xl={10}>
           <header className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
             <div>
-              <h1 className="h3 fw-bold mb-1">
-                Modificar Clasificación del corredor
-              </h1>
+              <h1 className="h3 fw-bold mb-1">Modificar Clasificación del corredor</h1>
               <p className="small text-secondary mb-0">
                 ID Registro: {clasificacion.id}
               </p>
@@ -261,11 +229,8 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
 
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Form
-            id="form-clasificacion"
-            onSubmit={handleGuardar}
-            noValidate
-          >
+          <Form id="form-clasificacion" onSubmit={handleSubmit(handleGuardar)} noValidate>
+            {/* Sección 1: información del corredor (solo lectura) */}
             <Card className="mb-4">
               <Card.Header className="d-flex justify-content-between align-items-center bg-transparent">
                 <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
@@ -292,23 +257,12 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                       valor={`${corredor.nombre} ${corredor.apellido}`}
                     />
                   </Col>
-
                   <Col md={4}>
-                    <CampoBloqueado
-                      id="infoDni"
-                      etiqueta="DNI"
-                      valor={corredor.dni}
-                    />
+                    <CampoBloqueado id="infoDni" etiqueta="DNI" valor={corredor.dni} />
                   </Col>
-
                   <Col md={4}>
-                    <CampoBloqueado
-                      id="infoSexo"
-                      etiqueta="Sexo"
-                      valor={corredor.sexo}
-                    />
+                    <CampoBloqueado id="infoSexo" etiqueta="Sexo" valor={corredor.sexo} />
                   </Col>
-
                   <Col md={4}>
                     <CampoBloqueado
                       id="infoDorsal"
@@ -316,7 +270,6 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                       valor={clasificacion.dorsal ?? 'Sin dorsal'}
                     />
                   </Col>
-
                   <Col md={4}>
                     <CampoBloqueado
                       id="infoEquipo"
@@ -324,7 +277,6 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                       valor={clasificacion.equipo ?? 'Sin equipo'}
                     />
                   </Col>
-
                   <Col md={4}>
                     <CampoBloqueado
                       id="infoDistancia"
@@ -336,14 +288,11 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
               </Card.Body>
             </Card>
 
+            {/* Sección 2: datos de clasificación (editables) */}
             <Card className="border-start border-success border-4">
               <Card.Body>
                 <h2 className="h6 fw-bold d-flex align-items-center gap-2 mb-1">
-                  <Pencil
-                    size={18}
-                    className="text-success"
-                    aria-hidden="true"
-                  />
+                  <Pencil size={18} className="text-success" aria-hidden="true" />
                   Datos de Clasificación
                 </h2>
 
@@ -362,11 +311,7 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                     </Col>
 
                     <Col md={4}>
-                      <CampoBloqueado
-                        id="categoria"
-                        etiqueta="Categoría"
-                        valor={categoria}
-                      />
+                      <CampoBloqueado id="categoria" etiqueta="Categoría" valor={categoria} />
                     </Col>
 
                     <Col md={4}>
@@ -378,16 +323,12 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                         <Form.Control
                           type="text"
                           inputMode="numeric"
-                          value={puestoGeneral}
-                          isInvalid={!!errores.puestoGeneral}
-                          onChange={(e) => {
-                            setPuestoGeneral(e.target.value)
-                            setErrores({})
-                          }}
+                          {...register('puestoGeneral')}
+                          isInvalid={!!errors.puestoGeneral}
                         />
 
                         <Form.Control.Feedback type="invalid">
-                          {errores.puestoGeneral}
+                          {errors.puestoGeneral?.message}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
@@ -401,13 +342,9 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                         <InputGroup hasValidation>
                           <Form.Control
                             type="text"
-                            value={tiempoOficial}
                             placeholder="HH:MM:SS.mmm"
-                            isInvalid={!!errores.tiempoOficial}
-                            onChange={(e) => {
-                              setTiempoOficial(e.target.value)
-                              setErrores({})
-                            }}
+                            {...register('tiempoOficial')}
+                            isInvalid={!!errors.tiempoOficial}
                           />
 
                           <InputGroup.Text>
@@ -415,7 +352,7 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
                           </InputGroup.Text>
 
                           <Form.Control.Feedback type="invalid">
-                            {errores.tiempoOficial}
+                            {errors.tiempoOficial?.message}
                           </Form.Control.Feedback>
                         </InputGroup>
                       </Form.Group>
