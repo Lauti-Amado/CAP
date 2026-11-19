@@ -27,8 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }){
 
     //Al iniciar la sesión, checkea si el usuario ya tenía una cookie válida
     useEffect(() => {
-        apiFetch<Usuario>('/auth/yo')
-            .then((usuario) => setUsuario(usuario))
+         apiFetch<Usuario>('/auth/yo')
+            .then((usuario) => {
+                setUsuario(Array.isArray(usuario?.roles) ? usuario : null)
+    })
             .catch(() => setUsuario(null))
             .finally(() => setCargando(false));
     }, []);
