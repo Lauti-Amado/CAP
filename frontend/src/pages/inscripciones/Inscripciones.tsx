@@ -2,30 +2,34 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import {
-  Badge,
-  Button,
-  Col,
-  Container,
-  Form,
-  InputGroup,
-  Row,
-  Alert,
-} from 'react-bootstrap'
+import { Badge, Button, Col, Container, Form, InputGroup, Row, Alert,} from 'react-bootstrap'
 import { Eye, UserRoundPlus, Search, Undo2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import { Tabla, type Columna } from '../../components/tabla/Tabla'
 import { useCarrera } from '../../context/CarreraContext'
 import { obtenerInscripciones } from '../../services/inscripcionService'
+import { filtrosInscripcionesSchema } from '../../schemas/inscripcionFiltrosSchema'
+import type { FiltrosInscripcionesForm } from '../../schemas/inscripcionFiltrosSchema'
 
 import type {
   InscripcionListadoDTO,
   FiltrosListadoInscripciones,
   EstadoInscripcionBackend,
-  TipoDistanciaBackend,
 } from '../../types/inscripcion'
 
 const INSCRIPCIONES_POR_PAGINA = 10
+
+const filtrosIniciales: FiltrosInscripcionesForm = {
+  dni: '',
+  carreraId: '',
+  kilometraje: '',
+  tipoDistancia: '',
+  pago: '',
+  estado: '',
+  anio: '',
+}
 
 const colorPago: Record<string, string> = {
   Pagado: 'success',
@@ -60,15 +64,31 @@ function Inscripciones() {
   const { nombreCarrera } = useParams()
   const { carreras } = useCarrera()
 
-  // Filtros
-  const [dni, setDni] = useState('')
-  const [carreraId, setCarreraId] = useState('')
-  const [kilometraje, setKilometraje] = useState('')
-  const [tipoDistancia, setTipoDistancia] = useState<TipoDistanciaBackend | ''>('')
-  const [pago, setPago] = useState('')
-  const [estado, setEstado] = useState<EstadoInscripcionBackend | ''>('')
-  const [anio, setAnio] = useState('')
+  // Filtros (formulario validado con el mismo criterio que el backend)
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = useForm<FiltrosInscripcionesForm>({
+    resolver: zodResolver(filtrosInscripcionesSchema),
+    mode: 'onChange',
+    defaultValues: filtrosIniciales,
+  })
+
+  const [dni, carreraId, kilometraje, tipoDistancia, pago, estado, anio] = watch([
+    'dni',
+    'carreraId',
+    'kilometraje',
+    'tipoDistancia',
+    'pago',
+    'estado',
+    'anio',
+  ])
+
   const [paginaActual, setPaginaActual] = useState(1)
+
+  // Cada vez que cambia un filtro se vuelve a la primera página
+  const volverAPrimeraPagina = () => setPaginaActual(1)
 
   // Datos del backend
   const [inscripciones, setInscripciones] = useState<InscripcionListadoDTO[]>([])
@@ -88,18 +108,35 @@ function Inscripciones() {
     ].sort((a, b) => a - b)
   }, [carreras])
 
-  // Parámetros que se envían al backend
-  const filtros = useMemo<FiltrosListadoInscripciones>(() => ({
-    ...(carreraId ? { carreraId } : {}),
-    ...(dni.trim() ? { dni: dni.replace(/\D/g, '') } : {}),
-    ...(kilometraje ? { kilometraje: Number(kilometraje) } : {}),
-    ...(tipoDistancia ? { tipoDistancia } : {}),
-    ...(pago !== '' ? { pagado: pago === 'true' } : {}),
-    ...(estado ? { estado } : {}),
-    ...(anio ? { anio: Number(anio) } : {}),
-    pagina: paginaActual,
-    limite: INSCRIPCIONES_POR_PAGINA,
-  }), [
+  // Parámetros que se envían al backend. Si algún filtro es inválido no se consulta
+  // (el formulario muestra el error) para no mandar al backend un pedido que va a rechazar.
+  const filtros = useMemo<FiltrosListadoInscripciones | null>(() => {
+    const validacion = filtrosInscripcionesSchema.safeParse({
+      dni,
+      carreraId,
+      kilometraje,
+      tipoDistancia,
+      pago,
+      estado,
+      anio,
+    })
+
+    if (!validacion.success) return null
+
+    const datos = validacion.data
+
+    return {
+      ...(datos.carreraId ? { carreraId: datos.carreraId } : {}),
+      ...(datos.dni ? { dni: datos.dni } : {}),
+      ...(datos.kilometraje ? { kilometraje: Number(datos.kilometraje) } : {}),
+      ...(datos.tipoDistancia ? { tipoDistancia: datos.tipoDistancia } : {}),
+      ...(datos.pago !== '' ? { pagado: datos.pago === 'true' } : {}),
+      ...(datos.estado ? { estado: datos.estado } : {}),
+      ...(datos.anio ? { anio: Number(datos.anio) } : {}),
+      pagina: paginaActual,
+      limite: INSCRIPCIONES_POR_PAGINA,
+    }
+  }, [
     carreraId,
     dni,
     kilometraje,
@@ -112,14 +149,16 @@ function Inscripciones() {
 
   // Consulta al backend cada vez que cambian los filtros o la página
   useEffect(() => {
+    if (!filtros) return
+
     let cancelado = false
 
-    async function cargarInscripciones() {
+    async function cargarInscripciones(filtrosActuales: FiltrosListadoInscripciones) {
       try {
         setCargando(true)
         setError(null)
 
-        const resultado = await obtenerInscripciones(filtros)
+        const resultado = await obtenerInscripciones(filtrosActuales)
 
         if (cancelado) return
 
@@ -142,7 +181,7 @@ function Inscripciones() {
       }
     }
 
-    void cargarInscripciones()
+    void cargarInscripciones(filtros)
 
     return () => {
       cancelado = true
@@ -284,32 +323,27 @@ function Inscripciones() {
       <Form className="mb-3" onSubmit={(event) => event.preventDefault()}>
         <Row className="g-3 align-items-center">
           <Col xs={12} sm={6} lg={2}>
-            <InputGroup size="sm">
+            <InputGroup size="sm" hasValidation>
               <InputGroup.Text className="bg-white">
                 <Search size={14} aria-hidden="true" />
               </InputGroup.Text>
               <Form.Control
                 type="text"
-                value={dni}
-                onChange={(event) => {
-                  setDni(event.target.value)
-                  setPaginaActual(1)
-                }}
+                inputMode="numeric"
                 placeholder="Buscar por DNI"
                 aria-label="Buscar por DNI"
+                isInvalid={!!errors.dni}
+                {...register('dni', { onChange: volverAPrimeraPagina })}
               />
+              <Form.Control.Feedback type="invalid">{errors.dni?.message}</Form.Control.Feedback>
             </InputGroup>
           </Col>
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={carreraId}
               size="sm"
               aria-label="Filtrar por carrera"
-              onChange={(event) => {
-                setCarreraId(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('carreraId', { onChange: volverAPrimeraPagina })}
             >
               <option value="">Todas las carreras</option>
               {carreras.map((carrera) => (
@@ -322,13 +356,9 @@ function Inscripciones() {
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={kilometraje}
               size="sm"
               aria-label="Filtrar por distancia"
-              onChange={(event) => {
-                setKilometraje(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('kilometraje', { onChange: volverAPrimeraPagina })}
             >
               <option value="">Todas las distancias</option>
               {distancias.map((km) => (
@@ -341,13 +371,9 @@ function Inscripciones() {
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={tipoDistancia}
               size="sm"
               aria-label="Filtrar por modalidad"
-              onChange={(event) => {
-                setTipoDistancia(event.target.value as TipoDistanciaBackend | '')
-                setPaginaActual(1)
-              }}
+              {...register('tipoDistancia', { onChange: volverAPrimeraPagina })}
             >
               <option value="">Todas las modalidades</option>
               <option value="Participativa">Participativa</option>
@@ -357,13 +383,9 @@ function Inscripciones() {
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={pago}
               size="sm"
               aria-label="Filtrar por pago"
-              onChange={(event) => {
-                setPago(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('pago', { onChange: volverAPrimeraPagina })}
             >
               <option value="">Todos los pagos</option>
               <option value="true">Pagado</option>
@@ -373,13 +395,9 @@ function Inscripciones() {
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={estado}
               size="sm"
               aria-label="Filtrar por estado"
-              onChange={(event) => {
-                setEstado(event.target.value as EstadoInscripcionBackend | '')
-                setPaginaActual(1)
-              }}
+              {...register('estado', { onChange: volverAPrimeraPagina })}
             >
               <option value="">Todos los estados</option>
               <option value="En_proceso">En proceso</option>
@@ -394,15 +412,13 @@ function Inscripciones() {
               type="number"
               min={2000}
               max={2100}
-              value={anio}
               size="sm"
               placeholder="Año"
               aria-label="Filtrar por año"
-              onChange={(event) => {
-                setAnio(event.target.value)
-                setPaginaActual(1)
-              }}
+              isInvalid={!!errors.anio}
+              {...register('anio', { onChange: volverAPrimeraPagina })}
             />
+            <Form.Control.Feedback type="invalid">{errors.anio?.message}</Form.Control.Feedback>
           </Col>
         </Row>
       </Form>

@@ -1,11 +1,16 @@
 //frontend/src/pages/inscripciones/NuevaInscripcion.tsx
-import { useEffect, useState } from 'react'
-import { Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Modal, Row, ToggleButton, ToggleButtonGroup,} from 'react-bootstrap'
+import { useEffect, useMemo, useState } from 'react'
+import { Alert, Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Modal, Row, ToggleButton, ToggleButtonGroup,} from 'react-bootstrap'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, CreditCard, Eye, Footprints, Plus, Search, UserRoundPlus } from 'lucide-react'
-import { contactoEmergenciaSchema, inscripcionPaso1Schema } from '../../schemas/inscripcionSchema'
-import { validar, type ErroresFormulario } from '../../utils/validar'
-import type { ContactoEmergencia, CrearInscripcionPayload, OpcionesInscripcionDTO } from '../../types/inscripcion'
+import { useForm } from 'react-hook-form'
+import type { UseFormRegisterReturn } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { contactoEmergenciaSchema, crearInscripcionPaso1Schema, inscripcionPaso2Schema } from '../../schemas/inscripcionSchema'
+import type { ContactoEmergenciaForm, InscripcionPaso1Form, InscripcionPaso2Form } from '../../schemas/inscripcionSchema'
+import { dniBusquedaSchema } from '../../schemas/kitSchema'
+import type { DniBusquedaForm } from '../../schemas/kitSchema'
+import type { CrearInscripcionPayload, OpcionesInscripcionDTO } from '../../types/inscripcion'
 import { ApiError } from '../../services/apiService'
 import {
   buscarContactoEmergencia as buscarContactoEmergenciaAPI,
@@ -13,18 +18,6 @@ import {
   obtenerOpcionesInscripcion,
 } from '../../services/inscripcionService'
 import { useCarreraActual } from '../../hooks/useCarreraActual'
-
-type DatosCorredor = {
-  nombre: string
-  apellido: string
-  genero: string
-  fechaNacimiento: string
-  dni: string
-  telefono: string
-  discapacidad: string
-  aptoMedico: boolean
-  vencimientoAptoMedico: string
-}
 
 /* =====================================================
    COMPONENTES AUXILIARES
@@ -64,8 +57,7 @@ function Pasos({ actual }: { actual: number }) {
 type CampoTextoProps = {
   id: string
   etiqueta: string
-  valor: string
-  onCambio: (valor: string) => void
+  registro: UseFormRegisterReturn
   error?: string
   obligatorio?: boolean
   placeholder?: string
@@ -74,7 +66,7 @@ type CampoTextoProps = {
   min?: string
 }
 
-function CampoTexto({ id, etiqueta, valor, onCambio, error, obligatorio, placeholder, tipo = 'text', modo, min }: CampoTextoProps) {
+function CampoTexto({ id, etiqueta, registro, error, obligatorio, placeholder, tipo = 'text', modo, min }: CampoTextoProps) {
   return (
     <Form.Group controlId={id}>
       <Form.Label className="small fw-semibold">
@@ -85,10 +77,9 @@ function CampoTexto({ id, etiqueta, valor, onCambio, error, obligatorio, placeho
         type={tipo}
         inputMode={modo}
         min={min}
-        value={valor}
         placeholder={placeholder}
         isInvalid={!!error}
-        onChange={(e) => onCambio(e.target.value)}
+        {...registro}
       />
 
       <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
@@ -151,101 +142,141 @@ function NuevaInscripcion() {
     let cancelado = false
 
     async function cargarOpciones(idCarrera: string) {
-    try {
-      setCargandoOpciones(true)
-      setErrorOpciones(null)
+      try {
+        setCargandoOpciones(true)
+        setErrorOpciones(null)
 
-      const resultado = await obtenerOpcionesInscripcion(idCarrera)
+        const resultado = await obtenerOpcionesInscripcion(idCarrera)
 
-      if (!cancelado) setOpciones(resultado)
-    } catch (error) {
-      if (!cancelado) {
-        setErrorOpciones(
-          error instanceof Error
-            ? error.message
-            : 'No se pudieron cargar las opciones de inscripción.'
-        )
+        if (!cancelado) setOpciones(resultado)
+      } catch (error) {
+        if (!cancelado) {
+          setErrorOpciones(
+            error instanceof Error
+              ? error.message
+              : 'No se pudieron cargar las opciones de inscripción.'
+          )
+        }
+      } finally {
+        if (!cancelado) setCargandoOpciones(false)
       }
-    } finally {
-      if (!cancelado) setCargandoOpciones(false)
     }
-  }
 
-  void cargarOpciones(carreraId)
+    void cargarOpciones(carreraId)
     return () => {
       cancelado = true
     }
   }, [carreraSeleccionada?.id])
 
-  const [datosCorredor, setDatosCorredor] = useState<DatosCorredor>({
-    nombre: '',
-    apellido: '',
-    genero: '',
-    fechaNacimiento: '',
-    dni: dniInicial,
-    telefono: '',
-    discapacidad: '',
-    aptoMedico: false,
-    vencimientoAptoMedico: '',
+  /* ---------- Fechas de la carrera (el apto médico debe cubrirla) ---------- */
+
+  const manana = new Date()
+  manana.setDate(manana.getDate() + 1)
+  const mananaISO = new Date(manana.getTime() - manana.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+
+  const fechaCarrera = opciones ? new Date(opciones.carrera.fechaHoraCarrera) : null
+  const fechaCarreraISO = fechaCarrera
+    ? new Date(fechaCarrera.getTime() - fechaCarrera.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+    : undefined
+  const fechaMinimaApto = fechaCarreraISO && fechaCarreraISO > mananaISO
+    ? fechaCarreraISO
+    : mananaISO
+
+  /* =====================================================
+     FORMULARIO PASO 1: corredor + contacto de emergencia
+  ===================================================== */
+
+  const schemaPaso1 = useMemo(() => crearInscripcionPaso1Schema(fechaCarreraISO), [fechaCarreraISO])
+
+  const {
+    register: registrarPaso1,
+    handleSubmit: enviarPaso1,
+    setValue: setValuePaso1,
+    watch: watchPaso1,
+    formState: { errors: erroresPaso1, isSubmitted: paso1Enviado },
+  } = useForm<InscripcionPaso1Form>({
+    resolver: zodResolver(schemaPaso1),
+    defaultValues: {
+      corredor: {
+        nombre: '',
+        apellido: '',
+        genero: '' as InscripcionPaso1Form['corredor']['genero'],
+        fechaNacimiento: '',
+        dni: dniInicial,
+        telefono: '',
+        discapacidad: '',
+        aptoMedico: false,
+        vencimientoAptoMedico: '',
+      },
+      contactoEmergencia: null,
+    },
   })
 
-  /* ---------- Contacto de emergencia ---------- */
+  const datosCorredor = watchPaso1('corredor')
+  const contactoEmergencia = watchPaso1('contactoEmergencia')
 
-  const [dniContacto, setDniContacto] = useState('')
-  const [contactoEmergencia, setContactoEmergencia] = useState<ContactoEmergencia | null>(null)
-  const [mostrarModalContacto, setMostrarModalContacto] = useState(false)
-  const [nuevoContacto, setNuevoContacto] = useState<ContactoEmergencia>({
-    nombre: '',
-    apellido: '',
-    dni: '',
-    telefono: '',
+  const errorContactoPaso1 = erroresPaso1.contactoEmergencia?.message ?? erroresPaso1.contactoEmergencia?.dni?.message
+
+  const [errorAptoMedico, setErrorAptoMedico] = useState<string | null>(null)
+
+  const aptoMedicoValido = datosCorredor.aptoMedico &&
+    datosCorredor.vencimientoAptoMedico !== '' &&
+    datosCorredor.vencimientoAptoMedico >= fechaMinimaApto
+
+  const continuarPaso1 = enviarPaso1(() => {
+    setErrorAptoMedico(null)
+    setPaso(2)
   })
 
-  const [mostrarErrores, setMostrarErrores] = useState(false)
-  const [erroresContacto, setErroresContacto] = useState<ErroresFormulario>({})
+  /* ---------- Búsqueda de contacto de emergencia ---------- */
+
+  const {
+    register: registrarBusqueda,
+    handleSubmit: enviarBusqueda,
+    setValue: setValueBusqueda,
+    getValues: getValuesBusqueda,
+    formState: { errors: erroresBusqueda },
+  } = useForm<DniBusquedaForm>({
+    resolver: zodResolver(dniBusquedaSchema),
+    defaultValues: { dni: '' },
+  })
+
   const [buscandoContacto, setBuscandoContacto] = useState(false)
   const [errorBusquedaContacto, setErrorBusquedaContacto] = useState<string | null>(null)
 
-  /* ---------- Datos de la inscripción ---------- */
+  /* ---------- Modal: nuevo contacto de emergencia ---------- */
 
-  const [distanciaSeleccionada, setDistanciaSeleccionada] = useState('')
-  const [productoDinamico, setProductoDinamico] = useState<'si' | 'no'>('no')
-  const [productoSeleccionadoId, setProductoSeleccionadoId] = useState('')
-  const [varianteProducto, setVarianteProducto] = useState('')
-  const [cantidadProducto, setCantidadProducto] = useState('1')
-  const [errorAptoMedico, setErrorAptoMedico] = useState<string | null>(null)
+  const [mostrarModalContacto, setMostrarModalContacto] = useState(false)
 
-  const actualizarDato = (campo: keyof DatosCorredor, valor: string | boolean) => {
-    setDatosCorredor((anterior) => ({ ...anterior, [campo]: valor }))
-  }
+  const {
+    register: registrarContacto,
+    handleSubmit: enviarContacto,
+    reset: resetContacto,
+    formState: { errors: erroresContacto },
+  } = useForm<ContactoEmergenciaForm>({
+    resolver: zodResolver(contactoEmergenciaSchema),
+    defaultValues: { nombre: '', apellido: '', dni: '', telefono: '' },
+  })
 
   const volverAInscripciones = () => {
     navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones`)
   }
 
-  /* =====================================================
-     BÚSQUEDA DE CONTACTO
-  ===================================================== */
+  const abrirModalContacto = (dni: string) => {
+    resetContacto({ nombre: '', apellido: '', dni, telefono: '' })
+    setMostrarModalContacto(true)
+  }
 
-  const buscarContactoEmergencia = async () => {
-    const dni = dniContacto.trim()
-
-    if (!/^\d{7,8}$/.test(dni)) {
-      setErrorBusquedaContacto('Ingresá un DNI válido de 7 u 8 números.')
-      return
-    }
-
+  const buscarContactoEmergencia = enviarBusqueda(async ({ dni }) => {
     try {
       setBuscandoContacto(true)
       setErrorBusquedaContacto(null)
 
       const contactoEncontrado = await buscarContactoEmergenciaAPI(dni)
-      setContactoEmergencia(contactoEncontrado)
+      setValuePaso1('contactoEmergencia', contactoEncontrado, { shouldValidate: paso1Enviado })
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
-        setNuevoContacto({ nombre: '', apellido: '', dni, telefono: '' })
-        setErroresContacto({})
-        setMostrarModalContacto(true)
+        abrirModalContacto(dni)
         return
       }
 
@@ -257,69 +288,41 @@ function NuevaInscripcion() {
     } finally {
       setBuscandoContacto(false)
     }
-  }
-
-  const abrirModalNuevoContacto = () => {
-    setNuevoContacto({ nombre: '', apellido: '', dni: dniContacto.trim(), telefono: '' })
-    setErroresContacto({})
-    setMostrarModalContacto(true)
-  }
-
-  const actualizarContacto = (campo: keyof ContactoEmergencia, valor: string) => {
-    setNuevoContacto((anterior) => ({ ...anterior, [campo]: valor }))
-    setErroresContacto((anteriores) => ({ ...anteriores, [campo]: '' }))
-  }
-
-  // El contacto nuevo se envía junto con la inscripción; el backend lo crea en esa operación.
-  const guardarNuevoContacto = () => {
-    const validacion = validar(contactoEmergenciaSchema, nuevoContacto)
-
-    if (!validacion.ok) {
-      setErroresContacto(validacion.errores)
-      return
-    }
-
-    setContactoEmergencia(validacion.datos)
-    setDniContacto(validacion.datos.dni)
-    setMostrarModalContacto(false)
-  }
-
-  /* =====================================================
-     VALIDACIÓN PASO 1
-  ===================================================== */
-
-  const validacionPaso1 = validar(inscripcionPaso1Schema, {
-    corredor: datosCorredor,
-    contactoEmergencia,
   })
 
-  // Los errores se muestran recién después de intentar continuar
-  const errorPaso1 = (campo: string) => (mostrarErrores ? validacionPaso1.errores[campo] : undefined)
-
-  const errorContactoPaso1 = errorPaso1('contactoEmergencia') ?? errorPaso1('contactoEmergencia.dni')
-
-  const continuarPaso1 = () => {
-    if (!validacionPaso1.ok) {
-      setMostrarErrores(true)
-      return
-    }
-
-    if (datosCorredor.aptoMedico && !aptoMedicoValido) {
-      setErrorAptoMedico('El apto médico debe estar vigente hasta la fecha de la carrera.')
-      return
-    }
-
-    setErrorAptoMedico(null)
-    setPaso(2)
-  }
-
-  const manana = new Date()
-  manana.setDate(manana.getDate() + 1)
-  const mananaISO = new Date(manana.getTime() - manana.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+  // El contacto nuevo se envía junto con la inscripción; el backend lo crea en esa operación.
+  const guardarNuevoContacto = enviarContacto((contacto) => {
+    setValuePaso1('contactoEmergencia', contacto, { shouldValidate: paso1Enviado })
+    setValueBusqueda('dni', contacto.dni)
+    setMostrarModalContacto(false)
+  })
 
   /* =====================================================
-     DATOS DEL PASO 2
+     FORMULARIO PASO 2: distancia + producto
   ===================================================== */
+
+  const {
+    register: registrarPaso2,
+    handleSubmit: enviarPaso2,
+    setValue: setValuePaso2,
+    watch: watchPaso2,
+    formState: { errors: erroresPaso2 },
+  } = useForm<InscripcionPaso2Form>({
+    resolver: zodResolver(inscripcionPaso2Schema),
+    defaultValues: {
+      distancia: '',
+      productoDinamico: 'no',
+      productoId: '',
+      varianteId: '',
+      cantidad: '1',
+    },
+  })
+
+  const distanciaSeleccionada = watchPaso2('distancia')
+  const productoDinamico = watchPaso2('productoDinamico')
+  const productoSeleccionadoId = watchPaso2('productoId')
+  const varianteProducto = watchPaso2('varianteId')
+  const cantidadProducto = watchPaso2('cantidad')
 
   // Se ofrecen todas las distancias configuradas para la carrera.
   const distanciasDisponibles = opciones?.distancias ?? []
@@ -353,72 +356,44 @@ function NuevaInscripcion() {
   const totalPagar = precioDistancia + precioProducto
 
   const seleccionarDistancia = (kilometraje: number, tipoDistancia: string) => {
-    setDistanciaSeleccionada(claveDistancia(kilometraje, tipoDistancia))
+    setValuePaso2('distancia', claveDistancia(kilometraje, tipoDistancia), { shouldValidate: true })
     setErrorAptoMedico(null)
   }
 
-  const fechaCarrera = opciones ? new Date(opciones.carrera.fechaHoraCarrera) : null
-  const fechaCarreraISO = fechaCarrera
-    ? new Date(fechaCarrera.getTime() - fechaCarrera.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
-    : undefined
-  const fechaMinimaApto = fechaCarreraISO && fechaCarreraISO > mananaISO
-    ? fechaCarreraISO
-    : mananaISO
-
-  const aptoMedicoValido = datosCorredor.aptoMedico &&
-    datosCorredor.vencimientoAptoMedico !== '' &&
-    datosCorredor.vencimientoAptoMedico >= fechaMinimaApto
-
-  const errorAptoMedicoVisible = datosCorredor.aptoMedico && !aptoMedicoValido
-    ? `El apto médico debe estar vigente hasta la fecha de la carrera (${fechaCarreraISO ?? 'fecha no disponible'}).`
-    : errorAptoMedico ?? undefined
-
   const faltaAptoRequerido = requiereAptoMedico && !aptoMedicoValido
 
-  const puedeContinuarPaso2 = Boolean(
-    distanciaSeleccionadaData &&
-    (productoDinamico === 'no' || (
-      productoSeleccionadoId !== '' &&
-      varianteProducto !== '' &&
-      cantidadProducto !== '' &&
-      varianteSeleccionada &&
-      varianteSeleccionada.stock >= cantidad
-    )) &&
-    (!datosCorredor.aptoMedico || aptoMedicoValido) &&
-    (!requiereAptoMedico || aptoMedicoValido)
-  )
+  // Reglas que dependen del stock y del cupo de la carrera (vienen del backend, no del schema)
+  const stockInsuficiente = productoDinamico === 'si' &&
+    Boolean(varianteSeleccionada) &&
+    (varianteSeleccionada?.stock ?? 0) < cantidad
+
+  const cupoCompleto = Boolean(opciones && opciones.cupo.ocupados >= opciones.cupo.maximo)
 
   const cambiarProductoDinamico = (valor: 'si' | 'no') => {
-    setProductoDinamico(valor)
+    setValuePaso2('productoDinamico', valor)
 
     if (valor === 'no') {
-      setProductoSeleccionadoId('')
-      setVarianteProducto('')
-      setCantidadProducto('1')
+      setValuePaso2('productoId', '')
+      setValuePaso2('varianteId', '')
+      setValuePaso2('cantidad', '1')
     }
   }
 
-  const continuarPaso2 = () => {
-    if (requiereAptoMedico && !aptoMedicoValido) {
+  const continuarPaso2 = enviarPaso2(() => {
+    if (faltaAptoRequerido) {
       setErrorAptoMedico('Para esta distancia necesitás registrar un apto médico aprobado y vigente hasta la fecha de la carrera.')
       setPaso(1)
       return
     }
 
-    if (datosCorredor.aptoMedico && !aptoMedicoValido) {
-      setErrorAptoMedico('Ingresá una fecha de vencimiento que cubra la fecha de la carrera.')
-      setPaso(1)
-      return
-    }
-
     if (!opciones?.carrera.admiteInscripciones) return
-    if (opciones.cupo.ocupados >= opciones.cupo.maximo) return
-    if (!puedeContinuarPaso2) return
+    if (cupoCompleto) return
+    if (stockInsuficiente) return
 
     setErrorAptoMedico(null)
     setPaso(3)
     setInscripcionConfirmada(false)
-  }
+  })
 
   /* =====================================================
      CONFIRMAR INSCRIPCIÓN
@@ -430,7 +405,7 @@ function NuevaInscripcion() {
       return
     }
 
-    if (requiereAptoMedico && !aptoMedicoValido) {
+    if (faltaAptoRequerido) {
       setPaso(1)
       setErrorAptoMedico('Para esta distancia necesitás registrar un apto médico aprobado y vigente hasta la fecha de la carrera.')
       return
@@ -453,7 +428,7 @@ function NuevaInscripcion() {
         nombre: datosCorredor.nombre.trim(),
         apellido: datosCorredor.apellido.trim(),
         telefono: datosCorredor.telefono.trim(),
-        sexo: datosCorredor.genero as 'Femenino' | 'Masculino',
+        sexo: datosCorredor.genero,
         fechaNacimiento: datosCorredor.fechaNacimiento,
         ...(discapacidadMapeada[datosCorredor.discapacidad]
           ? { discapacidad: discapacidadMapeada[datosCorredor.discapacidad] }
@@ -541,7 +516,7 @@ function NuevaInscripcion() {
             </div>
           )}
 
-          {opciones && opciones.cupo.ocupados >= opciones.cupo.maximo && (
+          {cupoCompleto && (
             <div className="alert alert-warning" role="alert">
               La carrera alcanzó el cupo máximo.
             </div>
@@ -553,7 +528,11 @@ function NuevaInscripcion() {
                   PASO 1
               ===================================================== */}
               {paso === 1 && (
-                <>
+                <Form onSubmit={continuarPaso1} noValidate>
+                  {errorAptoMedico && (
+                    <Alert variant="warning" role="alert">{errorAptoMedico}</Alert>
+                  )}
+
                   <div className="border-bottom pb-3 mb-4">
                     <h2 className="h5 fw-bold mb-1">Datos del corredor</h2>
                     <p className="text-secondary small mb-0">Ingrese los datos personales del corredor.</p>
@@ -566,9 +545,8 @@ function NuevaInscripcion() {
                         etiqueta="Nombre"
                         obligatorio
                         placeholder="Ingrese el nombre"
-                        valor={datosCorredor.nombre}
-                        onCambio={(valor) => actualizarDato('nombre', valor)}
-                        error={errorPaso1('corredor.nombre')}
+                        registro={registrarPaso1('corredor.nombre')}
+                        error={erroresPaso1.corredor?.nombre?.message}
                       />
                     </Col>
 
@@ -578,9 +556,8 @@ function NuevaInscripcion() {
                         etiqueta="Apellido"
                         obligatorio
                         placeholder="Ingrese el apellido"
-                        valor={datosCorredor.apellido}
-                        onCambio={(valor) => actualizarDato('apellido', valor)}
-                        error={errorPaso1('corredor.apellido')}
+                        registro={registrarPaso1('corredor.apellido')}
+                        error={erroresPaso1.corredor?.apellido?.message}
                       />
                     </Col>
 
@@ -591,9 +568,8 @@ function NuevaInscripcion() {
                         </Form.Label>
 
                         <Form.Select
-                          value={datosCorredor.genero}
-                          isInvalid={!!errorPaso1('corredor.genero')}
-                          onChange={(e) => actualizarDato('genero', e.target.value)}
+                          isInvalid={!!erroresPaso1.corredor?.genero}
+                          {...registrarPaso1('corredor.genero')}
                         >
                           <option value="" disabled>Seleccione género</option>
                           <option value="Femenino">Femenino</option>
@@ -601,7 +577,7 @@ function NuevaInscripcion() {
                         </Form.Select>
 
                         <Form.Control.Feedback type="invalid">
-                          {errorPaso1('corredor.genero')}
+                          {erroresPaso1.corredor?.genero?.message}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
@@ -612,9 +588,8 @@ function NuevaInscripcion() {
                         etiqueta="Fecha de nacimiento"
                         obligatorio
                         tipo="date"
-                        valor={datosCorredor.fechaNacimiento}
-                        onCambio={(valor) => actualizarDato('fechaNacimiento', valor)}
-                        error={errorPaso1('corredor.fechaNacimiento')}
+                        registro={registrarPaso1('corredor.fechaNacimiento')}
+                        error={erroresPaso1.corredor?.fechaNacimiento?.message}
                       />
                     </Col>
 
@@ -625,9 +600,8 @@ function NuevaInscripcion() {
                         obligatorio
                         modo="numeric"
                         placeholder="Ej. 12345678"
-                        valor={datosCorredor.dni}
-                        onCambio={(valor) => actualizarDato('dni', valor)}
-                        error={errorPaso1('corredor.dni')}
+                        registro={registrarPaso1('corredor.dni')}
+                        error={erroresPaso1.corredor?.dni?.message}
                       />
                     </Col>
 
@@ -638,9 +612,8 @@ function NuevaInscripcion() {
                         obligatorio
                         modo="tel"
                         placeholder="Ej. +54 9 11 1234-5678"
-                        valor={datosCorredor.telefono}
-                        onCambio={(valor) => actualizarDato('telefono', valor)}
-                        error={errorPaso1('corredor.telefono')}
+                        registro={registrarPaso1('corredor.telefono')}
+                        error={erroresPaso1.corredor?.telefono?.message}
                       />
                     </Col>
 
@@ -648,10 +621,7 @@ function NuevaInscripcion() {
                       <Form.Group controlId="discapacidad">
                         <Form.Label className="small fw-semibold">Discapacidad</Form.Label>
 
-                        <Form.Select
-                          value={datosCorredor.discapacidad}
-                          onChange={(e) => actualizarDato('discapacidad', e.target.value)}
-                        >
+                        <Form.Select {...registrarPaso1('corredor.discapacidad')}>
                           <option value="">Seleccione discapacidad</option>
                           <option value="Ninguna">Ninguna</option>
                           <option value="Visual">Visual</option>
@@ -674,13 +644,12 @@ function NuevaInscripcion() {
                       type="checkbox"
                       id="aptoMedico"
                       label="Apto médico aprobado"
-                      checked={datosCorredor.aptoMedico}
-                      onChange={(e) => {
-                        const aprobado = e.currentTarget.checked
-                        actualizarDato('aptoMedico', aprobado)
-                        if (!aprobado) actualizarDato('vencimientoAptoMedico', '')
-                        setErrorAptoMedico(null)
-                      }}
+                      {...registrarPaso1('corredor.aptoMedico', {
+                        onChange: (e) => {
+                          if (!e.target.checked) setValuePaso1('corredor.vencimientoAptoMedico', '')
+                          setErrorAptoMedico(null)
+                        },
+                      })}
                     />
 
                     {datosCorredor.aptoMedico && (
@@ -691,12 +660,10 @@ function NuevaInscripcion() {
                           obligatorio
                           tipo="date"
                           min={fechaMinimaApto}
-                          valor={datosCorredor.vencimientoAptoMedico}
-                          onCambio={(valor) => {
-                            actualizarDato('vencimientoAptoMedico', valor)
-                            setErrorAptoMedico(null)
-                          }}
-                          error={errorAptoMedicoVisible}
+                          registro={registrarPaso1('corredor.vencimientoAptoMedico', {
+                            onChange: () => setErrorAptoMedico(null),
+                          })}
+                          error={erroresPaso1.corredor?.vencimientoAptoMedico?.message}
                         />
                       </div>
                     )}
@@ -717,10 +684,17 @@ function NuevaInscripcion() {
                       <Form.Control
                         type="text"
                         inputMode="numeric"
-                        value={dniContacto}
                         placeholder="Buscar por DNI"
                         aria-label="DNI del contacto de emergencia"
-                        onChange={(e) => setDniContacto(e.target.value)}
+                        isInvalid={!!erroresBusqueda.dni}
+                        {...registrarBusqueda('dni')}
+                        onKeyDown={(e) => {
+                          // Enter busca el contacto; no debe enviar el paso 1
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            void buscarContactoEmergencia()
+                          }
+                        }}
                       />
 
                       <Button
@@ -738,15 +712,17 @@ function NuevaInscripcion() {
                         type="button"
                         variant="success"
                         className="d-inline-flex align-items-center gap-1"
-                        onClick={abrirModalNuevoContacto}
+                        onClick={() => abrirModalContacto(getValuesBusqueda('dni').trim())}
                       >
                         <UserRoundPlus size={14} aria-hidden="true" />
                         Nuevo contacto
                       </Button>
                     </InputGroup>
 
-                    {errorBusquedaContacto && (
-                      <div className="text-danger small mt-2" role="alert">{errorBusquedaContacto}</div>
+                    {(erroresBusqueda.dni || errorBusquedaContacto) && (
+                      <div className="text-danger small mt-2" role="alert">
+                        {erroresBusqueda.dni?.message ?? errorBusquedaContacto}
+                      </div>
                     )}
 
                     {contactoEmergencia && (
@@ -777,18 +753,18 @@ function NuevaInscripcion() {
                   </div>
 
                   <div className="d-flex justify-content-end gap-2 border-top mt-4 pt-3">
-                    <Button type="button" variant="success" onClick={continuarPaso1}>
+                    <Button type="submit" variant="success">
                       Continuar
                     </Button>
                   </div>
-                </>
+                </Form>
               )}
 
               {/* =====================================================
                   PASO 2
               ===================================================== */}
               {paso === 2 && (
-                <>
+                <Form onSubmit={continuarPaso2} noValidate>
                   <div className="border-bottom pb-3 mb-4">
                     <h2 className="h5 fw-bold mb-1">Datos de la inscripción</h2>
                     <p className="text-secondary small mb-0">Complete los datos correspondientes a la carrera.</p>
@@ -824,6 +800,10 @@ function NuevaInscripcion() {
 
                         {distanciasDisponibles.length === 0 && (
                           <div className="text-danger small mt-2">La carrera no tiene distancias válidas disponibles.</div>
+                        )}
+
+                        {erroresPaso2.distancia && (
+                          <div className="text-danger small mt-2" role="alert">{erroresPaso2.distancia.message}</div>
                         )}
 
                       </div>
@@ -868,12 +848,13 @@ function NuevaInscripcion() {
                             <Form.Group controlId="productoSeleccionado">
                               <Form.Label className="small fw-semibold">Producto</Form.Label>
                               <Form.Select
-                                value={productoSeleccionadoId}
-                                onChange={(e) => {
-                                  setProductoSeleccionadoId(e.target.value)
-                                  setVarianteProducto('')
-                                  setCantidadProducto('1')
-                                }}
+                                isInvalid={!!erroresPaso2.productoId}
+                                {...registrarPaso2('productoId', {
+                                  onChange: () => {
+                                    setValuePaso2('varianteId', '')
+                                    setValuePaso2('cantidad', '1')
+                                  },
+                                })}
                               >
                                 <option value="">Seleccione producto</option>
                                 {(opciones?.productos ?? []).map((producto) => (
@@ -882,6 +863,7 @@ function NuevaInscripcion() {
                                   </option>
                                 ))}
                               </Form.Select>
+                              <Form.Control.Feedback type="invalid">{erroresPaso2.productoId?.message}</Form.Control.Feedback>
                             </Form.Group>
                           </Col>
 
@@ -889,12 +871,10 @@ function NuevaInscripcion() {
                             <Form.Group controlId="varianteProducto">
                               <Form.Label className="small fw-semibold">Variante</Form.Label>
                               <Form.Select
-                                value={varianteProducto}
-                                disabled={!productoSeleccionado}
-                                onChange={(e) => {
-                                  setVarianteProducto(e.target.value)
-                                  setCantidadProducto('1')
-                                }}
+                                isInvalid={!!erroresPaso2.varianteId}
+                                {...registrarPaso2('varianteId', {
+                                  onChange: () => setValuePaso2('cantidad', '1'),
+                                })}
                               >
                                 <option value="">Seleccione variante</option>
                                 {(productoSeleccionado?.variantes ?? []).map((variante) => (
@@ -903,6 +883,7 @@ function NuevaInscripcion() {
                                   </option>
                                 ))}
                               </Form.Select>
+                              <Form.Control.Feedback type="invalid">{erroresPaso2.varianteId?.message}</Form.Control.Feedback>
                             </Form.Group>
                           </Col>
 
@@ -910,14 +891,16 @@ function NuevaInscripcion() {
                             <Form.Group controlId="cantidadProducto">
                               <Form.Label className="small fw-semibold">Cantidad</Form.Label>
                               <Form.Select
-                                value={cantidadProducto}
-                                disabled={!varianteSeleccionada || varianteSeleccionada.stock <= 0}
-                                onChange={(e) => setCantidadProducto(e.target.value)}
+                                isInvalid={!!erroresPaso2.cantidad || stockInsuficiente}
+                                {...registrarPaso2('cantidad')}
                               >
                                 {Array.from({ length: Math.min(10, varianteSeleccionada?.stock ?? 0) }, (_, i) => i + 1).map((opcion) => (
                                   <option key={opcion} value={opcion}>{opcion}</option>
                                 ))}
                               </Form.Select>
+                              <Form.Control.Feedback type="invalid">
+                                {erroresPaso2.cantidad?.message ?? 'No hay stock suficiente para la cantidad elegida.'}
+                              </Form.Control.Feedback>
                             </Form.Group>
                           </Col>
                         </Row>
@@ -970,11 +953,15 @@ function NuevaInscripcion() {
                       Volver
                     </Button>
 
-                    <Button type="button" variant="success" disabled={!puedeContinuarPaso2 || cargandoOpciones || !opciones?.carrera.admiteInscripciones || (opciones.cupo.ocupados >= opciones.cupo.maximo)} onClick={continuarPaso2}>
+                    <Button
+                      type="submit"
+                      variant="success"
+                      disabled={cargandoOpciones || !opciones?.carrera.admiteInscripciones || cupoCompleto || faltaAptoRequerido || stockInsuficiente}
+                    >
                       Continuar
                     </Button>
                   </div>
-                </>
+                </Form>
               )}
 
               {/* =====================================================
@@ -1124,6 +1111,14 @@ function NuevaInscripcion() {
           </Modal.Title>
         </Modal.Header>
 
+        <Form
+          noValidate
+          onSubmit={(e) => {
+            // El modal está en un portal: sin esto el submit burbujea al formulario del paso 1
+            e.stopPropagation()
+            void guardarNuevoContacto(e)
+          }}
+        >
         <Modal.Body>
           <Row className="g-3">
             <Col xs={6}>
@@ -1132,9 +1127,8 @@ function NuevaInscripcion() {
                 etiqueta="Nombre"
                 obligatorio
                 placeholder="Ej. Juan"
-                valor={nuevoContacto.nombre}
-                onCambio={(valor) => actualizarContacto('nombre', valor)}
-                error={erroresContacto.nombre}
+                registro={registrarContacto('nombre')}
+                error={erroresContacto.nombre?.message}
               />
             </Col>
 
@@ -1144,9 +1138,8 @@ function NuevaInscripcion() {
                 etiqueta="Apellido"
                 obligatorio
                 placeholder="Ej. Pérez"
-                valor={nuevoContacto.apellido}
-                onCambio={(valor) => actualizarContacto('apellido', valor)}
-                error={erroresContacto.apellido}
+                registro={registrarContacto('apellido')}
+                error={erroresContacto.apellido?.message}
               />
             </Col>
 
@@ -1157,9 +1150,8 @@ function NuevaInscripcion() {
                 obligatorio
                 modo="numeric"
                 placeholder="Ej. 12345678"
-                valor={nuevoContacto.dni}
-                onCambio={(valor) => actualizarContacto('dni', valor)}
-                error={erroresContacto.dni}
+                registro={registrarContacto('dni')}
+                error={erroresContacto.dni?.message}
               />
             </Col>
 
@@ -1170,9 +1162,8 @@ function NuevaInscripcion() {
                 obligatorio
                 modo="tel"
                 placeholder="Ej. +54 9 11 1234567"
-                valor={nuevoContacto.telefono}
-                onCambio={(valor) => actualizarContacto('telefono', valor)}
-                error={erroresContacto.telefono}
+                registro={registrarContacto('telefono')}
+                error={erroresContacto.telefono?.message}
               />
             </Col>
           </Row>
@@ -1183,10 +1174,11 @@ function NuevaInscripcion() {
             Cancelar
           </Button>
 
-          <Button type="button" variant="success" onClick={guardarNuevoContacto}>
+          <Button type="submit" variant="success">
             Guardar
           </Button>
         </Modal.Footer>
+        </Form>
       </Modal>
     </Container>
   )

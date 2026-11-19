@@ -44,6 +44,6 @@ export const resultadoClasificacionSchema = z
     tiempoLlegada: tiempoAMilisegundos(datos.tiempoOficial),
   }))
 
-export type PuestoManualForm = z.infer<ReturnType<typeof puestoManualSchema>>
+export type PuestoManualForm = z.infer<typeof puestoManualSchema>
 export type ResultadoClasificacionInput = z.input<typeof resultadoClasificacionSchema>
 export type ResultadoClasificacionOutput = z.output<typeof resultadoClasificacionSchema>
