@@ -16,7 +16,9 @@ export type Carrera = {
   id: string;
   estado: EstadoCarrera;
   nombre: string;
-  fechaHoraCarrera: string;
+  fechaHoraCarrera: string; // hora ESTIMADA que publica la web
+  fechaHoraInicio: string | null; // hora real de largada
+  fechaHoraFin: string | null;    // hora real en que se finalizó
   fechaHoraEntregaKits: string;
   fechaHoraModificacion: Date;
   imagenUrl: string;
