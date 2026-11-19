@@ -1,10 +1,10 @@
+//frontend/src/layout/navbar/Breadcrumbs.tsx
 import { useLocation, Link } from 'react-router-dom';
 import { Breadcrumb } from 'react-bootstrap';
 import { ChevronRight } from 'lucide-react';
 import { useCarreraSeleccion, type SeccionClasificador } from '../../context/SeleccionarCarreraContext';
 import { useCarrera } from '../../context/CarreraContext';
 import { slugCarrera } from '../../utils/carrera';
-import './Breadcrumbs.css';
 
 const customNames: Record<string, string> = {
   'home': 'HOME',
@@ -184,10 +184,7 @@ export default function Breadcrumbs() {
   }
 
   return (
-    <Breadcrumb
-      className="cap-breadcrumbs"
-      listProps={{ className: 'd-flex align-items-center m-0 p-0 fs-5' }}
-    >
+    <Breadcrumb listProps={{ className: 'd-flex align-items-center m-0 p-0 fs-5' }}>
       {crumbs.map((crumb, index) => {
         const isLast = index === crumbs.length - 1;
         const isClickable = Boolean(crumb.isClickable && crumb.pathToNavigate);
@@ -195,27 +192,31 @@ export default function Breadcrumbs() {
         return (
           <li
             key={crumb.key}
-            className={`breadcrumb-item d-flex align-items-center lh-1 ${!isClickable ? 'active' : ''}`}
+            className="d-flex align-items-center lh-1"
             aria-current={isLast && !isClickable ? 'page' : undefined}
           >
             {index > 0 && (
               index === 1 ? (
-                <span className="cap-separator pipe">|</span>
+                <span className="mx-2 pb-1 fw-light text-body-tertiary">|</span>
               ) : (
-                <ChevronRight className="cap-separator chevron" size={18} strokeWidth={2.5} />
+                <ChevronRight className="mx-2 text-secondary" size={18} strokeWidth={2.5} />
               )
             )}
 
             {isClickable ? (
               <Link
                 to={crumb.pathToNavigate!}
-                className="cap-link d-flex align-items-center lh-1"
+                className="d-flex align-items-center lh-1 fw-medium link-success link-underline-opacity-0 link-underline-opacity-100-hover"
                 onClick={crumb.onClick}
               >
                 {crumb.label}
               </Link>
             ) : (
-              <span className={`${crumb.isRoot ? 'cap-root' : 'cap-current'} d-flex align-items-center lh-1`}>
+              <span
+                className={`d-flex align-items-center lh-1 ${
+                  crumb.isRoot ? 'fw-light text-secondary' : 'fw-bold text-body-emphasis'
+                }`}
+              >
                 {crumb.label}
               </span>
             )}
