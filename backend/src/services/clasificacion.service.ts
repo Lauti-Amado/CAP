@@ -176,7 +176,7 @@ export async function registrarResultado(
                         idCarrera: true,
                         idDistancia: true,
                         entregaKit: { select: { id: true } },
-                        distanciaCarrera: { select: { carrera: { select: { id: true, estado: true, fechaHoraCarrera: true } } } },
+                        distanciaCarrera: { select: { carrera: { select: { id: true, estado: true, fechaHoraCarrera: true, ejecucion: { select: { fechaHoraInicio: true } } } } } },
                     },
                 },
             },
@@ -203,7 +203,9 @@ export async function registrarResultado(
         } else if (clasificacion.resultado) {
             tiempoLlegada = clasificacion.resultado.tiempoLlegada;
         } else if (carrera.estado === "En_curso") {
-            tiempoLlegada = reglas.calcularTiempoDesdeLargada(ahora, carrera.fechaHoraCarrera);
+            //Hora real de largada (las carreras viejas la tenían en fechaHoraCarrera)
+            const largada = carrera.ejecucion?.fechaHoraInicio ?? carrera.fechaHoraCarrera;
+            tiempoLlegada = reglas.calcularTiempoDesdeLargada(ahora, largada);
             if (tiempoLlegada <= 0) {
                 throw new ErrorReglaDeNegocio("No se pudo calcular el tiempo: la carrera todavía no largó. Informá el tiempo de llegada o enviá null.");
             }
