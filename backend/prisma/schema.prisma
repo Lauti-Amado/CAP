@@ -259,10 +259,23 @@ model Carrera {
     estado                EstadoCarrera @default(Creada)
     
     distanciaCarrera      DistanciaCarrera[]
+    ejecucion             EjecucionCarrera? //Hora real de inicio y fin (tabla exclusiva de este sistema)
 
     fechaHoraCreacion     DateTime @default(now())
     fechaHoraModificacion DateTime @updatedAt
     //usuarioModificacion
+}
+
+//DIFIERE: tabla exclusiva de este sistema (no existe en el sistema web)
+//Carrera.fechaHoraCarrera es solo la hora ESTIMADA que publica la web: acá queda la hora real
+model EjecucionCarrera {
+    id              String   @id @default(uuid())
+
+    carreraId       String   @unique
+    carrera         Carrera  @relation(fields: [carreraId], references: [id], onDelete: Cascade)
+
+    fechaHoraInicio DateTime
+    fechaHoraFin    DateTime?
 }
 
 model Distancia {
