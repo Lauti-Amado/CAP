@@ -1,16 +1,13 @@
 //backend/src/services/carreraDetalle.service.ts
 import { prisma } from "../config/prisma";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
-import { toCarreraDto } from "../dtos/carrera.dto";
+import { carreraInclude, toCarreraDto } from "../dtos/carrera.dto";
 import type { CarreraDetalleDTO } from "../dtos/carreraDetalle.dto";
 
 export async function obtenerDetalle(carreraId: string): Promise<CarreraDetalleDTO> {
     const carrera = await prisma.carrera.findUnique({
         where: { id: carreraId },
-        include: {
-            lugar: { include: { localidad: true } },
-            distanciaCarrera: { include: { distancia: true } },
-        },
+        include: carreraInclude,
     });
     if (!carrera) throw new ErrorNoEncontrado("Carrera no encontrada.");
 
