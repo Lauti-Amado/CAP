@@ -14,9 +14,15 @@ Cada cuenta activa con rol **Clasificador y sin rol Administrador** tiene **8 cl
 - La referencia exacta está en `backend/src/utils/claveRespaldo.util.ts`: conviene usar el mismo código.
 - El `CLAVES_RESPALDO_SECRET` debe ser el mismo en la web y en todos los equipos.
 
+## Visibilidad (decisión [05])
+- Solo el Administrador ve el valor de las claves. Ningún Clasificador las ve.
+- `claveCifrada` se descarga únicamente al equipo del Administrador. Los equipos de Clasificador solo reciben `claveHash` y el estado.
+- Los equipos locales validan el ingreso de contingencia con `claveHash`.
+- La web decide si ofrece su propia pantalla de consulta para el Administrador. Si lo hace, debe usar el mismo secreto de cifrado.
+
 ## Sincronización
-- Las claves viajan junto con las cuentas que ya se sincronizan (clasificadores), en los dos sentidos.
-- El sistema local escribe: el cambio de `estado` a Utilizada o Invalidada, `fechaHoraUso`, las filas de `UsoClaveRespaldo` y, como respaldo, claves nuevas.
+- El Clasificador descarga el hash y el estado de las claves de todas las cuentas de Clasificador, para que cualquiera pueda ingresar en cualquier equipo.
+- El sistema local escribe: el cambio de `estado` a Utilizada o Invalidada, `fechaHoraUso`, las filas de `UsoClaveRespaldo` y las claves repuestas (con `claveCifrada`).
 - La web no debe borrar claves usadas ni anuladas. Si una clave tiene más de un `UsoClaveRespaldo`, se usó en dos equipos sin conexión.
 
 ## Respaldo local
