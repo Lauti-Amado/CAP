@@ -10,14 +10,22 @@ const estadosSincronizacion: Record<
 > = {
     conectado: { color: 'success', texto: 'Sincronizado' },
     sincronizando: { color: 'warning', texto: 'Sincronizando...' },
-    'sin-conexion': { color: 'danger', texto: 'Sin conexión: guardando localmente' },
+    'sin-conexion': {
+        color: 'danger',
+        texto: 'Sin conexión: guardando localmente'
+    },
+    'no-disponible': {
+        color: 'secondary',
+        texto: 'Sincronización no disponible'
+    },
 };
 
 export default function AccionesNavbar() {
     // Por ahora está fijo, hasta conectar PowerSync.
-    const estadoSync: EstadoSincronizacion = 'sincronizando'; // Los otros valores son conectado y sin-conexion (rojo)
-    const { color, texto } = estadosSincronizacion[estadoSync];
+    // Pendiente de integrar con PowerSync.
+    const estadoSync: EstadoSincronizacion = 'sincronizando';
 
+    const { color, texto } = estadosSincronizacion[estadoSync];
     const { usuario } = useAuth();
 
     return (
@@ -27,25 +35,43 @@ export default function AccionesNavbar() {
                 className="link-secondary position-relative p-1 d-inline-flex"
                 aria-label={texto}
                 title={texto}
+                type="button"
             >
                 <Cloud size={20} />
-                <span className={`position-absolute top-0 end-0 p-1 rounded-circle pe-none bg-${color}`} />
+                <span
+                    className={`position-absolute top-0 end-0 p-1 rounded-circle pe-none bg-${color}`}
+                />
             </Button>
 
-            <Button variant="link" className="link-secondary p-1 d-inline-flex" aria-label="Notificaciones">
+            <Button
+                variant="link"
+                className="link-secondary p-1 d-inline-flex"
+                aria-label="Notificaciones"
+                type="button"
+            >
                 <Bell size={20} />
             </Button>
 
-            <Button variant="link" className="link-secondary p-1 d-inline-flex" aria-label="Ayuda">
+            <Button
+                variant="link"
+                className="link-secondary p-1 d-inline-flex"
+                aria-label="Ayuda"
+                type="button"
+            >
                 <CircleHelp size={20} />
             </Button>
 
             <div className="d-flex align-items-center gap-1">
-                <Button variant="link" className="link-secondary p-1 d-inline-flex" aria-label="Perfil">
+                <Button
+                    variant="link"
+                    className="link-secondary p-1 d-inline-flex"
+                    aria-label="Perfil"
+                    type="button"
+                >
                     <UserRound size={20} />
                 </Button>
                 <span>Hola, {usuario?.persona.nombre}!</span>
             </div>
         </div>
-    )
+    );
 }
