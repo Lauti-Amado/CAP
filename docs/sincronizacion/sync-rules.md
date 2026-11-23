@@ -42,6 +42,7 @@ Este archivo define **qué se descarga** a cada equipo. Lo que se **sube** lo de
 | `UsoClaveRespaldo` para el Clasificador | El equipo la escribe y la sube, pero no necesita leerla. |
 | `ClaveRespaldo.claveCifrada` para el Clasificador | Ningún Clasificador debe poder ver las claves (decisión [05]). |
 | `AptoMedico.archivoUrl` | Evita replicar archivos pesados en las notebooks. |
+| `LecturaHuerfana` | Lecturas de EPC sin chip asociado, para monitoreo y auditoría. Los equipos la escriben y la suben; ninguno necesita leerla de otro. |
 
 Nota: `Comprobante` tiene una FK opcional a `EntidadEmisora`. Como esa tabla no se descarga, `Comprobante.entidadEmisoraId` queda sin fila local referenciada y la pantalla no debe asumir que existe.
 

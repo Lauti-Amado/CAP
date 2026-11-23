@@ -41,6 +41,7 @@ Todavía no se sabe si Prisma puede leer y escribir sobre esas vistas sin romper
 | 7 | Insertar en la vista un `id` ya existente: ¿se rechaza? (sirve para la estrategia de ids determinísticos) | _pendiente_ |
 | 8 | Columna excluida del stream (`claveCifrada` en el equipo del Clasificador): al volver a descargar la fila que ese equipo subió, ¿queda vacía en local? | _pendiente_ |
 | 9 | Fila escrita en local en una tabla sin stream de descarga para ese rol (`UsoClaveRespaldo` en el Clasificador): ¿persiste o se elimina al subirse? | _pendiente_ |
+| 10 | Avisos en vivo (SSE): hoy los dispara un evento interno del backend al escribir. ¿Cómo se entera de los cambios que llegan por sync desde otros equipos? (el SDK permite observar cambios de tablas; a confirmar) | _pendiente_ |
 
 ## Opciones
 

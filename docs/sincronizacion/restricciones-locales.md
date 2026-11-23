@@ -41,15 +41,15 @@ Aplica a las opciones A y B de la decisión [03]. Con la opción C (raw tables) 
 | 22 | `Chip` | `dorsalId` | Sí | T |
 | 23 | `Clasificacion` | `inscripcionId` | Sí | T + S |
 | 24 | `Resultado` | `clasificacionId` | Sí | T |
+| 25 | `Chip` | `numero` | Sí (código EPC del chip, decisión [06]) | T + S |
 
 La columna "¿Se crea en local?" indica si algún service de `backend/src` crea filas de esa tabla: con `create`, `createMany`, `upsert` o escrituras anidadas (`comprobante: { create }`, `ejecucion: { upsert }`). Solo esas filas necesitan control de unicidad en local; el resto llega ya validado desde la web.
 
 ### Unicidad que ya se controla solo en el service
 - `Dorsal.numero`: sin `UNIQUE` en el schema; `dorsal.service.ts` busca antes de crear. Candidato a D (id = UUIDv5 del número).
-- `Chip.numero`: `asociarChip` verifica que no esté asociado a otro dorsal.
-- Un dorsal no se repite en una misma carrera (se resuelve con la entrega de kit).
+- `Chip.numero`: desde la decisión [06] es `@unique` en el schema (fila 25). `asociarChip` mantiene su chequeo, que con las vistas de PowerSync pasa a ser la única garantía local.
 
-## Claves foráneas (35, de las cuales 16 con cascada)
+## Claves foráneas (36, de las cuales 17 con cascada)
 
 ### Con `ON DELETE CASCADE` (16)
 
@@ -71,6 +71,7 @@ La columna "¿Se crea en local?" indica si algún service de `backend/src` crea 
 | 14 | `Clasificacion` | `Inscripcion` | No se observa |
 | 15 | `Resultado` | `Clasificacion` | No se observa |
 | 16 | `ResultadoCategoria` | `Resultado` | No se observa |
+| 17 | `LecturaHuerfana` | `LectorRFID` | No se observa |
 
 "No se observa" significa que no hay un borrado del padre en `backend/src` según una búsqueda de `.delete(` y `deleteMany(`. Los borrados existentes son: `usuarioRol.deleteMany`, `plantillaCertificado.delete`, `resultadoCategoria.deleteMany`, `entregaKit.delete`, `criterioCategoria.deleteMany`, `categoria.delete` y `chip.delete`. Casi todos borran filas hoja.
 
