@@ -1,2 +1,2 @@
 //frontend/src/types/sincronizacion.ts
-export type EstadoSincronizacion = 'conectado' | 'sincronizando' | 'sin-conexion'
+export type EstadoSincronizacion = 'conectado' | 'sincronizando' | 'sin-conexion'  | 'no-disponible'

@@ -13,7 +13,7 @@ import {
   Spinner,
 } from 'react-bootstrap'
 import { Clock, Lock, Pencil, Save, User } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion'
@@ -25,9 +25,9 @@ import {
 } from '../../../services/clasificacionService'
 import { resultadoClasificacionSchema } from '../../../schemas/clasificacionSchema'
 import type {
-  ResultadoClasificacionInput,
   ResultadoClasificacionOutput,
 } from '../../../schemas/clasificacionSchema'
+import { z } from 'zod';
 
 const milisegundosATiempo = (valor: number | null): string => {
   if (valor === null) return ''
@@ -73,13 +73,17 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ResultadoClasificacionInput, unknown, ResultadoClasificacionOutput>({
-    resolver: zodResolver(resultadoClasificacionSchema),
-    defaultValues: {
-      tiempoOficial: '',
-      puestoGeneral: '',
-    },
-  })
+  } = useForm<
+    z.input<typeof resultadoClasificacionSchema>,
+    unknown,
+    z.output<typeof resultadoClasificacionSchema>
+>({
+    resolver: zodResolver(resultadoClasificacionSchema) as Resolver<
+        z.input<typeof resultadoClasificacionSchema>,
+        unknown,
+        z.output<typeof resultadoClasificacionSchema>
+    >,
+})
 
   const [clasificacion, setClasificacion] = useState<ClasificacionDTO | null>(null)
   const [cargando, setCargando] = useState(true)
