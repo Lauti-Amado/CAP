@@ -114,8 +114,8 @@ function Dashboard() {
       </Container>
     )
   }
-
-  const { nextRace, registrations, rfid, activities, sincronizacion } = data
+//cuando este el rfid agregarlo
+  const { nextRace, registrations, activities, sincronizacion } = data
   const ultimaLecturaRfid = activities.find((activity) => activity.tipo === 'lectura')
 
   const estadoSync = estadosSincronizacion[sincronizacion.estado]
