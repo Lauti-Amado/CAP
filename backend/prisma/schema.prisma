@@ -450,6 +450,20 @@ model LectorRFID {
     fechaHora       DateTime
 
     lecturas        LecturaRFID[]
+    lecturasHuerfanas LecturaHuerfana[]
+}
+
+//Lectura de un código EPC que no está asociado a ningún chip. No participa de la clasificación:
+//se conserva solo para el monitoreo en vivo y la auditoría.
+model LecturaHuerfana {
+    id               String @id @default(uuid())
+
+    codigoEpc        String //EPC crudo tal como lo leyó el lector, en hexadecimal y en mayúsculas
+    fechaHoraLectura DateTime
+    intensidad       Int
+
+    lectorRFIDId     String
+    lectorRFID       LectorRFID @relation(fields: [lectorRFIDId], references: [id], onDelete: Cascade)
 }
 
 model Clasificacion {
