@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Button, Card, Col, Container, ProgressBar, Row,} from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
-import { Archive, BarChart3, CalendarDays, CloudCheck, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, type LucideIcon,} from 'lucide-react'
+import { Archive, BarChart3, CalendarDays, CircleHelp, CloudCheck, MapPin, MoreHorizontal, RefreshCw, Timer, Trophy, UsersRound, WifiOff, type LucideIcon,} from 'lucide-react'
 import type { DashboardActivity } from '../../types/dashboard'
 import type { EstadoSincronizacion } from '../../types/sincronizacion'
 import { useDashboard } from '../../hooks/useDashboard'
@@ -25,6 +25,7 @@ const estadosSincronizacion: Record<
   conectado: { texto: 'Actualizado', icon: CloudCheck },
   sincronizando: { texto: 'Sincronizando...', icon: RefreshCw },
   'sin-conexion': { texto: 'Guardando localmente', icon: WifiOff },
+  'no-disponible': { texto: 'No disponible', icon: CircleHelp },
 }
 
 function formatRaceDate(value: string) {
@@ -101,7 +102,7 @@ function ActivityRow({ activity }: { activity: DashboardActivity }) {
 function Dashboard() {
   const navigate = useNavigate()
   const [hoveredQuickAction, setHoveredQuickAction] = useState<string | null>(null)
-  const [hoverChipBtn, setHoverChipBtn] = useState(false)
+  //const [hoverChipBtn, setHoverChipBtn] = useState(false)
   const [hoverVerTodo, setHoverVerTodo] = useState(false)
 
   const { data, cargando } = useDashboard()
@@ -113,8 +114,9 @@ function Dashboard() {
       </Container>
     )
   }
-
-  const { nextRace, registrations, rfid, activities, sincronizacion } = data
+//cuando este el rfid agregarlo
+  const { nextRace, registrations, activities, sincronizacion } = data
+  const ultimaLecturaRfid = activities.find((activity) => activity.tipo === 'lectura')
 
   const estadoSync = estadosSincronizacion[sincronizacion.estado]
   const SyncIcon = estadoSync.icon
@@ -139,6 +141,11 @@ function Dashboard() {
       backgroundColor: '#fee2e2',
       color: '#dc2626',
       border: '1px solid #fecaca',
+    },
+    'no-disponible': {
+      backgroundColor: '#f1f3f5',
+      color: '#667085',
+      border: '1px solid #e4e7ec',
     },
   }
 
@@ -351,24 +358,34 @@ function Dashboard() {
                   style={{ borderColor: '#e1e6f4', height: '48px', display: 'flex', alignItems: 'center' }}
                 >
                   <h2 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#172033' }}>
-                    Estado RFID:{' '}
-                    <span style={{ color: rfid.connected ? '#006d38' : '#b34b40' }}>
-                      ● {rfid.connected ? 'CONECTADO' : 'DESCONECTADO'}
-                    </span>
+                     Actividad RFID reciente
                   </h2>
                 </Card.Header>
 
-                <Card.Body className="p-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
-                  <div style={{ fontSize: '12px', lineHeight: '23px', whiteSpace: 'nowrap' }}>
-                    {rfid.antennas.map((antenna) => (
-                      <div key={antenna.name}>
-                        <span style={{ color: '#768078' }}>{antenna.name}:</span>{' '}
-                        {antenna.working ? 'Funcionando' : 'Sin conexión'}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* TODO: navegar a la configuración de chips cuando exista la ruta */}
+                {/*<Card.Body className="p-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
+                  <div style={{ fontSize: '12px', lineHeight: '23px', whiteSpace: 'nowrap' }}>*/}
+                <Card.Body className="p-3">
+                  {ultimaLecturaRfid ? (
+                    <div className="d-flex flex-column gap-1">
+                      <span style={{ color: '#172033', fontSize: '12px', fontWeight: 600 }}>
+                        {ultimaLecturaRfid.descripcion}
+                      </span>
+                      <span style={{ color: '#768078', fontSize: '11px' }}>
+                        {formatActivityTime(ultimaLecturaRfid.fechaHora)}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="mb-0" style={{ color: '#65716b', fontSize: '12px' }}>
+                      No hay lecturas RFID registradas para esta carrera.
+                    </p>
+                  )}
+                  <p className="mb-0 mt-2" style={{ color: '#8a938d', fontSize: '10px' }}>
+                    La conexión y el estado de las antenas no están disponibles porque todavía no
+                    existe una integración con el hardware RFID.
+                  </p>
+                </Card.Body>
+              </Card>
+              {/* Ver si sacar botón
                   <Button
                     type="button"
                     size="sm"
@@ -389,6 +406,7 @@ function Dashboard() {
                   </Button>
                 </Card.Body>
               </Card>
+              */}
 
               {/* Panel Sincronización */}
               <Card
@@ -408,7 +426,9 @@ function Dashboard() {
                       Estado de Sincronización
                     </h2>
                     <p style={{ margin: '4px 0 0', color: '#637069', fontSize: '10px' }}>
-                      Última vez: {sincronizacion.ultimaVez}
+                      {sincronizacion.ultimaVez
+                        ? `Última vez: ${sincronizacion.ultimaVez}`
+                        : 'No hay información de sincronización disponible.'}
                     </p>
                   </div>
 

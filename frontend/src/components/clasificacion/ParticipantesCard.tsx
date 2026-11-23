@@ -137,7 +137,7 @@ function ParticipantesCard({
       titulo: 'ACCIÓN',
       key: 'accion',
       render: (p) =>
-        p.estado === 'DESCALIFICADO' ? (
+        p.estado !== 'DESCALIFICADO' ? (
           <Button
             variant="link"
             size="sm"

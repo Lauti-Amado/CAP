@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Col, Row, Spinner } from 'react-bootstrap';
 import {
   AlertTriangle,
@@ -94,6 +94,7 @@ const mapearParticipante = (
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { nombreCarrera } = useParams();
   const { tieneRol } = useAuth();
   const { recargar } = useCarrera();
@@ -155,7 +156,9 @@ const DashboardClasificacion = () => {
     return () => {
       cancelado = true;
     };
-  }, [carrera?.id, carrera?.estado]);
+  // location.key cambia al navegar y permite volver a consultar los datos
+  // cuando se regresa desde la pantalla de registro de llegadas.
+  }, [carrera?.id, carrera?.estado, location.key]);
 
   const ejecutar = async (accion: (id: string) => Promise<unknown>) => {
     if (!carrera || procesando) return;
