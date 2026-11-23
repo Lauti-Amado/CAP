@@ -1,21 +1,24 @@
 # Sync rules: filtrado de filas y columnas
 
+Este archivo define **qué se descarga** a cada equipo. Lo que se **sube** lo define el conector de PowerSync (`uploadData`) y no está en estas reglas.
+
 ## Criterios de sincronización
 
 - **Validación de rol:** El token incluye `roles` como un array. La forma exacta de evaluarlo dentro de la sync rule se valida en el spike de PowerSync, priorizando operadores nativos de pertenencia sobre comparaciones de texto.
 - **Alcance general:** Solo sincronizan datos los usuarios con rol `Administrador` o `Clasificador`. Cualquier otro rol (por ejemplo, `Tesorero`) no recibe ninguna fila.
-- **Usuarios del CAP:** El `Administrador` sincroniza los usuarios con rol `Administrador` o `Clasificador`, mientras que el `Clasificador` solo descarga su propio registro de usuario. No se descarga ningún otro usuario de la base de datos web ni los hashes de contraseña o credenciales.
+- **Usuarios del CAP:** El `Administrador` sincroniza los usuarios con rol `Administrador` o `Clasificador`. El `Clasificador` sincroniza los usuarios con rol `Clasificador`, necesarios para el ingreso de contingencia de cualquier Clasificador en cualquier equipo (decisión [05]). No se descarga ningún otro usuario de la base de datos web.
+- **Credenciales:** `Usuario.passwordHash` se descarga junto con cada usuario del personal, porque el login local compara contra el hash local (`bcrypt.compare`; ver `docs/arquitectura/decisiones/04-usar-auth-cookies.md` y `docs/decisiones/01-usuarios-y-contrasenas-en-sistema-web.md`). Nunca se descargan hashes de usuarios que no son del personal.
 - **Permisos de Administrador:** Descarga la totalidad de las tablas operativas, administrativas, comerciales, de entrega de kits y de certificados.
-- **Permisos de Clasificador:** Descarga únicamente las tablas necesarias para seleccionar la carrera activa, gestionar inscripciones (incluyendo condición de socio en `Afiliacion`, pertenencia a `Equipo` y el registro o consulta de artículos asociados mediante `Compra`, `DetalleCompra`, `Producto` y `ProductoVariante`), controlar y registrar aptos médicos (aprobación y fecha de vencimiento), realizar la entrega de kits, identificar participantes con su dorsal o chip y gestionar la clasificación y los resultados. No accede a certificados, plantillas, comprobantes de pago ni gestión de otros usuarios.
-- **Filtrado de filas en Carreras:** El `Administrador` descarga todas las carreras; el `Clasificador` solo descarga aquellas que se encuentran en un estado habilitado para operar y clasificar.
-- **Filtrado de columnas:** En `AptoMedico` no se descarga `archivoUrl` (link a archivo) para evitar replicar contenido pesado en las notebooks, y en `Usuario` se seleccionan explícitamente las columnas no sensibles.
+- **Permisos de Clasificador:** Descarga únicamente las tablas necesarias para seleccionar la carrera activa, gestionar inscripciones (incluyendo condición de socio en `Afiliacion`, pertenencia a `Equipo` y el registro o consulta de artículos asociados mediante `Compra`, `DetalleCompra`, `Producto` y `ProductoVariante`), controlar y registrar aptos médicos (aprobación y fecha de vencimiento), realizar la entrega de kits, identificar participantes con su dorsal o chip y gestionar la clasificación y los resultados. No accede a certificados, plantillas ni gestión de otros usuarios. Solo descarga los comprobantes de pagos presenciales, que se generan en el propio sistema al inscribir; los de pagos virtuales los gestiona la web y no se descargan.
+- **Filtrado de filas en Carreras:** El `Administrador` descarga todas las carreras; el `Clasificador` solo descarga las que tienen estado `Activa`, `Entrega_kits`, `En_curso` o `Finalizada`, que son los estados en los que el backend permite inscribir, entregar kits, clasificar o consultar resultados.
+- **Filtrado de columnas:** En `AptoMedico` no se descarga `archivoUrl` (link a archivo) para evitar replicar contenido pesado en las notebooks, y en `Usuario` se seleccionan explícitamente las columnas necesarias (`passwordHash` incluido, solo para el personal).
 
 ## Tablas a sincronizar por rol
 
 | Tabla | Rol con acceso | Filas | Columnas |
 |---|---|---|---|
-| `Usuario` | Administrador y Clasificador | Personal para Admin; solo el propio para Clasificador | `id`, `email`, `nombre`, `activo`, `personaId` (sin credenciales) |
-| `UsuarioRol`, `RolAdministrativo` | Administrador y Clasificador | Personal para Admin; solo el propio para Clasificador | Todas |
+| `Usuario` | Administrador y Clasificador | Personal para Admin; solo usuarios con rol Clasificador para Clasificador | `id`, `email`, `passwordHash`, `estado`, `personaId` |
+| `UsuarioRol`, `RolAdministrativo` | Administrador y Clasificador | Mismo alcance que `Usuario` | Todas |
 | `Carrera` | Administrador y Clasificador | Todas para Admin; solo estados habilitados para Clasificador | Todas |
 | `DistanciaCarrera`, `Distancia`, `Lugar`, `Localidad` | Administrador y Clasificador | Todas | Todas |
 | `Persona`, `Corredor`, `Afiliacion`, `Equipo`, `Inscripcion` | Administrador y Clasificador | Todas | Todas |
@@ -24,8 +27,23 @@
 | `EntregaKit`, `Dorsal`, `Chip`, `LecturaRFID`, `LectorRFID` | Administrador y Clasificador | Todas | Todas |
 | `Clasificacion`, `Resultado`, `ResultadoCategoria` | Administrador y Clasificador | Todas | Todas |
 | `Categoria`, `CriterioCategoria` | Administrador y Clasificador | Todas | Todas |
-| `Comprobante` | Solo Administrador | Todas | Todas |
+| `Comprobante` | Administrador y Clasificador | Todos para Admin; solo los de compras con `Pago_presencial` para Clasificador | Todas |
 | `CertificadoCarrera`, `PlantillaCertificado` | Solo Administrador | Todas | Todas |
+| `EjecucionCarrera` | Administrador y Clasificador | Todas | Todas |
+| `ClaveRespaldo` | Administrador y Clasificador | Todas | Administrador: todas. Clasificador: todas menos `claveCifrada` |
+| `UsoClaveRespaldo` | Solo Administrador | Todas | Todas |
+
+## Tablas y columnas que no se descargan
+
+| Elemento | Motivo |
+|---|---|
+| `EntidadEmisora` | Tabla propia de la web (entidades de los comprobantes de pago). Ningún equipo local la necesita. |
+| `Comprobante` de pagos virtuales para el Clasificador | Contienen datos del titular del pago y los gestiona la web. |
+| `UsoClaveRespaldo` para el Clasificador | El equipo la escribe y la sube, pero no necesita leerla. |
+| `ClaveRespaldo.claveCifrada` para el Clasificador | Ningún Clasificador debe poder ver las claves (decisión [05]). |
+| `AptoMedico.archivoUrl` | Evita replicar archivos pesados en las notebooks. |
+
+Nota: `Comprobante` tiene una FK opcional a `EntidadEmisora`. Como esa tabla no se descarga, `Comprobante.entidadEmisoraId` queda sin fila local referenciada y la pantalla no debe asumir que existe.
 
 ## Sync rules
 
@@ -34,32 +52,36 @@ config:
   edition: 3
 
 streams:
-  # 1. Usuarios del personal: Admin descarga todo el personal; Clasificador solo su propio usuario
+  # 1. Usuarios del personal: Admin descarga todo el personal; Clasificador solo los usuarios con rol Clasificador
   usuarios_personal:
     auto_subscribe: true
     queries:
       - |
-        SELECT u.id, u.email, u.nombre, u.activo, u.personaId
+        SELECT u.id, u.email, u.passwordHash, u.estado, u.personaId
         FROM Usuario u
-        WHERE u.id IN (
-          SELECT ur.usuarioId
-          FROM UsuarioRol ur
-          JOIN RolAdministrativo ra ON ra.id = ur.rolAdministrativoId
-          WHERE ra.rol IN ('Administrador', 'Clasificador')
-        )
-        AND (
+        WHERE (
           auth.jwt() ->> 'roles' LIKE '%Administrador%'
-          OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND u.id = auth.user_id())
+          AND u.id IN (
+            SELECT ur.usuarioId
+            FROM UsuarioRol ur
+            JOIN RolAdministrativo ra ON ra.id = ur.rolAdministrativoId
+            WHERE ra.rol IN ('Administrador', 'Clasificador')
+          )
+        ) OR (
+          auth.jwt() ->> 'roles' LIKE '%Clasificador%'
+          AND u.id IN (
+            SELECT ur.usuarioId
+            FROM UsuarioRol ur
+            JOIN RolAdministrativo ra ON ra.id = ur.rolAdministrativoId
+            WHERE ra.rol = 'Clasificador'
+          )
         )
       - |
         SELECT ur.*
         FROM UsuarioRol ur
         JOIN RolAdministrativo ra ON ra.id = ur.rolAdministrativoId
-        WHERE ra.rol IN ('Administrador', 'Clasificador')
-        AND (
-          auth.jwt() ->> 'roles' LIKE '%Administrador%'
-          OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND ur.usuarioId = auth.user_id())
-        )
+        WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' AND ra.rol IN ('Administrador', 'Clasificador'))
+           OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND ra.rol = 'Clasificador')
       - |
         SELECT *
         FROM RolAdministrativo
@@ -73,15 +95,23 @@ streams:
   datos_clasificacion:
     auto_subscribe: true
     queries:
-      # Admin descarga todas las carreras; Clasificador solo las que están en estado clasificable
+      # Admin descarga todas las carreras; Clasificador solo las que operan o consultan (ver criterios)
       - |
         SELECT * FROM Carrera
         WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
-           OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND estado IN ('EN_CURSO', 'FINALIZADA', 'PUBLICADA'))
+           OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND estado IN ('Activa', 'Entrega_kits', 'En_curso', 'Finalizada'))
       - |
         SELECT id, aprobado, fechaVencimiento, corredorId, fechaCreacion
         FROM AptoMedico
         WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
+      # Clasificador (sin rol Administrador): solo los comprobantes de pagos presenciales, que se generan en este sistema
+      - |
+        SELECT c.*
+        FROM Comprobante c
+        JOIN Compra co ON co.id = c.compraId
+        WHERE auth.jwt() ->> 'roles' LIKE '%Clasificador%'
+          AND auth.jwt() ->> 'roles' NOT LIKE '%Administrador%'
+          AND co.metodoPago = 'Pago_presencial'
       - SELECT * FROM DistanciaCarrera   WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
       - SELECT * FROM Distancia          WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
       - SELECT * FROM Lugar              WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
@@ -105,8 +135,23 @@ streams:
       - SELECT * FROM ResultadoCategoria WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
       - SELECT * FROM Categoria          WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
       - SELECT * FROM CriterioCategoria  WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
+      - SELECT * FROM EjecucionCarrera   WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
 
-  # 3. Datos exclusivos de Administrador: comprobantes de pago y certificados
+  # 3. Claves de respaldo: `claveCifrada` solo se descarga al Administrador (decisión 05)
+  claves_respaldo:
+    auto_subscribe: true
+    queries:
+      # Administrador: todo, incluida claveCifrada
+      - SELECT * FROM ClaveRespaldo     WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
+      - SELECT * FROM UsoClaveRespaldo  WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
+      # Clasificador (sin rol Administrador): hash y estado, nunca claveCifrada
+      - |
+        SELECT id, claveHash, estado, fechaHoraUso, usuarioId, fechaHoraCreacion
+        FROM ClaveRespaldo
+        WHERE auth.jwt() ->> 'roles' LIKE '%Clasificador%'
+          AND auth.jwt() ->> 'roles' NOT LIKE '%Administrador%'
+
+  # 4. Datos de Administrador: todos los comprobantes de pago, certificados y plantillas
   datos_administrador:
     auto_subscribe: true
     queries:
@@ -117,14 +162,16 @@ streams:
 
 ### Qué se consigue
 
-- **Separación de permisos por rol:** El `Administrador` descarga todas las tablas operativas y de gestión, mientras que el `Clasificador` recibe únicamente los datos necesarios para inscripciones, compras vinculadas a la inscripción y sus productos/variantes, verificación de socios y equipos, control de apto médico, entrega de kits, cronometraje y resultados, sin acceder a certificados, comprobantes de pago ni gestión de otros usuarios.
+- **Separación de permisos por rol:** El `Administrador` descarga todas las tablas operativas y de gestión, mientras que el `Clasificador` recibe únicamente los datos necesarios para inscripciones, compras vinculadas a la inscripción y sus productos/variantes, verificación de socios y equipos, control de apto médico, entrega de kits, cronometraje y resultados, sin acceder a certificados ni gestión de otros usuarios, y solo con los comprobantes de pagos presenciales.
 - **Bloqueo total a otros roles:** Al incluir la validación del token en todas las consultas (incluidas `UsuarioRol` y `RolAdministrativo`), cualquier otro rol como `Tesorero` no recibe ninguna fila.
 - **Corrección de precedencia en filtros:** Las condiciones `OR` de roles están agrupadas entre paréntesis para no invalidar los filtros de subconsulta o estado de carrera.
-- **Optimización y seguridad local:** `AptoMedico` se sincroniza sin `archivoUrl` para evitar replicar archivos pesados en las notebooks y `Usuario` excluye hashes de contraseña.
+- **Optimización y seguridad local:** `AptoMedico` se sincroniza sin `archivoUrl` para evitar replicar archivos pesados en las notebooks.
 
-### A validar en el spike de PowerSync
+## A validar en el spike de PowerSync
 
 - **Evaluación del array `roles` del token:** `LIKE '%Rol%'` es un reemplazo provisorio. En Sync Rules Edition 3 conviene validar el uso de pertenencia directa al arreglo (por ejemplo, `'Administrador' IN token_parameters.roles`) o incluir un claim simple en el JWT.
-- **Soporte de subconsultas y joins:** Verificar que las subconsultas `IN (SELECT ...)` y los `JOIN` en `usuarios_personal` estén soportados dentro del stream.
-- **Estados de `Carrera` para el Clasificador:** Ajustar la lista de estados (`EN_CURSO`, `FINALIZADA`, `PUBLICADA`) según los valores exactos definidos en el esquema para las carreras habilitadas para clasificación y entrega de kits.
-- **Alcance de `Comprobante` y `ClaveRespaldo`:** Definir si `Comprobante` es necesario localmente para el `Administrador` o si puede omitirse, y validar cómo se sincronizan las claves de respaldo para el acceso de contingencia.
+- **Soporte de subconsultas y joins:** Verificar que las subconsultas `IN (SELECT ...)` y los `JOIN` estén soportados dentro del stream (`usuarios_personal` y `Comprobante` para el Clasificador).
+
+## A confirmar con la web
+
+- **Algoritmo de `passwordHash`:** el login local usa `bcrypt.compare`, así que la web debe generar los hashes con bcrypt (por ejemplo, `$2a$` o `$2b$`).

@@ -16,17 +16,17 @@ Las pantallas siempre leen y escriben en la base local. La sincronización con l
 |---|---|---|---|---|
 | Entrega de kits | El día pactado antes de la carrera. Al buscar un DNI o tocar "Dar kit" en la lista, se lee lo ya descargado. | Corredores inscriptos, estado de pago de la inscripción, apto médico, carrera, productos adquiridos. | Al entregar cada kit, apenas haya conexión (*1). | Entrega de kit, dorsal asignado y cambio de estado de la inscripción a Confirmada. |
 | Lista de inscripciones | El día pactado antes de la carrera. | Inscripciones y datos de los corredores. | No se envían datos. | Ninguno. |
-| Nuevas inscripciones | El día pactado antes de la carrera. | Carrera, distancias con precio, productos, corredores existentes (para no duplicar por DNI). | Al terminar de crear una inscripción correctamente (desde cualquiera de los 3 botones). | Persona, corredor, contacto de emergencia, apto médico (si se requiere), compra presencial y productos (si la persona lo quiere) si no existían y la inscripción. |
+| Nuevas inscripciones | El día pactado antes de la carrera. | Carrera, distancias con precio, productos, corredores existentes (para no duplicar por DNI). | Al terminar de crear una inscripción correctamente (desde cualquiera de los 3 botones). | Persona, corredor, contacto de emergencia, apto médico (si se requiere), compra presencial y su comprobante y productos (si la persona lo quiere) si no existían y la inscripción. |
 | Clasificación manual | El día anterior a la carrera como mínimo. | Entregas de kits actualizadas, dorsales y datos de los corredores. | Apenas se registra cada puesto, si hay conexión. Obligatorio al terminar la carrera. | Puesto general, tiempo y estado de cada corredor. |
 | Clasificación en tiempo real | El día anterior a la carrera como mínimo. | Entregas de kits actualizadas, dorsales y chips asociados, datos de los corredores. | Apenas se registra cada llegada, si hay conexión. Obligatorio al terminar la carrera. | Puesto general, tiempo y estado de cada corredor, con los datos de los chips. |
-| Inicio y fin de carrera | Automáticamente, previo a la carrera, consulta la carrera y su estado. | Carrera y su estado. | Al iniciar la carrera (el administrador toca "Iniciar carrera") y al finalizarla. | Estado de la carrera y hora real de inicio. Al finalizar, los corredores sin llegada pasan a "No finalizó". |
+| Inicio y fin de carrera | Automáticamente, previo a la carrera, consulta la carrera y su estado. | Carrera y su estado. | Al iniciar la carrera (el administrador toca "Iniciar carrera") y al finalizarla. | Estado de la carrera y hora real de inicio y de fin. Al finalizar, los corredores sin llegada pasan a "No finalizó". |
 | Resultados | No recibe datos: usa todos los datos locales. | Ninguno. | Al terminar la carrera. Si no hay internet, el día posterior apenas haya conexión. Después, cada vez que se modifica la clasificación. | Resultados finales y sus modificaciones posteriores. |
 | Grand Prix | Se actualiza en segundo plano cuando hay internet, sin un momento específico. | Datos del campeonato anual, afiliaciones y resultados de las demás carreras. | Solo al usar el botón "Recalcular puntos". | Puntos totales por corredor, acumulados en todas las carreras en las que participó en el período. |
 | RFID | De la base web: nada. Del hardware: dorsal asociado al chip y lecturas del chip. | Lecturas del chip. | Al terminar la clasificación de cada persona, si es posible. | Lecturas, tiempos y demás datos registrados. |
 | Categorías | Nada. | Ninguno. | Al crear o modificar una categoría, si es posible. | Categoría y sus criterios. |
 | Certificados | Una vez finalizada la carrera, se consultan los datos en el momento para verificar su veracidad. | Datos del corredor y la carrera: nombre, carrera, fecha y tiempo. | Al intentar enviar el mail. | Estado de envío del certificado (se pudo enviar o no). |
-| Claves de respaldo | Cuando quedan menos de 4 claves disponibles (la mitad del lote). | Claves y su estado. | Apenas se conecte a internet. | Estado de cada clave (disponible, utilizada, invalidada) y quién la usó. |
-| Usuarios y roles | Antes del evento, junto con la sincronización inicial. | Usuarios del personal y sus roles. | Cuando un administrador cambia los roles de un usuario. | Roles asignados. |
+| Claves de respaldo | Antes del evento, con la sincronización inicial. | Hash y estado de las claves de las cuentas de Clasificador (y su valor cifrado, solo el Administrador) | Apenas se conecte a internet. | Estado de cada clave (disponible, utilizada, invalidada) y quién la usó. |
+| Usuarios y roles | Antes del evento, junto con la sincronización inicial. | Usuarios del personal, sus roles y el hash de contraseña (para iniciar sesión sin conexión). | Cuando un administrador cambia los roles de un usuario. | Roles asignados. |
 
 (*1) "De ser posible" significa: si hay conexión se envía en el momento. Si no, queda en la cola local y se envía al recuperarla.
 
@@ -48,7 +48,7 @@ Información que debe estar disponible localmente antes de comenzar el evento.
 | Clasificación manual y en tiempo real | El día anterior a la carrera como mínimo. |
 | Usuarios y roles | Antes del evento, para poder iniciar sesión sin conexión. |
 | Certificados | Una vez finalizada la carrera, se necesitan los datos en el momento. |
-| Claves de respaldo | Cuando quedan menos de 4 claves disponibles (la mitad del lote). |
+| Claves de respaldo | Antes del evento, con la sincronización inicial. |
 
 ## Sincronización durante la carrera
 Se envía en tiempo real, de ser posible (por intervalos o apenas se recupere la conexión):
