@@ -422,7 +422,7 @@ model Dorsal {
 model Chip {
     id              String @id @default(uuid())
 
-    numero          Int
+    numero          String @unique //Código EPC del chip, en hexadecimal (ej. "E2801160600002054C2A1B3C")
 
     dorsalId        String @unique
     dorsal          Dorsal @relation(fields: [dorsalId], references: [id], onDelete: Cascade)

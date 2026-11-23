@@ -1,9 +1,12 @@
 //backend/src/validations/dorsal.validations.ts
 import { z } from "zod";
 
-const MAX_CHIP = 2147483647;
-
-const chipNumero = z.number().int().positive().max(MAX_CHIP, "Número de chip inválido");
+// El chip se identifica por su código EPC: hexadecimal de hasta 32 dígitos (96 o 128 bits).
+// Se guarda en mayúsculas para que "e280..." y "E280..." sean el mismo chip.
+const chipNumero = z.string()
+    .trim()
+    .regex(/^[0-9a-fA-F]{1,32}$/, "El chip debe ser un código hexadecimal de hasta 32 dígitos")
+    .transform((v) => v.toUpperCase());
 
 export const numeroDorsal = z.string()
     .trim()
@@ -26,7 +29,7 @@ export const inventarioSchema = z.object({
         .max(5000),
 }).superRefine((datos, ctx) => {
     const numeros = new Set<string>();
-    const chips = new Set<number>();
+    const chips = new Set<string>();
     datos.dorsales.forEach((d, i) => {
         if (numeros.has(d.numero)) {
             ctx.addIssue({ code: "custom", path: ["dorsales", i, "numero"], message: `Dorsal repetido: ${d.numero}` });
@@ -43,9 +46,7 @@ export const inventarioSchema = z.object({
 
 export const numeroParamSchema = z.object({ numero: numeroDorsal });
 
-export const chipParamSchema = z.object({
-    numero: z.coerce.number().int().positive().max(MAX_CHIP, "Número de chip inválido"),
-});
+export const chipParamSchema = z.object({ numero: chipNumero });
 
 export const busquedaQuerySchema = z.object({
     busqueda: z.string().trim().max(100).optional(),
