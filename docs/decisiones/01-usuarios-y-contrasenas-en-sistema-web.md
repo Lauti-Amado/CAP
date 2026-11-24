@@ -1,4 +1,4 @@
-# [0X] - Los usuarios y sus contraseñas se gestionan solo en el sistema web
+# [01] - Los usuarios y sus contraseñas se gestionan solo en el sistema web
 
 - **Afecta:** frontend y backend
 - **Estado:** aplicado

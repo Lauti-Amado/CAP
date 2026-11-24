@@ -4,7 +4,7 @@ import * as inscripcionController from "../controllers/inscripcionGestion.contro
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate, validateParams } from "../middlewares/validate.middleware";
 import { idParamSchema } from "../validations/id.validations";
-import { crearInscripcionSchema, modificarInscripcionSchema } from "../validations/inscripcionGestion.validations";
+import { crearInscripcionSchema, modificarInscripcionSchema, cargarAptoMedicoSchema } from "../validations/inscripcionGestion.validations";
 
 const router = Router();
 

@@ -259,10 +259,23 @@ model Carrera {
     estado                EstadoCarrera @default(Creada)
     
     distanciaCarrera      DistanciaCarrera[]
+    ejecucion             EjecucionCarrera? //Hora real de inicio y fin (tabla exclusiva de este sistema)
 
     fechaHoraCreacion     DateTime @default(now())
     fechaHoraModificacion DateTime @updatedAt
     //usuarioModificacion
+}
+
+//DIFIERE: tabla exclusiva de este sistema (no existe en el sistema web)
+//Carrera.fechaHoraCarrera es solo la hora ESTIMADA que publica la web: acá queda la hora real
+model EjecucionCarrera {
+    id              String   @id @default(uuid())
+
+    carreraId       String   @unique
+    carrera         Carrera  @relation(fields: [carreraId], references: [id], onDelete: Cascade)
+
+    fechaHoraInicio DateTime
+    fechaHoraFin    DateTime?
 }
 
 model Distancia {
@@ -409,7 +422,7 @@ model Dorsal {
 model Chip {
     id              String @id @default(uuid())
 
-    numero          Int
+    numero          String @unique //Código EPC del chip, en hexadecimal (ej. "E2801160600002054C2A1B3C")
 
     dorsalId        String @unique
     dorsal          Dorsal @relation(fields: [dorsalId], references: [id], onDelete: Cascade)
@@ -437,6 +450,20 @@ model LectorRFID {
     fechaHora       DateTime
 
     lecturas        LecturaRFID[]
+    lecturasHuerfanas LecturaHuerfana[]
+}
+
+//Lectura de un código EPC que no está asociado a ningún chip. No participa de la clasificación:
+//se conserva solo para el monitoreo en vivo y la auditoría.
+model LecturaHuerfana {
+    id               String @id @default(uuid())
+
+    codigoEpc        String //EPC crudo tal como lo leyó el lector, en hexadecimal y en mayúsculas
+    fechaHoraLectura DateTime
+    intensidad       Int
+
+    lectorRFIDId     String
+    lectorRFID       LectorRFID @relation(fields: [lectorRFIDId], references: [id], onDelete: Cascade)
 }
 
 model Clasificacion {

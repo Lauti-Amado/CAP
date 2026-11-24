@@ -1,108 +1,69 @@
-//frontend/src/context/SeleccionarCarreracontext.tsx
+// src/context/CarreraSeccionesContext.tsx
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { slugCarrera } from "../utils/carrera";
-import type { Carrera } from "../types/carrera";
+export type SeccionClasificador = 'entrega-kits' | 'clasificaciones' | 'resultados';
 
-import { useCarrera } from "./CarreraContext";
-import { Spinner } from "react-bootstrap";
-
-interface SeleccionarCarreraContextType {
-    carreraSeleccionada: Carrera | null;
-    seleccionarCarrera: (carrera: Carrera) => void;
+export interface CarreraGuardada {
+  id: string;
+  nombre: string;
 }
 
-const SeleccionarCarreraContext = createContext<SeleccionarCarreraContextType | null>(null);
-
-const memoriaSecciones: Record<string, string> = {};
-
-export function SeleccionarCarreraProvider() {
-    const { cargando, carreras } = useCarrera(); 
-    const [carreraSeleccionada, setCarreraSeleccionada] = useState<Carrera | null>(null);
-    const navigate = useNavigate();
-    const location = useLocation();
-    const previousPath = useRef(location.pathname);
-
-    // useEffect para logica de redireccionar al seleccionar carrera
-    useEffect(() => {
-        if (cargando) return;
-
-        const seccion = location.pathname.split('/')[2]; // Agarra la seccion seleccionada de la asidebar
-        const basePath = `/clasificador/${seccion}`;
-        
-        const acabaDeEntrarASelector = 
-            !previousPath.current.includes('/seleccionar-carrera') && 
-            location.pathname.includes('/seleccionar-carrera');
-        
-        previousPath.current = location.pathname;
-
-        if (acabaDeEntrarASelector) {
-            if (carreraSeleccionada !== null) {
-                setCarreraSeleccionada(null);
-            }
-            delete memoriaSecciones[seccion];
-            return; 
-        }
-
-        const savedId = memoriaSecciones[seccion];
-        let carreraListaParaUsar = carreraSeleccionada;
-
-        // Reconciliar estado con la memoria RAM
-        if (savedId) {
-            if (carreraSeleccionada?.id !== savedId) {
-                const savedCarrera = carreras.find(c => c.id === savedId);
-                if (savedCarrera) {
-                    setCarreraSeleccionada(savedCarrera);
-                    carreraListaParaUsar = savedCarrera;
-                }
-            }
-        } else if (carreraSeleccionada !== null) {
-            setCarreraSeleccionada(null);
-            carreraListaParaUsar = null;
-        }
-
-        // Acabas de clickear una seccion?
-        if (location.pathname === basePath || location.pathname === `${basePath}/`) {
-            // Si ya habias seleccionado carrera, te redirecciono a ella dentro de la seccion que clickeaste
-            if (carreraListaParaUsar) {
-                const nombreUrl = slugCarrera(carreraListaParaUsar.nombre);
-                navigate(`${basePath}/${nombreUrl}`, { replace: true });
-            // Sino, te redirecciono a seleccionar una carrera
-            } else {
-                navigate(`${basePath}/seleccionar-carrera`, { replace: true });
-            }
-            return;
-        }
-
-        // Capa de proteccion para mandarlo automaticamente a seleccionar una carrera si se salteo el paso
-        if (!carreraListaParaUsar && !location.pathname.includes('/seleccionar-carrera')) {
-            navigate(`${basePath}/seleccionar-carrera`, { replace: true });
-        }
-        
-    }, [cargando, carreras, carreraSeleccionada, location.pathname, navigate]);
-
-
-    const seleccionarCarrera = useCallback((carrera: Carrera) => {
-        const seccionActual = location.pathname.split('/')[2]; 
-        
-        setCarreraSeleccionada(carrera);
-        memoriaSecciones[seccionActual] = carrera.id;
-    }, [location.pathname]);
-
-    const value = useMemo(() => ({ carreraSeleccionada, seleccionarCarrera }),
-        [carreraSeleccionada, seleccionarCarrera]
-    );
-
-    return (
-        <SeleccionarCarreraContext.Provider value={value}>
-            {cargando ? <Spinner animation="border" /> : <Outlet />}
-        </SeleccionarCarreraContext.Provider>
-    );
+interface CarreraSeccionesContextType {
+  obtenerIdCarrera: (seccion: SeccionClasificador) => string | null;
+  obtenerCarrera: (seccion: SeccionClasificador) => string | null;
+  guardarCarrera: (seccion: SeccionClasificador, carrera: CarreraGuardada) => void;
+  limpiarCarrera: (seccion: SeccionClasificador) => void;
 }
 
-export function useSeleccionarCarrera() {
-    const context = useContext(SeleccionarCarreraContext);
-    if (!context) throw new Error('useSeleccionarCarrera debe usarse dentro de <SeleccionarCarreraProvider>');
-    return context;
+const CarreraSeleccionContext = createContext<CarreraSeccionesContextType | null>(null);
+
+export function CarreraSeleccionProvider({ children }: { children: ReactNode }) {
+  const [selecciones, setSelecciones] = useState<Partial<Record<SeccionClasificador, CarreraGuardada | string>>>(() => {
+    try {
+      const guardado = sessionStorage.getItem('cap_carreras_secciones');
+      return guardado ? JSON.parse(guardado) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const guardarCarrera = (seccion: SeccionClasificador, carrera: CarreraGuardada) => {
+    setSelecciones((prev) => {
+      const nuevo = { ...prev, [seccion]: { id: carrera.id, nombre: carrera.nombre } };
+      sessionStorage.setItem('cap_carreras_secciones', JSON.stringify(nuevo));
+      return nuevo;
+    });
+  };
+
+  const limpiarCarrera = (seccion: SeccionClasificador) => {
+    setSelecciones((prev) => {
+      const nuevo = { ...prev };
+      delete nuevo[seccion];
+      sessionStorage.setItem('cap_carreras_secciones', JSON.stringify(nuevo));
+      return nuevo;
+    });
+  };
+
+  const obtenerIdCarrera = (seccion: SeccionClasificador): string | null => {
+    const item = selecciones[seccion];
+    return item && typeof item === 'object' ? item.id : null;
+  };
+
+  const obtenerCarrera = (seccion: SeccionClasificador): string | null => {
+    const item = selecciones[seccion];
+    if (!item) return null;
+    return typeof item === 'object' ? item.nombre : item;
+  };
+
+  return (
+    <CarreraSeleccionContext.Provider value={{ obtenerIdCarrera, obtenerCarrera, guardarCarrera, limpiarCarrera }}>
+      {children}
+    </CarreraSeleccionContext.Provider>
+  );
 }
+
+export const useCarreraSeleccion = () => {
+  const ctx = useContext(CarreraSeleccionContext);
+  if (!ctx) throw new Error('useCarreraSecciones debe usarse dentro de CarreraSeccionesProvider');
+  return ctx;
+};

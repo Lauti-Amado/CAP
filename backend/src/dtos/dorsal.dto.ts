@@ -5,7 +5,7 @@ import type { EntregaKit, Prisma, TipoDistancia, EstadoInscripcion, Sexo,} from 
 // Un dorsal es un número físico que puede (o no) tener un chip RFID integrado
 export type ChipDTO = {
     id: string;
-    numero: number;
+    numero: string;
 };
 
 export type DorsalDTO = {

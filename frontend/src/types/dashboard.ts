@@ -19,14 +19,14 @@ export type DashboardData = {
     capacity: number
   }
   rfid: {
-    connected: boolean
-    antennas: { name: string; working: boolean }[]
-  }
+   connected: boolean
+   antennas: { name: string; working: boolean }[]
+  } | null
   activities: DashboardActivity[]
-  unreadNotifications: number
+  unreadNotifications: number | null
 
-  sincronizacion: {                       // NUEVO
+  sincronizacion: {                     
     estado: EstadoSincronizacion
-    ultimaVez: string
+    ultimaVez: string | null
   }
 }

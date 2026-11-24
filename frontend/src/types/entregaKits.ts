@@ -1,3 +1,4 @@
+//frontend/src/types/entregaKits.ts
 export type EstadoInscripcion =
   | 'En_proceso'
   | 'Pagada'
@@ -6,7 +7,7 @@ export type EstadoInscripcion =
 
 export type ChipDTO = {
   id: string
-  numero: number
+  numero: string
 }
 
 export type DorsalDTO = {

@@ -4,7 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { PackageCheck, Info, CircleCheck } from 'lucide-react'
 import { Alert, Container, Row, Col, Card, Form, Button, InputGroup, Spinner} from 'react-bootstrap'
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
-import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
+import { useCarreraActual } from '../../hooks/useCarreraActual'
 import { ApiError } from '../../services/apiService'
 import { buscarCorredorPorDni, registrarEntregaKit,} from '../../services/entregaKitService'
 import { useForm } from 'react-hook-form'
@@ -26,7 +26,7 @@ function DetalleCorredor() {
   const textoVolver = vieneDeInscripciones
     ? '← Volver a inscripciones'
     : '← Volver al buscador'
-  const { carreraSeleccionada } = useSeleccionarCarrera()
+  const carreraSeleccionada = useCarreraActual()
   const [corredor, setCorredor] = useState<CorredorEntregaKitDTO | null>(null)
   const [cargando, setCargando] = useState(true)
   const [entregando, setEntregando] = useState(false)

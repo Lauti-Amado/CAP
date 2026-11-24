@@ -62,6 +62,7 @@
 | `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación: descalificar, marcar "No finalizó" o "No largó" |
 | `PUT` | `/api/clasificaciones/{id}/resultado` | Registrar o corregir el tiempo, el puesto y el estado de un resultado |
 | `GET` | `/api/carreras/{id}/clasificacion/tiempo-real` | Obtener los datos para la vista de clasificación en tiempo real, si el frontend lo necesita |
+| `GET` | `/api/carreras/{id}/clasificacion/eventos` | Conexión de avisos en vivo (Server-Sent Events): el servidor emite un evento `clasificacion` cada vez que cambia la clasificación de la carrera, y el frontend vuelve a pedir los datos |
 
 #### Datos auxiliares
 

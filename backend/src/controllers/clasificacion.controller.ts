@@ -1,6 +1,7 @@
 //backend/src/controllers/clasificacion.controller.ts
 import type { Request, Response } from "express";
 import * as clasificacionService from "../services/clasificacion.service";
+import { suscribirCliente } from "../services/clasificacionEnVivo.service";
 import { clasificacionCarreraQuerySchema, tiempoRealQuerySchema } from "../validations/clasificacion.validations";
 
 export async function getByCarrera(req: Request, res: Response) {
@@ -13,6 +14,19 @@ export async function getTiempoReal(req: Request, res: Response) {
     const { limite } = tiempoRealQuerySchema.parse(req.query);
     const tiempoReal = await clasificacionService.obtenerTiempoReal(req.params.id as string, limite);
     return res.json(tiempoReal);
+}
+
+// Server-Sent Events: avisa cuando cambia la clasificación de la carrera
+export function getEventos(req: Request, res: Response) {
+    res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+    });
+    res.write("retry: 3000\n\n"); // si se corta, el navegador reintenta a los 3 segundos
+
+    const darDeBaja = suscribirCliente(req.params.id as string, res);
+    req.on("close", darDeBaja);
 }
 
 export async function getById(req: Request, res: Response) {

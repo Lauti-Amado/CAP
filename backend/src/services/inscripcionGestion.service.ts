@@ -6,13 +6,13 @@ import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import { toInscripcionDetalleDto, toInscripcionListadoDto, toOpcionesInscripcionDto, type ContactoEmergenciaDTO, type InscripcionDetalleDTO, type InscripcionListadoDTO, type OpcionesInscripcionDTO,} from "../dtos/inscripcionGestion.dto";
 import { toPaginaDto, type PaginaDTO } from "../dtos/pagina.dto";
-import type { CrearInscripcion, ListadoInscripciones, ModificarInscripcion } from "../validations/inscripcionGestion.validations";
-
+import type { CrearInscripcion, ListadoInscripciones, ModificarInscripcion, CargarAptoMedico } from "../validations/inscripcionGestion.validations";
+import { requiereAptoMedico } from "../rules/aptoMedico.rules";
 // Etapas de la carrera en las que se aceptan inscripciones presenciales
 const ESTADOS_INSCRIPCION: readonly EstadoCarrera[] = ["Activa", "Entrega_kits"];
 
 const listadoInclude = {
-    corredor: { include: { persona: true } },
+    corredor: { include: { persona: true, aptosMedicos: true } },
     distanciaCarrera: { include: { distancia: true, carrera: true } },
     detalleCompra: { include: { compra: true } },
     entregaKit: true,
@@ -98,6 +98,61 @@ export async function obtener(id: string): Promise<InscripcionDetalleDTO> {
     return toInscripcionDetalleDto(inscripcion);
 }
 
+// Carga de apto médico para una inscripción existente
+export async function cargarAptoMedico(
+    id: string,
+    datos: CargarAptoMedico
+): Promise<InscripcionDetalleDTO> {
+    await prisma.$transaction(async (tx) => {
+        const inscripcion = await tx.inscripcion.findUnique({
+            where: { id },
+            include: {
+                corredor: true,
+                distanciaCarrera: {
+                    include: {
+                        distancia: true,
+                        carrera: true,
+                    },
+                },
+            },
+        });
+
+        if (!inscripcion) {
+            throw new ErrorNoEncontrado("Inscripción no encontrada.");
+        }
+
+        if (inscripcion.estado === "Anulada") {
+            throw new ErrorReglaDeNegocio(
+                "No se puede cargar un apto médico para una inscripción anulada."
+            );
+        }
+
+        const { distancia, carrera } = inscripcion.distanciaCarrera;
+
+        if (!requiereAptoMedico(distancia.kilometraje, distancia.tipoDistancia)) {
+            throw new ErrorReglaDeNegocio(
+                "Esta inscripción no requiere apto médico."
+            );
+        }
+
+        if (datos.fechaVencimiento < carrera.fechaHoraCarrera) {
+            throw new ErrorReglaDeNegocio(
+                "El apto médico debe estar vigente hasta la fecha de la carrera."
+            );
+        }
+
+        await tx.aptoMedico.create({
+            data: {
+                aprobado: true,
+                fechaVencimiento: datos.fechaVencimiento,
+                corredorId: inscripcion.idCorredor,
+            },
+        });
+    });
+
+    return obtener(id);
+}
+
 // Distancias con precio, productos y cupo para armar el formulario de nueva inscripción
 export async function opciones(carreraId: string): Promise<OpcionesInscripcionDTO> {
     const carrera = await prisma.carrera.findUnique({
@@ -140,8 +195,22 @@ async function obtenerOCrearCorredor(
     contacto: CrearInscripcion["contactoEmergencia"]
 ) {
     const persona = await tx.persona.findUnique({ where: { dni: corredor.dni }, include: { corredor: true } });
-    if (persona?.corredor) return persona.corredor;
+    if (persona?.corredor) {
+        const personaContacto = await tx.persona.upsert({
+            where: { dni: contacto.dni },
+            update: {
+                nombre: contacto.nombre,
+                apellido: contacto.apellido,
+                telefono: contacto.telefono,
+            },
+            create: contacto,
+        });
 
+        return tx.corredor.update({
+            where: { id: persona.corredor.id },
+            data: { contactoEmergenciaId: personaContacto.id },
+        });
+    }
     const personaContacto = await tx.persona.upsert({
         where: { dni: contacto.dni },
         update: {},
@@ -189,7 +258,24 @@ export async function crear(
                 dc.distancia.tipoDistancia === datos.distancia.tipoDistancia
         );
         if (!distanciaCarrera) throw new ErrorReglaDeNegocio("La carrera no tiene esa distancia.");
+        const necesitaApto = requiereAptoMedico(
+            distanciaCarrera.distancia.kilometraje,
+            distanciaCarrera.distancia.tipoDistancia
+        );
+        if (necesitaApto && !datos.aptoMedico) {
+            throw new ErrorReglaDeNegocio(
+                "Para inscribirse en esta distancia, el corredor debe presentar un apto médico."
+            );
+        }
 
+        if (
+            datos.aptoMedico &&
+            datos.aptoMedico.fechaVencimiento < carrera.fechaHoraCarrera
+        ) {
+            throw new ErrorReglaDeNegocio(
+                "El apto médico debe estar vigente hasta la fecha de la carrera."
+            );
+        }
         const ocupados = await tx.inscripcion.count({ where: ocupanCupo(carreraId) });
         if (ocupados >= carrera.participantesMax) {
             throw new ErrorReglaDeNegocio("La carrera alcanzó el cupo máximo.");
@@ -360,7 +446,7 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
                 detalleCompra: { include: { compra: true } },
                 equipo: true,
                 entregaKit: true,
-                corredor: { include: { persona: true } },
+                corredor: { include: { persona: true , aptosMedicos: true } },
                 distanciaCarrera: { include: { distancia: true, carrera: true } },
             },
         });
@@ -379,6 +465,34 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
         const cambiaDistancia =
             datos.distancia.kilometraje !== distancia.kilometraje ||
             datos.distancia.tipoDistancia !== distancia.tipoDistancia;
+        const necesitaApto = requiereAptoMedico(
+            datos.distancia.kilometraje,
+            datos.distancia.tipoDistancia
+        );
+        const aptoExistenteVigente = inscripcion.corredor.aptosMedicos.some(
+            (apto: { aprobado: boolean; fechaVencimiento: Date }) =>
+                apto.aprobado &&
+                apto.fechaVencimiento >= carrera.fechaHoraCarrera
+        );
+
+        const aptoNuevoVigente =
+            datos.aptoMedico &&
+            datos.aptoMedico.fechaVencimiento >= carrera.fechaHoraCarrera;
+
+        if (necesitaApto && !aptoExistenteVigente && !aptoNuevoVigente) {
+            throw new ErrorReglaDeNegocio(
+                "Para cambiar a esta distancia, el corredor debe tener un apto médico aprobado y vigente hasta la fecha de la carrera."
+            );
+        }
+
+        if (
+            datos.aptoMedico &&
+            datos.aptoMedico.fechaVencimiento < carrera.fechaHoraCarrera
+        ) {
+            throw new ErrorReglaDeNegocio(
+                "El apto médico debe estar vigente hasta la fecha de la carrera."
+            );
+        }
         const cambiaEquipo =
             (datos.equipo?.nombre ?? null) !== (inscripcion.equipo?.nombre ?? null) ||
             (datos.equipo?.codigoEquipo ?? null) !== (inscripcion.equipo?.codigoEquipo ?? null);

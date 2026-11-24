@@ -14,3 +14,4 @@ export const dorsalSchema = z.object({
 })
 
 export type DorsalForm = z.infer<typeof dorsalSchema>
+export type DniBusquedaForm = z.infer<typeof dniBusquedaSchema>
