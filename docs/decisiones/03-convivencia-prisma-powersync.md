@@ -1,7 +1,7 @@
 # [03] - Convivencia entre Prisma y las vistas de PowerSync
 
 - **Afecta:** backend
-- **Estado:** pendiente (se completa al terminar el spike)
+- **Estado:** propuesto (opción A); falta verificar 8 y 9 con el servicio de sync
 
 ## Contexto y problemática
 El backend accede a la base local con Prisma (`@prisma/adapter-better-sqlite3`) y sus migraciones crean tablas reales con `@unique` y claves foráneas.
@@ -13,6 +13,7 @@ PowerSync, por defecto, no crea tablas reales en el cliente: crea **vistas** sob
 - No existen defaults de base de datos (`@default(now())`, `@updatedAt`): quien escribe debe proveer esos valores. Los `id` ya son UUID generados por la aplicación.
 - Las escrituras hechas con el SDK de PowerSync (`execute`) entran a la cola de subida. La cola es FIFO y bloqueante: una operación rechazada frena las que están detrás.
 - Existe una alternativa, las **raw tables**, donde las tablas son reales y se administran a mano (se pueden usar FKs si se declaran `DEFERRABLE INITIALLY DEFERRED` y se activa `pragma foreign_keys`), a costa de definir el mapeo y los triggers de captura de escrituras.
+- Los `UPDATE` y `DELETE` sobre una vista pueden devolver `rowsAffected = 0` aunque hayan funcionado. Para confirmar que cambió una fila hay que usar `RETURNING`. Si se elige la opción A, hay que revisar los services que dependan de ese conteo.
 
 Fuentes (documentación oficial de PowerSync):
 - https://docs.powersync.com/architecture/client-architecture
@@ -32,16 +33,17 @@ Todavía no se sabe si Prisma puede leer y escribir sobre esas vistas sin romper
 
 | # | Verificación | Resultado |
 |---|---|---|
-| 1 | Prisma `findMany` sobre la vista devuelve `Boolean` y `DateTime` con el tipo correcto | _pendiente_ |
-| 2 | Prisma `create` sobre la vista funciona y la fila entra a la cola de subida (hipótesis: no entra) | _pendiente_ |
-| 3 | Escritura con el SDK de PowerSync y lectura con Prisma: tipos correctos | _pendiente_ |
-| 4 | Quién completa `id`, `fechaHoraCreacion` y `fechaHoraModificacion` (`@updatedAt` no se actualiza solo en la vista) | _pendiente_ |
-| 5 | Prisma y el SDK abiertos sobre el mismo archivo: ¿aparece "database is locked" con escrituras seguidas? (PowerSync indica una sola instancia por archivo) | _pendiente_ |
-| 6 | `prisma migrate` contra una vista del mismo nombre: ¿choca? ¿cómo se excluye la tabla? | _pendiente_ |
-| 7 | Insertar en la vista un `id` ya existente: ¿se rechaza? (sirve para la estrategia de ids determinísticos) | _pendiente_ |
-| 8 | Columna excluida del stream (`claveCifrada` en el equipo del Clasificador): al volver a descargar la fila que ese equipo subió, ¿queda vacía en local? | _pendiente_ |
-| 9 | Fila escrita en local en una tabla sin stream de descarga para ese rol (`UsoClaveRespaldo` en el Clasificador): ¿persiste o se elimina al subirse? | _pendiente_ |
-| 10 | Avisos en vivo (SSE): hoy los dispara un evento interno del backend al escribir. ¿Cómo se entera de los cambios que llegan por sync desde otros equipos? (el SDK permite observar cambios de tablas; a confirmar) | _pendiente_ |
+| 1 | Prisma `findMany` sobre la vista devuelve `Boolean` y `DateTime` con el tipo correcto | **OK:** Prisma lee `boolean` y `Date` correctamente de lo que escribió el SDK |
+| 2 | Prisma escribe sobre la vista y la fila entra a la cola de subida | **FALLA:** `create`, `update`, `delete` y SQL crudo fallan con `no such function: powersync_strip_subtype` y `main.powersync_crud does not exist`: los triggers de la vista usan la extensión de PowerSync, que la conexión de Prisma no tiene cargada |
+| 3 | Escritura con el SDK de PowerSync y lectura con Prisma: tipos correctos | **OK** |
+| 4 | Quién completa `id`, `fechaHoraCreacion` y `fechaHoraModificacion` | **INFO:** las vistas no tienen defaults. Si el SDK inserta sin fechas, Prisma lee `null` sin error: toda escritura por el SDK debe completarlas |
+| 5 | Prisma y el SDK sobre el mismo archivo: ¿"database is locked"? | **OK:** 50 escrituras del SDK y 50 lecturas de Prisma en paralelo, sin errores ni bloqueos (las escrituras de Prisma no se pudieron probar, ver 2) |
+| 6 | `prisma migrate` sobre una base ya creada por PowerSync | **INFO:** `P3005` (la base no está vacía): Prisma no migra una base que ya tiene objetos de PowerSync |
+| 7 | Insertar en la vista un `id` ya existente | **INFO:** se rechaza (`UNIQUE constraint failed: ps_data__PlantillaCertificado.id`): la estrategia de ids determinísticos es viable |
+| 8 | Columna excluida del stream (`claveCifrada` en el equipo del Clasificador): al volver a descargar la fila que ese equipo subió, ¿queda vacía en local? | _pendiente (requiere el servicio de sync)_ |
+| 9 | Fila escrita en local en una tabla sin stream de descarga para ese rol (`UsoClaveRespaldo` en el Clasificador): ¿persiste o se elimina al subirse? | _pendiente (requiere el servicio de sync)_ |
+| 10 | Avisos en vivo (SSE): ¿`db.watch()` detecta escrituras del SDK, de Prisma y cambios por sync? | **OK para el SDK.** Prisma no puede escribir (ver 2). Lo que llega por sync: _pendiente (requiere el servicio de sync)_ |
+| 11 | Prisma Migrate primero y PowerSync después, sobre el mismo archivo | **FALLA:** `use DROP TABLE to delete table PlantillaCertificado`: PowerSync no puede crear una vista donde ya hay una tabla real |
 
 ## Opciones
 
@@ -52,9 +54,17 @@ Todavía no se sabe si Prisma puede leer y escribir sobre esas vistas sin romper
 | **C** | Raw tables: tablas reales gestionadas por Prisma Migrate, con mapeo y triggers de PowerSync. | Se conservan (FKs diferidas). Mayor costo de configuración y mantenimiento. |
 
 ## Decisión
-_A completar con el resultado del spike._
+**Opción A:** Prisma solo lee; todas las escrituras de la base local pasan por el SDK de PowerSync.
 
-Criterio: si las verificaciones 2 o 5 fallan, se descarta B. Entre A y C se elige según cuánto pesa mantener `@unique` y FKs reales frente al costo de mapeos y triggers manuales.
+La opción B queda descartada: Prisma no puede escribir sobre las vistas (verificación 2). Los resultados 6 y 11 muestran además que Prisma Migrate y PowerSync no pueden compartir el mismo archivo: el esquema local lo crea PowerSync.
+
+La opción C (raw tables) no se evaluó en el spike. Sus triggers de captura de escrituras también dependen de la extensión de PowerSync, por lo que habría que comprobar si Prisma podría escribir sobre esas tablas.
 
 ## Consecuencias
-_A completar._ Sea cual sea la opción, esta decisión define cómo se implementan la fusión de personas por DNI y el reemplazo de restricciones.
+- **El esquema de la base local lo define el schema de PowerSync, no Prisma Migrate.** Prisma Migrate se usa solo para la base web. El schema de PowerSync debe derivarse de `schema.prisma` (`String`, enums y `DateTime` como `text`; `Boolean` e `Int` como `integer`; `Float` como `real`).
+- **El refactor alcanza a 63 puntos de escritura en 13 services, 22 usos de `$transaction` en 10 services, 8 escrituras anidadas y `seed.ts`.** Todo pasa a `execute` y `writeTransaction` del SDK. Se puede migrar service por service.
+- **Toda escritura por el SDK debe proveer `id` (UUID), `fechaHoraCreacion` y `fechaHoraModificacion`**, porque las vistas no tienen defaults ni `@updatedAt`.
+- **El `rowsAffected` de un `UPDATE` o `DELETE` sobre una vista puede ser 0 aunque haya funcionado:** hay que usar `RETURNING`.
+- **El `id` es único localmente**, así que la estrategia de ids determinísticos (D) de `restricciones-locales.md` es viable. El resto de las restricciones se reemplaza como indica ese documento.
+- **Los avisos en vivo (SSE)** pueden apoyarse en `db.watch()`, que detecta las escrituras del SDK. Falta comprobar los cambios que llegan por sync (verificación 10).
+- **Hay que rediseñar** la creación de la base local en desarrollo y el seed, porque Prisma Migrate ya no la crea.
