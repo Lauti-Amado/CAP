@@ -18,26 +18,26 @@ function CorredorNoEncontrado({
       show
       onHide={onVolver}
       centered
-      size="sm"
+      size="lg"
       backdrop="static"
       keyboard={false}
       aria-labelledby="corredor-no-encontrado-titulo"
     >
-      <Modal.Body className="text-center p-4">
-        <span className="d-inline-flex rounded-circle bg-danger-subtle text-danger p-3 mb-3">
-          <AlertTriangle size={28} />
+      <Modal.Body className="text-center p-5">
+        <span className="d-inline-flex rounded-circle bg-danger-subtle text-danger p-4 mb-4">
+          <AlertTriangle size={48} />
         </span>
 
-        <h1 id="corredor-no-encontrado-titulo" className="h5 fw-bold">
+        <h1 id="corredor-no-encontrado-titulo" className="h3 fw-bold mb-3">
           Corredor no encontrado
         </h1>
 
-        <p className="small text-secondary">
+        <p className="fs-6 text-secondary mb-4">
           No se encontró ningún corredor inscripto con el DNI <strong className="text-body">{dni}</strong>.
           Verifique el número ingresado o proceda a realizar una nueva inscripción.
         </p>
 
-        <div className="bg-body-tertiary rounded p-3 mb-3 small d-flex flex-column gap-2 text-start">
+        <div className="bg-body-tertiary rounded p-4 mb-4 fs-6 d-flex flex-column gap-3 text-start">
           <div className="d-flex justify-content-between">
             <span className="text-secondary">DNI ingresado:</span>
             <strong>{dni}</strong>
@@ -48,11 +48,11 @@ function CorredorNoEncontrado({
           </div>
         </div>
 
-        <div className="d-grid gap-2">
-          <Button type="button" variant="success" onClick={onInscribir}>
+        <div className="d-grid gap-3">
+          <Button type="button" variant="success" size="lg" onClick={onInscribir}>
             Inscribir corredor
           </Button>
-          <Button type="button" variant="outline-secondary" onClick={onVolver}>
+          <Button type="button" variant="outline-secondary" size="lg" onClick={onVolver}>
             Ingresar otro DNI
           </Button>
         </div>

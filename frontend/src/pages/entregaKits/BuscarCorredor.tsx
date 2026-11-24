@@ -5,26 +5,43 @@ import { Search, PackageCheck, Flag } from 'lucide-react'
 import { Badge, Button, Card, Col, Container, Form, InputGroup, ListGroup, Row, Spinner } from 'react-bootstrap'
 
 import CorredorNoEncontrado from './CorredorNoEncontrado'
-import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext'
+import { useCarreraActual } from '../../hooks/useCarreraActual'
 import { ApiError } from '../../services/apiService'
 import { buscarCorredorPorDni, obtenerEntregasRecientes } from '../../services/entregaKitService'
 import type { EntregaRecienteDTO } from '../../types/entregaKits'
+import type { Distancia } from '../../types/carrera'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import { dniBusquedaSchema } from '../../schemas/kitSchema'
-import { validar } from '../../utils/validar'
+import type { DniBusquedaForm } from '../../schemas/kitSchema'
 
 function BuscarCorredor() {
-  const [dni, setDni] = useState('')
   const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null)
   const [errorEntregas, setErrorEntregas] = useState<string | null>(null)
   const [mostrarNoEncontrado, setMostrarNoEncontrado] = useState(false)
-  const [buscando, setBuscando] = useState(false)
   const [cargandoEntregas, setCargandoEntregas] = useState(true)
   const [ultimasEntregas, setUltimasEntregas] = useState<EntregaRecienteDTO[]>([])
 
   const navigate = useNavigate()
   const { nombreCarrera } = useParams()
-  const { carreraSeleccionada } = useSeleccionarCarrera()
+  const carreraSeleccionada = useCarreraActual()
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<DniBusquedaForm>({
+    resolver: zodResolver(dniBusquedaSchema),
+    defaultValues: { dni: '' },
+  })
+
+  const dni = watch('dni')
+  const dniRegistro = register('dni')
+  const mensajeError = errors.dni?.message ?? errorBusqueda
 
   useEffect(() => {
     if (!carreraSeleccionada) return
@@ -61,16 +78,7 @@ function BuscarCorredor() {
     }
   }, [carreraSeleccionada])
 
-  const buscarCorredor = async () => {
-    const validacion = validar(dniBusquedaSchema, { dni })
-
-    if (!validacion.ok) {
-      setErrorBusqueda(validacion.errores.dni)
-      return
-    }
-
-    const dniIngresado = validacion.datos.dni
-
+  const buscarCorredor = async ({ dni: dniIngresado }: DniBusquedaForm) => {
     if (!carreraSeleccionada) {
       setErrorBusqueda('No hay una carrera seleccionada.')
       return
@@ -78,7 +86,6 @@ function BuscarCorredor() {
 
     setErrorBusqueda(null)
     setMostrarNoEncontrado(false)
-    setBuscando(true)
 
     try {
       await buscarCorredorPorDni(carreraSeleccionada.id, dniIngresado)
@@ -92,15 +99,13 @@ function BuscarCorredor() {
 
       console.error('Error al buscar el corredor:', error)
       setErrorBusqueda('No se pudo consultar el corredor. Intente nuevamente.')
-    } finally {
-      setBuscando(false)
     }
   }
 
   const distanciasUnicas = carreraSeleccionada
     ? [
         ...new Map(
-          carreraSeleccionada.distancias.map((distancia) => [
+          carreraSeleccionada.distancias.map((distancia: Distancia) => [
             `${distancia.kilometraje}-${distancia.tipoDistancia}`,
             distancia,
           ]),
@@ -127,7 +132,7 @@ function BuscarCorredor() {
 
                   <span className="small text-secondary">
                     {distanciasUnicas
-                      .map((distancia) => `${distancia.kilometraje}K ${distancia.tipoDistancia}`)
+                      .map((distancia: Distancia) => `${distancia.kilometraje}K ${distancia.tipoDistancia}`)
                       .join(' / ')}
                   </span>
 
@@ -171,36 +176,29 @@ function BuscarCorredor() {
                 Ingrese el DNI del participante para asignar su kit de carrera.
               </p>
 
-              <Form
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  if (!buscando) {
-                    void buscarCorredor()
-                  }
-                }}
-              >
+              <Form onSubmit={handleSubmit(buscarCorredor)} noValidate>
                 <InputGroup hasValidation>
                   <Form.Control
                     type="text"
                     inputMode="numeric"
-                    value={dni}
+                    {...dniRegistro}
                     onChange={(event) => {
-                      setDni(event.target.value)
+                      void dniRegistro.onChange(event)
                       setErrorBusqueda(null)
                       setMostrarNoEncontrado(false)
                     }}
                     placeholder="Ej. 35123456"
                     aria-label="DNI del corredor"
-                    isInvalid={Boolean(errorBusqueda)}
-                    disabled={buscando}
+                    isInvalid={Boolean(mensajeError)}
+                    readOnly={isSubmitting}
                   />
 
-                  <Button type="submit" variant="success" aria-label="Buscar corredor" disabled={buscando}>
-                    {buscando ? <Spinner animation="border" size="sm" /> : <Search size={18} aria-hidden="true" />}
+                  <Button type="submit" variant="success" aria-label="Buscar corredor" disabled={isSubmitting}>
+                    {isSubmitting ? <Spinner animation="border" size="sm" /> : <Search size={18} aria-hidden="true" />}
                   </Button>
 
                   <Form.Control.Feedback type="invalid" className="text-start">
-                    {errorBusqueda}
+                    {mensajeError}
                   </Form.Control.Feedback>
                 </InputGroup>
               </Form>
@@ -217,7 +215,7 @@ function BuscarCorredor() {
               }}
               onVolver={() => {
                 setMostrarNoEncontrado(false)
-                setDni('')
+                reset()
               }}
             />
           )}

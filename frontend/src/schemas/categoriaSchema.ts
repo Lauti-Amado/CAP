@@ -11,3 +11,5 @@ export const categoriaSchema = z.object({
   descripcion: z.string().trim().min(1, 'La descripción es obligatoria.').max(500, 'Máximo 500 caracteres.'),
   criterios: z.array(criterioSchema),
 })
+
+export type CategoriaForm = z.infer<typeof categoriaSchema>

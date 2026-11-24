@@ -118,6 +118,19 @@ function ParticipantesCard({
               </div>
             </>
           )}
+          
+          {p.estado === 'DESCALIFICADO' && (
+            <Badge bg="danger">DESCALIFICADO</Badge>
+          )}
+
+          {p.estado === 'NO FINALIZÓ' && (
+            <Badge bg="warning" text="dark">NO FINALIZÓ</Badge>
+          )}
+
+          {p.estado === 'NO LARGÓ' && (
+            <Badge bg="secondary">NO LARGÓ</Badge>
+          )}
+          
         </>
       ),
     },
@@ -125,7 +138,7 @@ function ParticipantesCard({
       titulo: 'ACCIÓN',
       key: 'accion',
       render: (p) =>
-        p.estado === 'LLEGADO' ? (
+        p.estado !== 'DESCALIFICADO' ? (
           <Button
             variant="link"
             size="sm"

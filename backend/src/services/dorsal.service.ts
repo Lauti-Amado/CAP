@@ -44,7 +44,7 @@ export async function obtenerOCrearDorsal(tx: Tx, numero: string) {
 }
 
 // Integra el chip al dorsal: lo crea, o cambia el número si ya tenía uno
-export async function asociarChip(tx: Tx, dorsal: DorsalConChip, numero: number) {
+export async function asociarChip(tx: Tx, dorsal: DorsalConChip, numero: string) {
     if (dorsal.chip?.numero === numero) return;
 
     const enUso = await tx.chip.findFirst({ where: { numero, NOT: { dorsalId: dorsal.id } } });
@@ -100,7 +100,7 @@ export async function cargarInventario(items: ItemInventario[]) {
     }, { timeout: 60_000 });
 }
 
-export async function vincularChip(dorsalId: string, chipNumero: number): Promise<DorsalDTO> {
+export async function vincularChip(dorsalId: string, chipNumero: string): Promise<DorsalDTO> {
     return prisma.$transaction(async (tx) => {
         const dorsal = await tx.dorsal.findUnique({ where: { id: dorsalId }, include: conChip });
         if (!dorsal) throw new ErrorNoEncontrado("Dorsal no encontrado.");
@@ -150,7 +150,7 @@ export async function listarEntregadosEnCarrera(carreraId: string, busqueda?: st
 
 // Del chip leído al dorsal y su entrega en la carrera.
 // entrega === null: el chip es de un dorsal que no se entregó en esta carrera.
-export async function identificarPorChip(carreraId: string, chipNumero: number): Promise<DorsalEnCarreraDTO> {
+export async function identificarPorChip(carreraId: string, chipNumero: string): Promise<DorsalEnCarreraDTO> {
     const dorsal = await prisma.dorsal.findFirst({
         where: { chip: { numero: chipNumero } },
         include: enCarrera(carreraId),

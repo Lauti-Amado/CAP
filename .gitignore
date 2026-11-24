@@ -40,3 +40,5 @@ dist-electron/
 # Bases SQLite locales
 *.db
 *.db-journal
+
+release/

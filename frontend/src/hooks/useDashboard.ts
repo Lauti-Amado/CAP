@@ -5,8 +5,6 @@ import { useDetalleCarrera } from './useDetalleCarrera'
 import { obtenerActividadCarrera } from '../services/dashboardService'
 import type { Carrera } from '../types/carrera'
 import type { DashboardActivity, DashboardData } from '../types/dashboard'
-// MOCK TEMPORAL: RFID, notificaciones y sincronización todavía no tienen backend
-import { dashboardMock } from '../pages/dashboard/dashboardMock'
 
 const INTERVALO_ACTIVIDAD_MS = 30_000
 
@@ -35,13 +33,16 @@ export function useDashboard() {
 
   // La actividad se refresca sola mientras el dashboard está abierto
   useEffect(() => {
-    if (!carreraId) return undefined
+    if (!carreraId) {
+      setActividad([])
+      return undefined
+    }
     let activo = true
 
     const cargar = () =>
       obtenerActividadCarrera(carreraId)
         .then((datos) => { if (activo) setActividad(datos) })
-        .catch(() => { /* es secundaria: se deja la última lista cargada */ })
+        .catch(() => { /* es secundaria: se deja la última lista cargada ante un error transitorio*/ })
 
     void cargar()
     const intervalo = setInterval(() => void cargar(), INTERVALO_ACTIVIDAD_MS)
@@ -65,9 +66,12 @@ export function useDashboard() {
       capacity: carrera?.participantesMax ?? 0,
     },
     activities: actividad,
-    rfid: dashboardMock.rfid,
-    unreadNotifications: dashboardMock.unreadNotifications,
-    sincronizacion: dashboardMock.sincronizacion,
+    rfid: null,
+    unreadNotifications: null,
+    sincronizacion: {
+      estado: 'no-disponible',
+      ultimaVez: null,
+    },
   }
 
   return { data, cargando }
