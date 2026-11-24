@@ -2,13 +2,13 @@
 import type { ClasificacionDTO } from '../types/clasificacionApi'
 import type { ParticipanteClasificacion, EstadoParticipante } from '../types/clasificacion'
 
-function formatearTiempo(ms: number | null): string | undefined {
-  if (ms === null || ms === undefined) return undefined
+export function formatearTiempo(ms: number | null): string {
+  if (ms === null || ms === undefined) return '-'
   const totalSeg = Math.floor(ms / 1000)
   const h = Math.floor(totalSeg / 3600)
   const m = Math.floor((totalSeg % 3600) / 60)
   const s = totalSeg % 60
-  return `${h > 0 ? `${h}:` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 function estadoApiAParticipante(estado: ClasificacionDTO['estado']): EstadoParticipante {

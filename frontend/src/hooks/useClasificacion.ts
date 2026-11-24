@@ -8,8 +8,12 @@ export type FiltrosActivos = Partial<FiltrosClasificacion>
 
 const LIMITE_DEFAULT = 20
 
-export function useClasificacion(carreraId: string | undefined) {
-  const [filtros, setFiltros] = useState<FiltrosActivos>({ pagina: 1, limite: LIMITE_DEFAULT })
+export function useClasificacion(carreraId: string | undefined, initialFiltros?: FiltrosActivos) {
+  const [filtros, setFiltros] = useState<FiltrosActivos>({
+    pagina: 1,
+    limite: LIMITE_DEFAULT,
+    ...initialFiltros,
+  })
   const [datos, setDatos] = useState<ClasificacionDTO[]>([])
   const [total, setTotal] = useState(0)
   const [totalPaginas, setTotalPaginas] = useState(1)
