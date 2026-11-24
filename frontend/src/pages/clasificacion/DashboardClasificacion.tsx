@@ -8,12 +8,15 @@ import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion';
 import FinalizarCarreraModal from './modales/FinalizarCarreraModal';
 import { useCronometroCarrera } from '../../hooks/useCronometroCarrera';
-import { participantesMock, estadisticasMock } from './participanteMock';
+import { estadisticasMock } from './participanteMock';
 import { useAuth } from '../../context/AuthContext';
 import { useCarrera } from '../../context/CarreraContext';
 import { useCarreraActual } from '../../hooks/useCarreraActual';
 import { ApiError } from '../../services/apiService';
 import { iniciarCarrera, finalizarCarrera } from '../../services/carreraService';
+import { useClasificacion } from '../../hooks/useClasificacion';
+import { clasificacionAParticipante } from '../../utils/clasificacionUtils';
+import type { EstadoClasificacionApi } from '../../types/clasificacionApi';
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
@@ -26,6 +29,17 @@ const DashboardClasificacion = () => {
   const [mostrarFinalizar, setMostrarFinalizar] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Clasificación paginada desde el backend
+  const {
+    datos,
+    total,
+    totalPaginas,
+    cargando: cargandoClasificacion,
+    filtros,
+    cambiarFiltro,
+    cambiarPagina,
+  } = useClasificacion(carrera?.id);
 
   const ejecutar = async (accion: (id: string) => Promise<unknown>) => {
     if (!carrera || procesando) return;
@@ -167,8 +181,21 @@ const DashboardClasificacion = () => {
         {/* Participantes */}
         <Col xs={12} lg={8}>
           <ParticipantesCard
-            participantes={participantesMock}
+            participantes={datos.map(clasificacionAParticipante)}
             onVerClasificacion={(p) => navigate(`/clasificador/clasificaciones/${nombreCarrera}/${p.id}`)}
+            paginaActual={filtros.pagina ?? 1}
+            totalPaginas={totalPaginas}
+            total={total}
+            onCambiarPagina={cambiarPagina}
+            busqueda={filtros.busqueda ?? ''}
+            onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
+            filtroEstado={filtros.estado ?? ''}
+            onFiltroEstadoChange={(v) => cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)}
+            filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
+            onFiltroDistanciaChange={(v) => cambiarFiltro('distancia', v ? Number(v) : undefined)}
+            filtroSexo={filtros.sexo ?? ''}
+            onFiltroSexoChange={(v) => cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)}
+            cargando={cargandoClasificacion}
           />
         </Col>
 

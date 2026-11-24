@@ -5,8 +5,10 @@ import { ArrowLeft, CalendarDays, ListOrdered, MapPin, Ruler } from 'lucide-reac
 import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge'
 import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion'
-import { participantesMock } from './participanteMock'
 import { useDetalleCarrera } from '../../hooks/useDetalleCarrera'
+import { useClasificacion } from '../../hooks/useClasificacion'
+import { clasificacionAParticipante } from '../../utils/clasificacionUtils'
+import type { EstadoClasificacionApi } from '../../types/clasificacionApi'
 
 const estiloPagina = { minHeight: '100vh', backgroundColor: '#f8f9ff' }
 
@@ -14,12 +16,21 @@ function ModificarClasificacionCarrera() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  // TODO BACKEND: GET /api/carreras/{id} (incluye cantidadInscriptos y cantidadClasificados)
-  const { carrera, cargando, error } = useDetalleCarrera(id)
+  const { carrera, cargando: cargandoCarrera, error } = useDetalleCarrera(id)
+
+  const {
+    datos,
+    total,
+    totalPaginas,
+    cargando,
+    filtros,
+    cambiarFiltro,
+    cambiarPagina,
+  } = useClasificacion(id)
 
   const volverAlDetalle = () => navigate(`/administrador/carreras/${id}`)
 
-  if (cargando) {
+  if (cargandoCarrera) {
     return (
       <main className="p-4" style={estiloPagina}>
         <p className="text-secondary">Cargando carrera...</p>
@@ -60,6 +71,8 @@ function ModificarClasificacionCarrera() {
   const llegados = carrera.cantidadClasificados
   const pendientes = participantes - llegados
   const progreso = participantes === 0 ? 0 : Math.round((llegados / participantes) * 100)
+
+  const participantesTabla = datos.map(clasificacionAParticipante)
 
   return (
     <main className="p-4" style={estiloPagina}>
@@ -111,11 +124,24 @@ function ModificarClasificacionCarrera() {
       <Row className="g-3">
         <Col xs={12} lg={8}>
           <ParticipantesCard
-            participantes={participantesMock}
+            participantes={participantesTabla}
             textoAccion="Modificar clasificación"
             onVerClasificacion={(p) =>
-              navigate(`/administrador/carreras/${carrera.id}/clasificacion/${p.id}`)   // ← antes /clasificador/...
+              navigate(`/administrador/carreras/${carrera.id}/clasificacion/${p.id}`)
             }
+            paginaActual={filtros.pagina ?? 1}
+            totalPaginas={totalPaginas}
+            total={total}
+            onCambiarPagina={cambiarPagina}
+            busqueda={filtros.busqueda ?? ''}
+            onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
+            filtroEstado={filtros.estado ?? ''}
+            onFiltroEstadoChange={(v) => cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)}
+            filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
+            onFiltroDistanciaChange={(v) => cambiarFiltro('distancia', v ? Number(v) : undefined)}
+            filtroSexo={filtros.sexo ?? ''}
+            onFiltroSexoChange={(v) => cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)}
+            cargando={cargando}
           />
         </Col>
 

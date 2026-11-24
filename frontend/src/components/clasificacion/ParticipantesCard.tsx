@@ -1,5 +1,4 @@
 //frontend/src/components/clasificacion/ParticipantesCard.tsx
-import { useState } from 'react'
 import {
   Button,
   Card,
@@ -8,12 +7,11 @@ import {
   Row,
   Col,
   Badge,
+  Spinner,
 } from 'react-bootstrap'
 
 import {
   ArrowRight,
-  ChevronDown,
-  ChevronUp,
   Search,
   Table as IconoTabla,
 } from 'lucide-react'
@@ -21,45 +19,48 @@ import {
 import { Tabla, type Columna } from '../tabla/Tabla'
 import type { ParticipanteClasificacion } from '../../types/clasificacion'
 
-// Cantidad de filas visibles inicialmente
-const FILAS_INICIALES = 3
-
 type ParticipantesCardProps = {
   participantes: ParticipanteClasificacion[]
   textoAccion?: string
   onVerClasificacion: (participante: ParticipanteClasificacion) => void
+
+  // Paginación real (controlada por el padre)
+  paginaActual: number
+  totalPaginas: number
+  total: number
+  onCambiarPagina: (p: number) => void
+
+  // Filtros controlados por el padre
+  busqueda: string
+  onBusquedaChange: (v: string) => void
+  filtroEstado: string
+  onFiltroEstadoChange: (v: string) => void
+  filtroDistancia: string
+  onFiltroDistanciaChange: (v: string) => void
+  filtroSexo: string
+  onFiltroSexoChange: (v: string) => void
+
+  cargando?: boolean
 }
 
 function ParticipantesCard({
   participantes,
   textoAccion = 'Ver clasificación',
   onVerClasificacion,
+  paginaActual,
+  totalPaginas,
+  total,
+  onCambiarPagina,
+  busqueda,
+  onBusquedaChange,
+  filtroEstado,
+  onFiltroEstadoChange,
+  filtroDistancia,
+  onFiltroDistanciaChange,
+  filtroSexo,
+  onFiltroSexoChange,
+  cargando = false,
 }: ParticipantesCardProps) {
-
-  const [busqueda, setBusqueda] = useState('')
-  const [filtroEstado, setFiltroEstado] = useState('Todos')
-  const [verTodos, setVerTodos] = useState(false)
-
-  // Filtrar participantes
-  const filtrados = participantes.filter((p) => {
-    const termino = busqueda.toLowerCase().trim()
-
-    const coincideBusqueda =
-      p.dorsal.toLowerCase().includes(termino) ||
-      p.dni.toLowerCase().includes(termino) ||
-      p.atleta.toLowerCase().includes(termino)
-
-    const coincideEstado =
-      filtroEstado === 'Todos' ||
-      p.estado === filtroEstado.toUpperCase()
-
-    return coincideBusqueda && coincideEstado
-  })
-
-  // Determinar filas visibles
-  const visibles = verTodos
-    ? filtrados
-    : filtrados.slice(0, FILAS_INICIALES)
 
   // Columnas de la tabla
   const columnas: Columna<ParticipanteClasificacion>[] = [
@@ -152,10 +153,11 @@ function ParticipantesCard({
             <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
               <IconoTabla size={16} aria-hidden="true" />
               Participantes
+              {cargando && <Spinner animation="border" size="sm" className="ms-2" />}
             </h2>
           </Col>
 
-          {/* Buscador y filtro */}
+          {/* Buscador y filtros */}
           <Col xs={12} md="auto">
             <Row className="g-2">
 
@@ -164,15 +166,11 @@ function ParticipantesCard({
                   <InputGroup.Text className="bg-white">
                     <Search size={14} aria-hidden="true" />
                   </InputGroup.Text>
-
                   <Form.Control
                     type="text"
-                    placeholder="Buscar por DNI o dorsal..."
+                    placeholder="Buscar nombre, DNI o dorsal..."
                     value={busqueda}
-                    onChange={(e) => {
-                      setBusqueda(e.target.value)
-                      setVerTodos(false)
-                    }}
+                    onChange={(e) => onBusquedaChange(e.target.value)}
                     aria-label="Buscar participante"
                   />
                 </InputGroup>
@@ -183,15 +181,42 @@ function ParticipantesCard({
                   size="sm"
                   value={filtroEstado}
                   aria-label="Filtrar por estado"
-                  onChange={(e) => {
-                    setFiltroEstado(e.target.value)
-                    setVerTodos(false)
-                  }}
+                  onChange={(e) => onFiltroEstadoChange(e.target.value)}
                 >
-                  <option value="Todos">Estado: Todos</option>
+                  <option value="">Estado: Todos</option>
                   <option value="Pendiente">Pendiente</option>
-                  <option value="En Curso">En Curso</option>
-                  <option value="Llegado">Llegado</option>
+                  <option value="Finalizo">Llegó</option>
+                  <option value="No_finalizo">No finalizó</option>
+                  <option value="No_largo">No largó</option>
+                  <option value="Descalificado">Descalificado</option>
+                </Form.Select>
+              </Col>
+
+              <Col xs={12} sm="auto">
+                <Form.Select
+                  size="sm"
+                  value={filtroDistancia}
+                  aria-label="Filtrar por distancia"
+                  onChange={(e) => onFiltroDistanciaChange(e.target.value)}
+                >
+                  <option value="">Distancia: Todas</option>
+                  <option value="5">5 km</option>
+                  <option value="10">10 km</option>
+                  <option value="21">21 km</option>
+                  <option value="42">42 km</option>
+                </Form.Select>
+              </Col>
+
+              <Col xs={12} sm="auto">
+                <Form.Select
+                  size="sm"
+                  value={filtroSexo}
+                  aria-label="Filtrar por sexo"
+                  onChange={(e) => onFiltroSexoChange(e.target.value)}
+                >
+                  <option value="">Sexo: Todos</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
                 </Form.Select>
               </Col>
 
@@ -202,36 +227,13 @@ function ParticipantesCard({
         {/* Tabla de participantes */}
         <Tabla
           columnas={columnas}
-          datos={visibles}
+          datos={participantes}
           mensajeVacio="No se encontraron participantes."
-          paginaActual={1}
-          totalPaginas={1}
-          onCambiarPagina={() => {}}
-          textoPaginacion={`Mostrando ${visibles.length} de ${filtrados.length} resultados`}
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={onCambiarPagina}
+          textoPaginacion={`Mostrando ${participantes.length} de ${total} participantes`}
         />
-
-        {/* Botón ver todos */}
-        {filtrados.length > FILAS_INICIALES && (
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            className="w-100 mt-3 d-flex align-items-center justify-content-center gap-2"
-            aria-expanded={verTodos}
-            onClick={() => setVerTodos((actual) => !actual)}
-          >
-            {verTodos ? (
-              <>
-                <ChevronUp size={14} aria-hidden="true" />
-                Ver menos
-              </>
-            ) : (
-              <>
-                <ChevronDown size={14} aria-hidden="true" />
-                Ver todos ({filtrados.length})
-              </>
-            )}
-          </Button>
-        )}
 
       </Card.Body>
     </Card>
