@@ -5,8 +5,8 @@ import { clasificacionCarreraQuerySchema, tiempoRealQuerySchema } from "../valid
 
 export async function getByCarrera(req: Request, res: Response) {
     const filtros = clasificacionCarreraQuerySchema.parse(req.query);
-    const clasificaciones = await clasificacionService.listarPorCarrera(req.params.id as string, filtros);
-    return res.json(clasificaciones);
+    const pagina = await clasificacionService.listarPorCarrera(req.params.id as string, filtros);
+    return res.json(pagina);
 }
 
 export async function getTiempoReal(req: Request, res: Response) {

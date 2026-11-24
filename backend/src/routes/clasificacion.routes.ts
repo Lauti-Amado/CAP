@@ -11,7 +11,7 @@ const router = Router();
 // Ambos roles acceden a la clasificación y pueden descalificar (ver permisos de acceso)
 const protegido = [authenticate, authorize("Administrador", "Clasificador")];
 
-//GET clasificaciones de una carrera (con o sin resultado)
+//GET clasificaciones de una carrera paginadas (con filtros opcionales)
 router.get("/carreras/:id/clasificacion",
     ...protegido, validateParams(idParamSchema), clasificacionController.getByCarrera);
 
