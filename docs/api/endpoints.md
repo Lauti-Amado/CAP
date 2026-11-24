@@ -52,3 +52,30 @@
 | `GET` | `/api/distancias` | Consultar las distancias |
 | `GET` | `/api/lugares` | Consultar los lugares |
 | `GET` | `/api/equipos` | Consultar los equipos |
+
+## Grand Prix
+
+Base: `/api/grand-prix`. Lectura: Administrador / Clasificador. Modificaciones: solo Administrador, con cookie de sesión.
+
+| Método | Ruta relativa | Acción |
+|---|---|---|
+| GET / POST | `/` | Listar / crear ediciones |
+| GET | `/catalogo-pruebas` | Modalidades competitivas disponibles |
+| GET | `/corredores?q=...` | Buscar corredores (administrador) |
+| GET / PUT | `/:id` | Detalle / configurar `{ datos, motivo }` |
+| POST | `/:id/estado` | Cambiar estado `{ estado, motivo }` |
+| GET | `/:id/tabla` | Acumulados; filtros `categoriaId`, `sexo`, `kilometraje`, `busqueda` |
+| GET | `/:id/cambios/:recursoId` | Detalle de una revisión; se carga al abrir el historial |
+| POST | `/:id/recalcular` | Recalcular `{ motivo }` |
+| POST | `/:id/categorias` | Agregar grupo |
+| PUT / DELETE | `/:id/categorias/:recursoId` | Editar / quitar grupo sin uso |
+| POST | `/:id/pruebas` | Incluir `{ distanciaCarreraId }` |
+| PATCH | `/:id/pruebas/:recursoId` | Cambiar inclusión `{ incluida, motivo }` |
+| POST | `/:id/participaciones` | Inscribir `{ corredorId, categoriaId }` |
+| PATCH | `/:id/participaciones/:recursoId` | Cambiar `{ estado, motivo }` |
+| POST | `/:id/reglamentos` | Crear `{ basePuesto, copiarDeId? }` |
+| PUT | `/:id/reglamentos/:recursoId` | Guardar `{ basePuesto, reglas: [{ pruebaId, puesto, puntos }] }` |
+| POST | `/:id/reglamentos/:recursoId/previsualizar` | Calcular impacto sin escribir |
+| POST | `/:id/reglamentos/:recursoId/aplicar` | Publicar y recalcular |
+
+Previsualizar/aplicar recibe `{ pruebaIds, retroactivo, motivo }`. Fechas de edición: `YYYY-MM-DD`. Consultar [el diseño de Grand Prix](../arquitectura/grand-prix.md) para reglas, límites y migración. Errores: 400 datos inválidos, 401 sin sesión, 403 sin rol, 404 recurso inexistente, 409 conflicto de negocio.

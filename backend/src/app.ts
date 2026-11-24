@@ -16,6 +16,8 @@ import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
 import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
+import grandPrixRoutes from "./routes/grandPrix.routes";
+import { registrarListenerGrandPrix } from "./listeners/grandPrix.listener";
 
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.IS_PACKAGED === "true";
@@ -47,6 +49,7 @@ app.use("/api/carreras", carreraRoutes);
 app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
+app.use("/api/grand-prix", grandPrixRoutes);
 
 //EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.
 if (isProduction) {
@@ -68,5 +71,6 @@ else {
 app.use(errorHandler);
 
 registrarListenerResultadosCategoria();
+registrarListenerGrandPrix();
 
 export default app
