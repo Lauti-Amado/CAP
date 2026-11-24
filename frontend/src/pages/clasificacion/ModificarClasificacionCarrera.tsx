@@ -8,43 +8,9 @@ import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge'
 import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion'
 import { useDetalleCarrera } from '../../hooks/useDetalleCarrera'
-import {
-  obtenerClasificaciones,
-  type ClasificacionDTO,
-} from '../../services/clasificacionService'
-import type { ParticipanteClasificacion } from '../../types/clasificacion'
-import { ApiError } from '../../services/apiService'
-
-const estiloPagina = {
-  minHeight: '100vh',
-  backgroundColor: '#f8f9ff',
-}
-
-function mapearParticipante(
-  clasificacion: ClasificacionDTO,
-): ParticipanteClasificacion {
-  let estado: ParticipanteClasificacion['estado']
-
-  switch (clasificacion.estado) {
-    case 'Finalizo':
-      estado = 'LLEGADO'
-      break
-    case 'Descalificado':
-      estado = 'DESCALIFICADO'
-      break
-    case 'No_finalizo':
-      estado = 'NO FINALIZÓ'
-      break
-    case 'No_largo':
-      estado = 'NO LARGÓ'
-      break
-    default:
-      estado = 'PENDIENTE'
-  }
-
-  const tiempo = clasificacion.resultado?.tiempoLlegada
-
-  let tiempoFormateado: string | undefined
+import { useClasificacion } from '../../hooks/useClasificacion'
+import { clasificacionAParticipante } from '../../utils/clasificacionUtils'
+import type { EstadoClasificacionApi } from '../../types/clasificacionApi'
 
   if (tiempo !== null && tiempo !== undefined) {
     const segundosTotales = Math.floor(tiempo / 1000)
@@ -74,7 +40,17 @@ function ModificarClasificacionCarrera() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const { carrera, cargando, error } = useDetalleCarrera(id)
+  const { carrera, cargando: cargandoCarrera, error } = useDetalleCarrera(id)
+
+  const {
+    datos,
+    total,
+    totalPaginas,
+    cargando,
+    filtros,
+    cambiarFiltro,
+    cambiarPagina,
+  } = useClasificacion(id)
 
   const [participantes, setParticipantes] = useState<ParticipanteClasificacion[]>([])
   const [cargandoClasificaciones, setCargandoClasificaciones] = useState(true)
@@ -117,7 +93,7 @@ function ModificarClasificacionCarrera() {
 
   const volverAlDetalle = () => navigate(`/administrador/carreras/${id}`)
 
-  if (cargando) {
+  if (cargandoCarrera) {
     return (
       <main className="p-4" style={estiloPagina}>
         <p className="text-secondary">Cargando carrera...</p>
@@ -171,6 +147,8 @@ function ModificarClasificacionCarrera() {
     totalParticipantes === 0
       ? 0
       : Math.round((llegados / totalParticipantes) * 100)
+
+  const participantesTabla = datos.map(clasificacionAParticipante)
 
   return (
     <main className="p-4" style={estiloPagina}>
@@ -229,21 +207,34 @@ function ModificarClasificacionCarrera() {
         </Card.Body>
       </Card>
 
-      {errorClasificaciones && (
-        <Alert variant="danger">{errorClasificaciones}</Alert>
-      )}
+      <EstadisticasClasificacion
+        participantes={participantes}
+        llegados={llegados}
+        pendientes={pendientes}
+        progreso={progreso}
+      />
 
-      {cargandoClasificaciones ? (
-        <div className="d-flex justify-content-center py-5">
-          <Spinner animation="border" />
-        </div>
-      ) : (
-        <>
-          <EstadisticasClasificacion
-            participantes={totalParticipantes}
-            llegados={llegados}
-            pendientes={pendientes}
-            progreso={progreso}
+      <Row className="g-3">
+        <Col xs={12} lg={8}>
+          <ParticipantesCard
+            participantes={participantesTabla}
+            textoAccion="Modificar clasificación"
+            onVerClasificacion={(p) =>
+              navigate(`/administrador/carreras/${carrera.id}/clasificacion/${p.id}`)
+            }
+            paginaActual={filtros.pagina ?? 1}
+            totalPaginas={totalPaginas}
+            total={total}
+            onCambiarPagina={cambiarPagina}
+            busqueda={filtros.busqueda ?? ''}
+            onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
+            filtroEstado={filtros.estado ?? ''}
+            onFiltroEstadoChange={(v) => cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)}
+            filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
+            onFiltroDistanciaChange={(v) => cambiarFiltro('distancia', v ? Number(v) : undefined)}
+            filtroSexo={filtros.sexo ?? ''}
+            onFiltroSexoChange={(v) => cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)}
+            cargando={cargando}
           />
 
           <Row className="g-3">

@@ -1,13 +1,18 @@
 //backend/src/validations/clasificacion.validations.ts
 import { z } from "zod";
-import { EstadoClasificacion, EstadoResultado } from "../generated/prisma/client";
+import { EstadoClasificacion, EstadoResultado, Sexo } from "../generated/prisma/client";
 
 const INT_MAX = 2147483647; // Límite de un Int de Prisma/SQLite
 
-// GET /api/carreras/:id/clasificacion
+// GET /api/carreras/:id/clasificacion  (paginado)
 export const clasificacionCarreraQuerySchema = z.object({
-    estado: z.enum(EstadoClasificacion).optional(),
-    busqueda: z.string().trim().max(100).optional(),
+    estado:    z.enum(EstadoClasificacion).optional(),
+    busqueda:  z.string().trim().max(100).optional(),   // nombre, apellido, DNI o dorsal
+    distancia: z.coerce.number().positive().optional(), // kilometraje exacto (ej: 10, 21)
+    sexo:      z.enum(Sexo).optional(),                 // Masculino | Femenino
+    categoria: z.string().trim().max(100).optional(),   // nombre de categoría (coincidencia parcial)
+    pagina:    z.coerce.number().int().min(1).default(1),
+    limite:    z.coerce.number().int().min(1).max(100).default(20),
 });
 
 // GET /api/carreras/:id/clasificacion/tiempo-real
