@@ -21,6 +21,7 @@ import usuarioGestionRoutes from "./routes/usuarioGestion.routes"
 import plantillaCertificadoRoutes from "./routes/plantillaCertificado.routes"
 import actividadRoutes from "./routes/actividad.routes"
 import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
+import { registrarListenerClasificacionEnVivo } from "./listeners/clasificacionEnVivo.listener";
 import { iniciarMantenimientoClaves } from "./jobs/claveRespaldo.job";
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.IS_PACKAGED === "true";
@@ -79,6 +80,7 @@ else {
 app.use(errorHandler);
 
 registrarListenerResultadosCategoria();
+registrarListenerClasificacionEnVivo();
 iniciarMantenimientoClaves();
 
 export default app

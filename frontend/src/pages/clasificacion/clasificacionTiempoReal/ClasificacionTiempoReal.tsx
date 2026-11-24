@@ -33,6 +33,7 @@ import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion'
 import { useCronometroCarrera } from '../../../hooks/useCronometroCarrera'
 import { useDetalleCarrera } from '../../../hooks/useDetalleCarrera'
 import { useCarreraActual } from '../../../hooks/useCarreraActual'
+import { useClasificacionEnVivo } from '../../../hooks/useClasificacionEnVivo'
 
 import {
   cambiarEstadoClasificacion,
@@ -154,7 +155,8 @@ const ClasificacionTiempoReal: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [cargando, setCargando] = useState(true)
 
-  const cargarDatos = useCallback(async () => {
+  // `silencioso`: recarga sin mostrar el indicador de carga (actualizaciones en vivo)
+  const cargarDatos = useCallback(async (silencioso = false) => {
     if (!carreraId) {
       setError('No se pudo identificar la carrera.')
       setCargando(false)
@@ -162,7 +164,7 @@ const ClasificacionTiempoReal: React.FC = () => {
     }
 
     try {
-      setCargando(true)
+      if (!silencioso) setCargando(true)
       setError(null)
 
       const respuesta = await obtenerClasificacionTiempoReal(carreraId, 100)
@@ -183,6 +185,9 @@ const ClasificacionTiempoReal: React.FC = () => {
   useEffect(() => {
     void cargarDatos()
   }, [cargarDatos])
+
+  // Cuando otro clasificador (o, más adelante, la lectura automática) cambia la clasificación
+  useClasificacionEnVivo(carreraId, () => void cargarDatos(true))
 
   const seleccion = llegadas.filter((llegada) =>
     seleccionados.includes(llegada.id)

@@ -1,3 +1,4 @@
+//frontend/src/types/entregaKits.ts
 export type EstadoInscripcion =
   | 'En_proceso'
   | 'Pagada'

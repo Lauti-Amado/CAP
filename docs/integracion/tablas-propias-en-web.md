@@ -6,7 +6,7 @@ Complementa la decisión [04]. El schema de Prisma es **compartido** entre la we
 
 | Tabla | Qué guarda |
 |---|---|
-| `Dorsal`, `Chip`, `LecturaRFID`, `LectorRFID` | Dorsales, chips y lecturas RFID generados durante la carrera |
+| `Dorsal`, `Chip`, `LecturaRFID`, `LectorRFID`, `LecturaHuerfana` | Dorsales, chips y lecturas RFID generados durante la carrera. `Chip.numero` es el código EPC (decisión [06]) y `LecturaHuerfana` guarda las lecturas sin chip asociado |
 | `EjecucionCarrera` | Hora real de inicio y fin de la carrera (decisión [02]) |
 | `PlantillaCertificado` | Plantillas de certificado |
 | `ClaveRespaldo`, `UsoClaveRespaldo` | Claves de ingreso de contingencia (decisión [05]) |

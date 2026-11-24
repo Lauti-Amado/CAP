@@ -9,7 +9,7 @@ Parte de lo que genera el sistema de clasificaciones (dorsales, chips, lecturas 
 ## Decisión
 La base de datos web se usa también como **almacenamiento de las tablas propias** de este sistema. Estas tablas existen en la web, pero **las escribe este sistema**. La web las aloja y las expone; no las modifica por su cuenta.
 
-Tablas propias alojadas en la web: `Dorsal`, `Chip`, `LecturaRFID`, `LectorRFID`, `EjecucionCarrera`, `PlantillaCertificado`, `ClaveRespaldo` y `UsoClaveRespaldo`.
+Tablas propias alojadas en la web: `Dorsal`, `Chip`, `LecturaRFID`, `LectorRFID`, `LecturaHuerfana`, `EjecucionCarrera`, `PlantillaCertificado`, `ClaveRespaldo` y `UsoClaveRespaldo`.
 
 Las reglas para la web están en `docs/integracion/tablas-propias-en-web.md`. Las columnas están en `backend/prisma/schema.prisma`, que es compartido.
 

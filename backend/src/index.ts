@@ -1,6 +1,7 @@
 //backend/src/index.ts
 import app from "./app";
 import { prisma } from "./config/prisma";
+import { cerrarClientes } from "./services/clasificacionEnVivo.service";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -11,6 +12,7 @@ const server = app.listen(PORT, "127.0.0.1", () => {
 });
 
 export async function apagar(): Promise<void> {
+  cerrarClientes(); // las conexiones SSE abiertas impedirían que el servidor cierre
   await new Promise<void>((resolve) => server.close(() => resolve()));
   await prisma.$disconnect();
 }

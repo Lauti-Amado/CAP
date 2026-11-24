@@ -19,6 +19,10 @@ router.get("/carreras/:id/clasificacion",
 router.get("/carreras/:id/clasificacion/tiempo-real",
     ...protegido, validateParams(idParamSchema), clasificacionController.getTiempoReal);
 
+//GET (Server-Sent Events) avisos de que cambió la clasificación de la carrera
+router.get("/carreras/:id/clasificacion/eventos",
+    ...protegido, validateParams(idParamSchema), clasificacionController.getEventos);
+
 //GET clasificación de una inscripción
 router.get("/clasificaciones/:id",
     ...protegido, validateParams(idParamSchema), clasificacionController.getById);
