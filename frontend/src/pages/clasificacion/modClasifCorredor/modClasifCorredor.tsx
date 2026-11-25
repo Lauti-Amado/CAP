@@ -1,3 +1,4 @@
+//frontend/src/pages/clasificacion/modClasifCorredor/modClasifCorredor.tsx
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -19,7 +20,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion'
 import { useCarreraActual } from '../../../hooks/useCarreraActual'
 import {
-  obtenerClasificaciones,
+  obtenerClasificacionPorId,
   registrarResultadoClasificacion,
   type ClasificacionDTO,
 } from '../../../services/clasificacionService'
@@ -104,12 +105,7 @@ const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
         setCargando(true)
         setError('')
 
-        const clasificaciones = await obtenerClasificaciones(carrera.id)
-        const encontrada = clasificaciones.find((item) => item.id === id)
-
-        if (!encontrada) {
-          throw new Error('No se encontró la clasificación solicitada.')
-        }
+        const encontrada = await obtenerClasificacionPorId(id)
 
         if (!activo) return
 
