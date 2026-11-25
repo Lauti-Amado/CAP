@@ -1,4 +1,4 @@
-
+//frontend/src/pages/clasificacion/modales/CargaManualModal.tsx
 import { useNavigate, useParams } from 'react-router-dom'
 import BuscarCorredorModal from '../../../components/corredor/BuscarCorredorModal'
 import { useCarreraActual } from '../../../hooks/useCarreraActual'
@@ -23,7 +23,9 @@ function CargaManualModal({ show, onCerrar }: CargaManualModalProps) {
     const dniBuscado = normalizarDni(dni)
 
     try {
-      const clasificaciones = await obtenerClasificaciones(carrera.id)
+      const clasificaciones = await obtenerClasificaciones(carrera.id, {
+        busqueda: dniBuscado,
+      })
 
       const clasificacion = clasificaciones.find(
         (item) => normalizarDni(item.corredor.dni) === dniBuscado,

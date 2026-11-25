@@ -54,3 +54,32 @@ export type PaginaClasificacion = {
   pagina: number
   totalPaginas: number
 }
+
+
+export type ResumenClasificacionDTO = {
+  participantes: number
+  llegados: number
+  pendientes: number
+  noFinalizaron: number
+  noLargaron: number
+  descalificados: number
+  progreso: number // porcentaje de llegados sobre los que largaron (0-100)
+}
+
+export type ClasificacionTiempoRealDTO = {
+  carrera: {
+    id: string
+    estado: string
+    fechaHoraCarrera: string
+  }
+  resumen: ResumenClasificacionDTO
+  llegadas: ClasificacionDTO[] // las más recientes primero
+}
+
+export type EstadoManualClasificacion = 'Descalificado' | 'No_finalizo' | 'No_largo'
+
+export type RegistrarResultadoBody = {
+  puestoGeneral: number
+  tiempoLlegada?: number | null
+  estado?: string
+}

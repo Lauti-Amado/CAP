@@ -1,7 +1,7 @@
-
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Col, Row, Spinner } from 'react-bootstrap';
+//frontend/src/pages/clasificacion/DashboardClasificacion.tsx
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button, Card, Col, Row } from 'react-bootstrap';
 import {
   AlertTriangle,
   CalendarDays,
@@ -17,19 +17,18 @@ import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion';
 import FinalizarCarreraModal from './modales/FinalizarCarreraModal';
 import { useCronometroCarrera } from '../../hooks/useCronometroCarrera';
-import { estadisticasMock } from './participanteMock';
 import { useAuth } from '../../context/AuthContext';
 import { useCarrera } from '../../context/CarreraContext';
 import { useCarreraActual } from '../../hooks/useCarreraActual';
 import { ApiError } from '../../services/apiService';
 import { iniciarCarrera, finalizarCarrera } from '../../services/carreraService';
 import { useClasificacion } from '../../hooks/useClasificacion';
+import { useResumenClasificacion } from '../../hooks/useResumenClasificacion';
 import { clasificacionAParticipante } from '../../utils/clasificacionUtils';
 import type { EstadoClasificacionApi } from '../../types/clasificacionApi';
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { nombreCarrera } = useParams();
   const { tieneRol } = useAuth();
   const { recargar } = useCarrera();
@@ -46,10 +45,14 @@ const DashboardClasificacion = () => {
     total,
     totalPaginas,
     cargando: cargandoClasificacion,
+    error: errorDatos,
     filtros,
     cambiarFiltro,
     cambiarPagina,
   } = useClasificacion(carrera?.id);
+
+  // Totales de la carrera (independientes de la página y los filtros de la tabla)
+  const resumen = useResumenClasificacion(carrera?.id, true);
 
   const ejecutar = async (accion: (id: string) => Promise<unknown>) => {
     if (!carrera || procesando) return;
@@ -247,12 +250,21 @@ const DashboardClasificacion = () => {
         </div>
       )}
 
+      <EstadisticasClasificacion
+        participantes={resumen?.participantes ?? 0}
+        llegados={resumen?.llegados ?? 0}
+        pendientes={resumen?.pendientes ?? 0}
+        progreso={resumen?.progreso ?? 0}
+      />
+
       <Row className="g-4">
         {/* Participantes */}
         <Col xs={12} lg={8}>
           <ParticipantesCard
             participantes={datos.map(clasificacionAParticipante)}
-            onVerClasificacion={(p) => navigate(`/clasificador/clasificaciones/${nombreCarrera}/${p.id}`)}
+            onVerClasificacion={(p) =>
+              navigate(`/clasificador/clasificaciones/${nombreCarrera}/${p.id}`)
+            }
             paginaActual={filtros.pagina ?? 1}
             totalPaginas={totalPaginas}
             total={total}
@@ -260,89 +272,70 @@ const DashboardClasificacion = () => {
             busqueda={filtros.busqueda ?? ''}
             onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
             filtroEstado={filtros.estado ?? ''}
-            onFiltroEstadoChange={(v) => cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)}
+            onFiltroEstadoChange={(v) =>
+              cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)
+            }
             filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
-            onFiltroDistanciaChange={(v) => cambiarFiltro('distancia', v ? Number(v) : undefined)}
+            onFiltroDistanciaChange={(v) =>
+              cambiarFiltro('distancia', v ? Number(v) : undefined)
+            }
             filtroSexo={filtros.sexo ?? ''}
-            onFiltroSexoChange={(v) => cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)}
+            onFiltroSexoChange={(v) =>
+              cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)
+            }
             cargando={cargandoClasificacion}
           />
+        </Col>
 
-          <Row className="g-4">
-            <Col xs={12} lg={8}>
-              <ParticipantesCard
-                participantes={participantes}
-                onVerClasificacion={(p) =>
-                  navigate(
-                    `/clasificador/clasificaciones/${nombreCarrera}/${p.id}`,
-                  )
-                }
-              />
-            </Col>
-
-            <Col xs={12} lg={4}>
-              <Card
-                className="h-100 shadow-sm border"
-                style={{ borderRadius: '8px' }}
+        {/* Acciones rápidas */}
+        <Col xs={12} lg={4}>
+          <Card className="h-100 shadow-sm border" style={{ borderRadius: '8px' }}>
+            <Card.Body className="d-flex flex-column p-4">
+              <h3
+                className="text-uppercase text-muted fw-bold mb-3"
+                style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}
               >
-                <Card.Body className="d-flex flex-column p-4">
-                  <h3
-                    className="text-uppercase text-muted fw-bold mb-3"
-                    style={{
-                      fontSize: '0.7rem',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    ACCIONES RÁPIDAS
-                  </h3>
+                ACCIONES RÁPIDAS
+              </h3>
 
-                  <Button
-                    className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
-                    style={{
-                      backgroundColor: '#16a34a',
-                      borderRadius: '8px',
-                      minHeight: '180px',
-                    }}
-                    onClick={() =>
-                      navigate(
-                        `/clasificador/clasificaciones/${nombreCarrera}/tiempo-real`,
-                      )
-                    }
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#15803d')
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#16a34a')
-                    }
-                  >
-                    <span
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle"
-                      style={{
-                        width: '64px',
-                        height: '64px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      <Clock size={28} aria-hidden="true" />
-                    </span>
+              <Button
+                className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
+                style={{
+                  backgroundColor: '#16a34a',
+                  borderRadius: '8px',
+                  minHeight: '180px',
+                }}
+                onClick={() =>
+                  navigate(`/clasificador/clasificaciones/${nombreCarrera}/tiempo-real`)
+                }
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#15803d')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#16a34a')
+                }
+              >
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  }}
+                >
+                  <Clock size={28} aria-hidden="true" />
+                </span>
 
-                    <strong className="fs-5">
-                      Clasificaciones en tiempo real
-                    </strong>
+                <strong className="fs-5">Clasificaciones en tiempo real</strong>
 
-                    <span
-                      className="text-white-50"
-                      style={{ fontSize: '0.85rem' }}
-                    >
-                      Seguimiento en directo
-                    </span>
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </>
-      )}
+                <span className="text-white-50" style={{ fontSize: '0.85rem' }}>
+                  Seguimiento en directo
+                </span>
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       <FinalizarCarreraModal
         show={mostrarFinalizar}

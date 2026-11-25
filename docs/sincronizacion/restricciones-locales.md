@@ -2,7 +2,7 @@
 
 Con las vistas de PowerSync, la base local deja de hacer cumplir `UNIQUE`, claves foráneas y cascadas (ver decisión [03]). Este documento inventaría lo que dependía de la base y define cómo se reemplaza.
 
-Aplica a las opciones A y B de la decisión [03]. Con la opción C (raw tables) la mayor parte se conserva.
+Aplica a la opción A de la decisión [03] (Prisma solo lee; las escrituras pasan por el SDK de PowerSync).
 
 ## Estrategias
 
@@ -87,5 +87,5 @@ Por defecto de Prisma, las relaciones requeridas restringen el borrado del padre
 - Al borrar un padre: el service lo bloquea si tiene hijos. En particular, `categoria.delete` debe verificar `ResultadoCategoria` y `CriterioCategoria`.
 - Al sincronizar: pueden llegar hijos antes que su padre. Las pantallas no deben asumir que la relación siempre está presente.
 
-## Pendiente
-- Verificar con el spike [03] qué pasa al insertar un `id` repetido en una vista (determina si la estrategia D es viable).
+## Verificado en el spike
+- Insertar un `id` repetido en una vista se rechaza (`UNIQUE constraint failed: ps_data__...id`), así que la estrategia D (id determinístico) es viable. Ver decisión [03], verificación 7.
