@@ -6,7 +6,6 @@ import { Tabla, type Columna } from '../../components/tabla/Tabla';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { useSeleccionarCarrera } from '../../context/SeleccionarCarreraContext';
 import { useCarreraActual } from '../../hooks/useCarreraActual';
 import { useClasificacion } from '../../hooks/useClasificacion';
 import { formatearTiempo } from '../../utils/clasificacionUtils';
@@ -24,10 +23,8 @@ interface ResultadoAtleta {
 }
 
 const Resultados: React.FC = () => {
-  // Contexto de carrera
-  const { carreraSeleccionada } = useSeleccionarCarrera();
-  const carreraActual = useCarreraActual();
-  const carrera = carreraSeleccionada ?? carreraActual;
+  // La carrera elegida para la sección "resultados" (se resuelve por la URL)
+  const carrera = useCarreraActual();
 
   // Estados para filtros y búsqueda locales (para inputs)
   const [distancia, setDistancia] = useState('');
