@@ -4,6 +4,7 @@ import { Breadcrumb } from 'react-bootstrap';
 import { ChevronRight } from 'lucide-react';
 import { useCarreraSeleccion, type SeccionClasificador } from '../../context/SeleccionarCarreraContext';
 import { useCarrera } from '../../context/CarreraContext';
+import { useBreadcrumb } from '../../hooks/useBreadcrumbLabel';
 import { slugCarrera } from '../../utils/carrera';
 
 const customNames: Record<string, string> = {
@@ -54,7 +55,8 @@ interface BreadcrumbCrumb {
 export default function Breadcrumbs() {
   const { pathname } = useLocation();
   const { limpiarCarrera } = useCarreraSeleccion();
-  const { carreras } = useCarrera();
+  const { carreras, cargando: cargandoCarreras, getCarreraById } = useCarrera();
+  const { getLabel } = useBreadcrumb();
 
   const pathSegments = pathname.split('/').filter((segment) => segment !== '');
 
@@ -81,11 +83,13 @@ export default function Breadcrumbs() {
   });
 
   if (pathSegments.length > 1) {
-    // 2. Sección (ej: Entrega de Kits, Clasificaciones, etc.)
+    // 2. Sección (ej: Entrega de Kits, Clasificaciones, Carreras, Configuraciones, etc.)
+    const seccionEsClickeable = !esSeccionConCarrera && pathSegments.length > 2;
     crumbs.push({
       key: 'seccion',
       label: formatearNombreRuta(pathSegments[1]),
-      isClickable: false,
+      isClickable: seccionEsClickeable,
+      pathToNavigate: seccionEsClickeable ? `/${pathSegments[0]}/${pathSegments[1]}` : undefined,
     });
 
     if (esSeccionConCarrera && pathSegments.length > 2) {
@@ -140,8 +144,9 @@ export default function Breadcrumbs() {
           for (let i = 3; i < pathSegments.length; i++) {
             const seg = pathSegments[i];
             const isLast = i === pathSegments.length - 1;
+            const crumbPath = `/${pathSegments.slice(0, i + 1).join('/')}`;
 
-            let label = formatearNombreRuta(seg);
+            let label = getLabel(crumbPath) ?? formatearNombreRuta(seg);
             if (seccion === 'clasificaciones' && i === 3 && !rutasFijasClasificacion.includes(seg)) {
               label = 'Modificar clasificación';
             }
@@ -150,7 +155,7 @@ export default function Breadcrumbs() {
               key: `sub-${i}-${seg}`,
               label,
               isClickable: !isLast,
-              pathToNavigate: `/${pathSegments.slice(0, i + 1).join('/')}`,
+              pathToNavigate: crumbPath,
             });
           }
         }
@@ -160,8 +165,23 @@ export default function Breadcrumbs() {
       for (let i = 2; i < pathSegments.length; i++) {
         const seg = pathSegments[i];
         const isLast = i === pathSegments.length - 1;
+        const crumbPath = `/${pathSegments.slice(0, i + 1).join('/')}`;
 
-        let label = formatearNombreRuta(seg);
+        let label = getLabel(crumbPath) ?? formatearNombreRuta(seg);
+        const esCarreraAdmin =
+          pathSegments[0] === 'administrador' &&
+          pathSegments[1] === 'carreras' &&
+          i === 2;
+
+        if (esCarreraAdmin) {
+          const carrera = getCarreraById(seg);
+          if (carrera) {
+            label = carrera.nombre;
+          } else if (!getLabel(crumbPath) && cargandoCarreras) {
+            label = 'Cargando...';
+          }
+        }
+
         const esModificarCorredorAdmin =
           pathSegments[0] === 'administrador' &&
           pathSegments[1] === 'carreras' &&
@@ -177,7 +197,7 @@ export default function Breadcrumbs() {
           key: `std-${i}-${seg}`,
           label,
           isClickable: !isLast,
-          pathToNavigate: `/${pathSegments.slice(0, i + 1).join('/')}`,
+          pathToNavigate: crumbPath,
         });
       }
     }

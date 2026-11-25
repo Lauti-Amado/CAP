@@ -24,6 +24,7 @@ import {
 } from 'react-bootstrap'
 
 import type { InscripcionDetalleDTO } from '../../types/inscripcion'
+import { useBreadcrumbLabel } from '../../hooks/useBreadcrumbLabel'
 import {
   obtenerInscripcion,
   cargarAptoMedico,
@@ -107,6 +108,14 @@ function DetalleInscripcion() {
   const [fechaVencimiento, setFechaVencimiento] = useState('')
   const [mensajeApto, setMensajeApto] = useState<string | null>(null)
   const [errorApto, setErrorApto] = useState<string | null>(null)
+
+  const labelBreadcrumb = cargando
+    ? 'Cargando...'
+    : inscripcion
+      ? `${inscripcion.corredor.nombre} ${inscripcion.corredor.apellido}`
+      : 'Detalle de inscripción'
+
+  useBreadcrumbLabel(labelBreadcrumb)
 
   useEffect(() => {
     let cancelado = false
