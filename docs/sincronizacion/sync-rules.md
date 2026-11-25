@@ -4,7 +4,7 @@ Este archivo define **qué se descarga** a cada equipo. Lo que se **sube** lo de
 
 ## Criterios de sincronización
 
-- **Validación de rol:** El token incluye `roles` como un array. La forma exacta de evaluarlo dentro de la sync rule se valida en el spike de PowerSync, priorizando operadores nativos de pertenencia sobre comparaciones de texto.
+- **Validación de rol:** El token que firma el sistema incluye un claim de texto `rol` con el rol de mayor jerarquía del usuario: `Administrador` (aunque también sea Clasificador) o `Clasificador`. Las reglas lo leen con `auth.parameter('rol')`. Como es un único valor, las condiciones de Administrador y de Clasificador son excluyentes y no hace falta negarlas. Quien no tiene ninguno de los dos roles no recibe token de sincronización.
 - **Alcance general:** Solo sincronizan datos los usuarios con rol `Administrador` o `Clasificador`. Cualquier otro rol (por ejemplo, `Tesorero`) no recibe ninguna fila.
 - **Usuarios del CAP:** El `Administrador` sincroniza los usuarios con rol `Administrador` o `Clasificador`. El `Clasificador` sincroniza los usuarios con rol `Clasificador`, necesarios para el ingreso de contingencia de cualquier Clasificador en cualquier equipo (decisión [05]). No se descarga ningún otro usuario de la base de datos web.
 - **Credenciales:** `Usuario.passwordHash` se descarga junto con cada usuario del personal, porque el login local compara contra el hash local (`bcrypt.compare`; ver `docs/arquitectura/decisiones/04-usar-auth-cookies.md` y `docs/decisiones/01-usuarios-y-contrasenas-en-sistema-web.md`). Nunca se descargan hashes de usuarios que no son del personal.
@@ -61,7 +61,7 @@ streams:
         SELECT u.id, u.email, u.passwordHash, u.estado, u.personaId
         FROM Usuario u
         WHERE (
-          auth.jwt() ->> 'roles' LIKE '%Administrador%'
+          auth.parameter('rol') = 'Administrador'
           AND u.id IN (
             SELECT ur.usuarioId
             FROM UsuarioRol ur
@@ -69,7 +69,7 @@ streams:
             WHERE ra.rol IN ('Administrador', 'Clasificador')
           )
         ) OR (
-          auth.jwt() ->> 'roles' LIKE '%Clasificador%'
+          auth.parameter('rol') = 'Clasificador'
           AND u.id IN (
             SELECT ur.usuarioId
             FROM UsuarioRol ur
@@ -81,15 +81,15 @@ streams:
         SELECT ur.*
         FROM UsuarioRol ur
         JOIN RolAdministrativo ra ON ra.id = ur.rolAdministrativoId
-        WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' AND ra.rol IN ('Administrador', 'Clasificador'))
-           OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND ra.rol = 'Clasificador')
+        WHERE (auth.parameter('rol') = 'Administrador' AND ra.rol IN ('Administrador', 'Clasificador'))
+           OR (auth.parameter('rol') = 'Clasificador' AND ra.rol = 'Clasificador')
       - |
         SELECT *
         FROM RolAdministrativo
         WHERE rol IN ('Administrador', 'Clasificador')
         AND (
-          auth.jwt() ->> 'roles' LIKE '%Administrador%'
-          OR auth.jwt() ->> 'roles' LIKE '%Clasificador%'
+          auth.parameter('rol') = 'Administrador'
+          OR auth.parameter('rol') = 'Clasificador'
         )
 
   # 2. Datos operativos compartidos (Administrador y Clasificador): inscripciones, compras/productos, socios, equipos, aptos, kits y clasificación
@@ -99,66 +99,64 @@ streams:
       # Admin descarga todas las carreras; Clasificador solo las que operan o consultan (ver criterios)
       - |
         SELECT * FROM Carrera
-        WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
-           OR (auth.jwt() ->> 'roles' LIKE '%Clasificador%' AND estado IN ('Activa', 'Entrega_kits', 'En_curso', 'Finalizada'))
+        WHERE auth.parameter('rol') = 'Administrador'
+           OR (auth.parameter('rol') = 'Clasificador' AND estado IN ('Activa', 'Entrega_kits', 'En_curso', 'Finalizada'))
       - |
         SELECT id, aprobado, fechaVencimiento, corredorId, fechaCreacion
         FROM AptoMedico
-        WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
+        WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
       # Clasificador (sin rol Administrador): solo los comprobantes de pagos presenciales, que se generan en este sistema
       - |
         SELECT c.*
         FROM Comprobante c
         JOIN Compra co ON co.id = c.compraId
-        WHERE auth.jwt() ->> 'roles' LIKE '%Clasificador%'
-          AND auth.jwt() ->> 'roles' NOT LIKE '%Administrador%'
+        WHERE auth.parameter('rol') = 'Clasificador'
           AND co.metodoPago = 'Pago_presencial'
-      - SELECT * FROM DistanciaCarrera   WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Distancia          WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Lugar              WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Localidad          WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Persona            WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Corredor           WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Afiliacion         WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Equipo             WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Inscripcion        WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Compra             WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM DetalleCompra      WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Producto           WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM ProductoVariante   WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM EntregaKit         WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Dorsal             WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Chip               WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM LecturaRFID        WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM LectorRFID         WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Clasificacion      WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Resultado          WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM ResultadoCategoria WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM Categoria          WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM CriterioCategoria  WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
-      - SELECT * FROM EjecucionCarrera   WHERE (auth.jwt() ->> 'roles' LIKE '%Administrador%' OR auth.jwt() ->> 'roles' LIKE '%Clasificador%')
+      - SELECT * FROM DistanciaCarrera   WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Distancia          WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Lugar              WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Localidad          WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Persona            WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Corredor           WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Afiliacion         WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Equipo             WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Inscripcion        WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Compra             WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM DetalleCompra      WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Producto           WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM ProductoVariante   WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM EntregaKit         WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Dorsal             WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Chip               WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM LecturaRFID        WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM LectorRFID         WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Clasificacion      WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Resultado          WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM ResultadoCategoria WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM Categoria          WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM CriterioCategoria  WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
+      - SELECT * FROM EjecucionCarrera   WHERE (auth.parameter('rol') = 'Administrador' OR auth.parameter('rol') = 'Clasificador')
 
   # 3. Claves de respaldo: `claveCifrada` solo se descarga al Administrador (decisión 05)
   claves_respaldo:
     auto_subscribe: true
     queries:
       # Administrador: todo, incluida claveCifrada
-      - SELECT * FROM ClaveRespaldo     WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
-      - SELECT * FROM UsoClaveRespaldo  WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
+      - SELECT * FROM ClaveRespaldo     WHERE auth.parameter('rol') = 'Administrador'
+      - SELECT * FROM UsoClaveRespaldo  WHERE auth.parameter('rol') = 'Administrador'
       # Clasificador (sin rol Administrador): hash y estado, nunca claveCifrada
       - |
         SELECT id, claveHash, estado, fechaHoraUso, usuarioId, fechaHoraCreacion
         FROM ClaveRespaldo
-        WHERE auth.jwt() ->> 'roles' LIKE '%Clasificador%'
-          AND auth.jwt() ->> 'roles' NOT LIKE '%Administrador%'
+        WHERE auth.parameter('rol') = 'Clasificador'
 
   # 4. Datos de Administrador: todos los comprobantes de pago, certificados y plantillas
   datos_administrador:
     auto_subscribe: true
     queries:
-      - SELECT * FROM Comprobante          WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
-      - SELECT * FROM CertificadoCarrera   WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
-      - SELECT * FROM PlantillaCertificado WHERE auth.jwt() ->> 'roles' LIKE '%Administrador%'
+      - SELECT * FROM Comprobante          WHERE auth.parameter('rol') = 'Administrador'
+      - SELECT * FROM CertificadoCarrera   WHERE auth.parameter('rol') = 'Administrador'
+      - SELECT * FROM PlantillaCertificado WHERE auth.parameter('rol') = 'Administrador'
 ```
 
 ### Qué se consigue
@@ -168,11 +166,13 @@ streams:
 - **Corrección de precedencia en filtros:** Las condiciones `OR` de roles están agrupadas entre paréntesis para no invalidar los filtros de subconsulta o estado de carrera.
 - **Optimización y seguridad local:** `AptoMedico` se sincroniza sin `archivoUrl` para evitar replicar archivos pesados en las notebooks.
 
-## A validar en el spike de PowerSync
+## A validar en el servicio de PowerSync
 
-- **Evaluación del array `roles` del token:** `LIKE '%Rol%'` es un reemplazo provisorio. En Sync Rules Edition 3 conviene validar el uso de pertenencia directa al arreglo (por ejemplo, `'Administrador' IN token_parameters.roles`) o incluir un claim simple en el JWT.
-- **Soporte de subconsultas y joins:** Verificar que las subconsultas `IN (SELECT ...)` y los `JOIN` estén soportados dentro del stream (`usuarios_personal` y `Comprobante` para el Clasificador).
+- **Que el validador acepte las streams:** `auth.parameter('rol')`, el `IN (SELECT ... JOIN ...)` anidado de `usuarios_personal` y el join de `Comprobante` con `Compra`.
+- **Varias queries por stream:** deben usar parámetros compatibles. Si una stream no lo cumple, se divide.
+- **Versión del servicio:** debe incluir la corrección del aviso GHSA-q6wc-xx4m-92fj.
 
 ## A confirmar con la web
 
 - **Algoritmo de `passwordHash`:** el login local usa `bcrypt.compare`, así que la web debe generar los hashes con bcrypt (por ejemplo, `$2a$` o `$2b$`).
+- Emitir en el token de sincronización el claim rol (Administrador o Clasificador).
