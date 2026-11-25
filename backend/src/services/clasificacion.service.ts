@@ -7,6 +7,7 @@ import { EstadoClasificacion, Prisma } from "../generated/prisma/client";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import { clasificacionInclude, toClasificacionDto, type ClasificacionDTO, type ClasificacionTiempoRealDTO} from "../dtos/clasificacion.dto";
+import { toPaginaDto, type PaginaDTO } from "../dtos/pagina.dto";
 import type { FiltrosClasificacion, RegistrarResultado } from "../validations/clasificacion.validations";
 import * as reglas from "./clasificacion.reglas";
 import { notificarClasificacionActualizada } from "../events/clasificacion.events";
@@ -45,6 +46,24 @@ function condicionBusqueda(busqueda: string): Prisma.ClasificacionWhereInput {
     };
 }
 
+// Construye el where de Prisma a partir de los filtros opcionales (reutilizado en listar y exportar)
+function construirWhere(carreraId: string, filtros: FiltrosClasificacion): Prisma.ClasificacionWhereInput {
+    return {
+        ...deCarrera(carreraId),
+        ...(filtros.estado    ? { estado: filtros.estado } : {}),
+        ...(filtros.busqueda  ? condicionBusqueda(filtros.busqueda) : {}),
+        ...(filtros.sexo      ? { inscripcion: { corredor: { sexo: filtros.sexo } } } : {}),
+        ...(filtros.distancia ? { inscripcion: { distanciaCarrera: { distancia: { kilometraje: filtros.distancia } } } } : {}),
+        ...(filtros.categoria ? {
+            resultado: {
+                resultadosCategoria: {
+                    some: { categoria: { nombre: { contains: filtros.categoria } } },
+                },
+            },
+        } : {}),
+    };
+}
+
 // Crea la clasificación "Pendiente" de cada inscripción confirmada (con kit entregado) que todavía no la tenga.
 // Es idempotente: se puede llamar cuantas veces haga falta. Devuelve cuántas creó.
 export async function sincronizarPendientes(carreraId: string): Promise<number> {
@@ -71,20 +90,26 @@ export async function sincronizarPendientes(carreraId: string): Promise<number> 
     }
 }
 
-// Todas las clasificaciones de una carrera (con o sin resultado), con filtros opcionales
-export async function listarPorCarrera(carreraId: string, filtros: FiltrosClasificacion): Promise<ClasificacionDTO[]> {
+// Todas las clasificaciones de una carrera paginadas, con filtros opcionales
+export async function listarPorCarrera(carreraId: string, filtros: FiltrosClasificacion): Promise<PaginaDTO<ClasificacionDTO>> {
     await carreraConClasificaciones(carreraId);
 
-    const clasificaciones = await prisma.clasificacion.findMany({
-        where: {
-            ...deCarrera(carreraId),
-            ...(filtros.estado ? { estado: filtros.estado } : {}),
-            ...(filtros.busqueda ? condicionBusqueda(filtros.busqueda) : {}),
-        },
-        include: clasificacionInclude,
-    });
+    const where = construirWhere(carreraId, filtros);
+    const { pagina, limite } = filtros;
+    const skip = (pagina - 1) * limite;
 
-    return clasificaciones.map(toClasificacionDto).sort(reglas.compararPorPuesto);
+    const [total, clasificaciones] = await Promise.all([
+        prisma.clasificacion.count({ where }),
+        prisma.clasificacion.findMany({
+            where,
+            include: clasificacionInclude,
+            skip,
+            take: limite,
+        }),
+    ]);
+
+    const datos = clasificaciones.map(toClasificacionDto).sort(reglas.compararPorPuesto);
+    return toPaginaDto(datos, total, pagina, limite);
 }
 
 // Datos de la vista de clasificación en tiempo real: resumen + últimas llegadas

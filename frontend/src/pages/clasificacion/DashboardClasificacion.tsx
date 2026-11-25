@@ -17,80 +17,15 @@ import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion';
 import FinalizarCarreraModal from './modales/FinalizarCarreraModal';
 import { useCronometroCarrera } from '../../hooks/useCronometroCarrera';
+import { estadisticasMock } from './participanteMock';
 import { useAuth } from '../../context/AuthContext';
 import { useCarrera } from '../../context/CarreraContext';
 import { useCarreraActual } from '../../hooks/useCarreraActual';
 import { ApiError } from '../../services/apiService';
-import {
-  iniciarCarrera,
-  finalizarCarrera,
-} from '../../services/carreraService';
-import {
-  obtenerClasificaciones,
-  obtenerClasificacionTiempoReal,
-  type ClasificacionDTO,
-  type ResumenClasificacionDTO,
-} from '../../services/clasificacionService';
-import type { ParticipanteClasificacion } from '../../types/clasificacion';
-
-const resumenInicial: ResumenClasificacionDTO = {
-  participantes: 0,
-  llegados: 0,
-  pendientes: 0,
-  noFinalizaron: 0,
-  noLargaron: 0,
-  descalificados: 0,
-  progreso: 0,
-};
-
-const formatearTiempo = (milisegundos: number | null): string | undefined => {
-  if (milisegundos === null) return undefined;
-
-  const totalSegundos = Math.floor(milisegundos / 1000);
-  const horas = Math.floor(totalSegundos / 3600);
-  const minutos = Math.floor((totalSegundos % 3600) / 60);
-  const segundos = totalSegundos % 60;
-
-  return [horas, minutos, segundos]
-    .map((valor) => String(valor).padStart(2, '0'))
-    .join(':');
-};
-
-const mapearParticipante = (
-  clasificacion: ClasificacionDTO,
-  carreraEnCurso: boolean,
-): ParticipanteClasificacion => {
-  let estado: ParticipanteClasificacion['estado'];
-
-  switch (clasificacion.estado) {
-    case 'Finalizo':
-      estado = 'LLEGADO';
-      break;
-    case 'Descalificado':
-      estado = 'DESCALIFICADO';
-      break;
-    case 'No_finalizo':
-      estado = 'NO FINALIZÓ';
-      break;
-    case 'No_largo':
-      estado = 'NO LARGÓ';
-      break;
-    default:
-      estado = carreraEnCurso ? 'EN CURSO' : 'PENDIENTE';
-  }
-
-  return {
-    id: clasificacion.id,
-    dorsal: clasificacion.dorsal
-      ? `#${clasificacion.dorsal}`
-      : '—',
-    atleta: `${clasificacion.corredor.nombre} ${clasificacion.corredor.apellido}`,
-    dni: clasificacion.corredor.dni,
-    categoria: clasificacion.resultado?.categorias[0]?.nombre ?? '—',
-    estado,
-    tiempo: formatearTiempo(clasificacion.resultado?.tiempoLlegada ?? null),
-  };
-};
+import { iniciarCarrera, finalizarCarrera } from '../../services/carreraService';
+import { useClasificacion } from '../../hooks/useClasificacion';
+import { clasificacionAParticipante } from '../../utils/clasificacionUtils';
+import type { EstadoClasificacionApi } from '../../types/clasificacionApi';
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
@@ -105,60 +40,16 @@ const DashboardClasificacion = () => {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [participantes, setParticipantes] = useState<ParticipanteClasificacion[]>([]);
-  const [estadisticas, setEstadisticas] =
-    useState<ResumenClasificacionDTO>(resumenInicial);
-  const [cargandoDatos, setCargandoDatos] = useState(false);
-  const [errorDatos, setErrorDatos] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!carrera) return;
-
-    let cancelado = false;
-
-    const cargarDatos = async () => {
-      setCargandoDatos(true);
-      setErrorDatos(null);
-
-      try {
-        const [clasificaciones, tiempoReal] = await Promise.all([
-          obtenerClasificaciones(carrera.id),
-          obtenerClasificacionTiempoReal(carrera.id),
-        ]);
-
-        if (cancelado) return;
-
-        setParticipantes(
-          clasificaciones.map((clasificacion) =>
-            mapearParticipante(
-              clasificacion,
-              carrera.estado === 'En_curso',
-            ),
-          ),
-        );
-
-        setEstadisticas(tiempoReal.resumen);
-      } catch (e) {
-        if (cancelado) return;
-
-        setErrorDatos(
-          e instanceof ApiError
-            ? e.message
-            : 'No se pudieron cargar los datos de clasificación.',
-        );
-      } finally {
-        if (!cancelado) setCargandoDatos(false);
-      }
-    };
-
-    void cargarDatos();
-
-    return () => {
-      cancelado = true;
-    };
-  // location.key cambia al navegar y permite volver a consultar los datos
-  // cuando se regresa desde la pantalla de registro de llegadas.
-  }, [carrera?.id, carrera?.estado, location.key]);
+  // Clasificación paginada desde el backend
+  const {
+    datos,
+    total,
+    totalPaginas,
+    cargando: cargandoClasificacion,
+    filtros,
+    cambiarFiltro,
+    cambiarPagina,
+  } = useClasificacion(carrera?.id);
 
   const ejecutar = async (accion: (id: string) => Promise<unknown>) => {
     if (!carrera || procesando) return;
@@ -356,19 +247,25 @@ const DashboardClasificacion = () => {
         </div>
       )}
 
-      {cargandoDatos ? (
-        <div className="d-flex justify-content-center align-items-center py-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Cargando clasificación...</span>
-          </Spinner>
-        </div>
-      ) : (
-        <>
-          <EstadisticasClasificacion
-            participantes={estadisticas.participantes}
-            llegados={estadisticas.llegados}
-            pendientes={estadisticas.pendientes}
-            progreso={estadisticas.progreso}
+      <Row className="g-4">
+        {/* Participantes */}
+        <Col xs={12} lg={8}>
+          <ParticipantesCard
+            participantes={datos.map(clasificacionAParticipante)}
+            onVerClasificacion={(p) => navigate(`/clasificador/clasificaciones/${nombreCarrera}/${p.id}`)}
+            paginaActual={filtros.pagina ?? 1}
+            totalPaginas={totalPaginas}
+            total={total}
+            onCambiarPagina={cambiarPagina}
+            busqueda={filtros.busqueda ?? ''}
+            onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
+            filtroEstado={filtros.estado ?? ''}
+            onFiltroEstadoChange={(v) => cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)}
+            filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
+            onFiltroDistanciaChange={(v) => cambiarFiltro('distancia', v ? Number(v) : undefined)}
+            filtroSexo={filtros.sexo ?? ''}
+            onFiltroSexoChange={(v) => cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)}
+            cargando={cargandoClasificacion}
           />
 
           <Row className="g-4">
