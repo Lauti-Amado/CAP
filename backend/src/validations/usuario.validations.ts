@@ -1,3 +1,4 @@
+//backend/src/validations/usuario.validations.ts
 import { z } from "zod";
 
 const personaSchema = z.object({
@@ -59,3 +60,13 @@ export const loginSchema = z.object({
 
 export type RegistroCorredor = z.infer<typeof registroCorredorSchema>;
 export type Login = z.infer<typeof loginSchema>;
+
+//Para el acceso de contingencia
+export const loginContingenciaSchema = z.object({
+  email: email,
+  clave: z.string()
+    .trim()
+    .regex(/^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$/, "La clave debe tener 8 caracteres, por ejemplo K9X2-M4P8"),
+});
+
+export type LoginContingencia = z.infer<typeof loginContingenciaSchema>;

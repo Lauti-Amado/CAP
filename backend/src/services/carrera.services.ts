@@ -1,6 +1,5 @@
 import { prisma } from "../config/prisma";
-
-import { CarreraDTO, toCarreraDto } from "../dtos/carrera.dto";
+import { CarreraDTO, carreraInclude, toCarreraDto } from "../dtos/carrera.dto";
 
 
 //Find all por año
@@ -9,10 +8,7 @@ export async function findAll(anio?: number): Promise<CarreraDTO[]> {
 
   if (anio === undefined) {
     carrerasPrisma = await prisma.carrera.findMany({
-      include: {
-        lugar: { include: { localidad: true } },
-        distanciaCarrera: { include: { distancia: true } }
-      }
+      include: carreraInclude,
     });
   } else {
     const inicio = new Date(anio, 0, 1);
@@ -20,10 +16,7 @@ export async function findAll(anio?: number): Promise<CarreraDTO[]> {
 
     carrerasPrisma = await prisma.carrera.findMany({
       where: { fechaHoraCarrera: { gte: inicio, lt: fin } },
-      include: {
-        lugar: { include: { localidad: true } },
-        distanciaCarrera: { include: { distancia: true } }
-      }
+      include: carreraInclude,
     });
   }
 
@@ -34,10 +27,7 @@ export async function findAll(anio?: number): Promise<CarreraDTO[]> {
 export async function findById(id: string): Promise<CarreraDTO | null> {
   const c = await prisma.carrera.findUnique({
     where: { id },
-    include: {
-      lugar: { include: { localidad: true } },
-      distanciaCarrera: { include: { distancia: true } }
-    }
+    include: carreraInclude,
   });
 
   if (!c) return null;

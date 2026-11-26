@@ -1,8 +1,8 @@
-//frontend/src/components/corredor/TarjetasCorredor.tsx
-import { Badge, Card } from 'react-bootstrap'
+
+import type { ReactNode } from 'react'
+import { Badge, Card, ListGroup } from 'react-bootstrap'
 import { BadgeCheck, Banknote, UserRound } from 'lucide-react'
 import type { EstadoVerificacion } from '../../types/entregaKits'
-import './DetalleCorredor.css'
 
 type TarjetasCorredorProps = {
   nombre: string
@@ -11,8 +11,43 @@ type TarjetasCorredorProps = {
   distancia: string
   talleRemera?: string
   clubTeam?: string
-  estadoInscripcion: EstadoVerificacion
+  estadoInscripcion?: EstadoVerificacion
   estadoAptoMedico?: EstadoVerificacion
+}
+
+function Dato({ etiqueta, valor }: { etiqueta: string; valor: ReactNode }) {
+  return (
+    <ListGroup.Item className="d-flex justify-content-between align-items-start gap-3 px-0">
+      <small className="text-secondary">{etiqueta}</small>
+      <strong className="text-end text-break">{valor}</strong>
+    </ListGroup.Item>
+  )
+}
+
+function FilaEstado({
+  etiqueta,
+  ok,
+  textoOk,
+}: {
+  etiqueta: string
+  ok: boolean
+  textoOk: string
+}) {
+  return (
+    <div className="d-flex justify-content-between align-items-center bg-body-tertiary rounded p-2 mt-2">
+      <span className="small">{etiqueta}</span>
+      {ok ? (
+        <Badge pill bg="success" className="d-inline-flex align-items-center gap-1">
+          <BadgeCheck size={12} />
+          {textoOk}
+        </Badge>
+      ) : (
+        <Badge pill bg="warning" text="dark">
+          PENDIENTE
+        </Badge>
+      )}
+    </div>
+  )
 }
 
 function TarjetasCorredor({
@@ -26,88 +61,55 @@ function TarjetasCorredor({
   estadoAptoMedico,
 }: TarjetasCorredorProps) {
   return (
-    <div className="detalle-corredor__columna-izquierda">
-      {/* DATOS DEL CORREDOR */}
-      <Card className="detalle-corredor__tarjeta corredor">
+    <div className="d-flex flex-column gap-3 w-100">
+      <Card className="shadow-sm">
         <Card.Body>
-          <div className="detalle-corredor__avatar">
-            <UserRound size={30} strokeWidth={2} />
-          </div>
-
-          <h2>{nombre}</h2>
-
-          <p className="detalle-corredor__dni">DNI: {dni}</p>
-
-          <div className="detalle-corredor__separador" />
-
-          <div className="detalle-corredor__datos">
-            <div>
-              <span>CATEGORÍA</span>
-              <strong>{categoria}</strong>
-            </div>
-
-            <div>
-              <span>DISTANCIA</span>
-              <strong>{distancia}</strong>
-            </div>
-
-            <div>
-              <span>TALLE REMERA</span>
-              <strong>{talleRemera || '—'}</strong>
-            </div>
-
-            <div>
-              <span>CLUB/TEAM</span>
-              <strong>{clubTeam || '—'}</strong>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
-
-      {/* ESTADO DE PAGO */}
-      <Card className="detalle-corredor__tarjeta pago">
-        <Card.Body>
-          <div className="detalle-corredor__titulo-pago">
-            <span className="detalle-corredor__icono-pago">
-              <Banknote size={19} strokeWidth={2.2} />
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-2">
+              <UserRound size={19} />
             </span>
-
-            <strong>ESTADO DE PAGO</strong>
+            <strong className="small">DATOS DEL CORREDOR</strong>
           </div>
 
-          <div className="detalle-corredor__estado">
-            <span>Inscripción</span>
-
-            {estadoInscripcion === 'pagado' ? (
-              <Badge bg="success">
-                <BadgeCheck size={12} />
-                PAGADO
-              </Badge>
-            ) : (
-              <Badge bg="warning" text="dark">
-                PENDIENTE
-              </Badge>
-            )}
-          </div>
-
-          {estadoAptoMedico && (
-            <div className="detalle-corredor__estado">
-              <span>Apto Médico</span>
-
-              {estadoAptoMedico === 'verificado' ? (
-                <Badge bg="success">
-                  <BadgeCheck size={12} />
-                  VERIFICADO
-                </Badge>
-              ) : (
-                <Badge bg="warning" text="dark">
-                  PENDIENTE
-                </Badge>
-              )}
-            </div>
-          )}
+          <ListGroup variant="flush">
+            <Dato etiqueta="Nombre" valor={nombre} />
+            <Dato etiqueta="DNI" valor={dni} />
+            <Dato etiqueta="Categoría" valor={categoria} />
+            <Dato etiqueta="Distancia" valor={distancia} />
+            {clubTeam && <Dato etiqueta="Equipo" valor={clubTeam} />}
+            {talleRemera && <Dato etiqueta="Talle de remera" valor={talleRemera} />}
+          </ListGroup>
         </Card.Body>
       </Card>
+
+      {(estadoInscripcion || estadoAptoMedico) && (
+        <Card className="shadow-sm">
+          <Card.Body>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <span className="d-inline-flex rounded-circle bg-success-subtle text-success p-2">
+                <Banknote size={19} />
+              </span>
+              <strong className="small">ESTADO DE INSCRIPCIÓN</strong>
+            </div>
+
+            {estadoInscripcion && (
+              <FilaEstado
+                etiqueta="Inscripción"
+                ok={estadoInscripcion === 'pagado'}
+                textoOk="PAGADO"
+              />
+            )}
+
+            {estadoAptoMedico && (
+              <FilaEstado
+                etiqueta="Apto Médico"
+                ok={estadoAptoMedico === 'verificado'}
+                textoOk="VERIFICADO"
+              />
+            )}
+          </Card.Body>
+        </Card>
+      )}
     </div>
   )
 }

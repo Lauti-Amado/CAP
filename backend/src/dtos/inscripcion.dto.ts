@@ -30,21 +30,25 @@ export function toInscripcionDto(inscripcion: InscripcionPrisma): InscripcionDTO
             codigoEquipo: inscripcion.equipo.codigoEquipo
         } : null,
         compra: {
-            id: inscripcion.compra.id,
-            metodoPago: inscripcion.compra.metodoPago,
-            comprobante: inscripcion.compra.comprobante ? {
-                montoTotalPago: inscripcion.compra.comprobante.montoTotalPago,
-                fechaHoraPago: inscripcion.compra.comprobante.fechaHoraPago,
-                nombreApellidoTitularPago: inscripcion.compra.comprobante.nombreApellidoTitularPago,
-                documentoTitularPago: inscripcion.compra.comprobante.documentoTitularPago,
-                codigoComprobante: inscripcion.compra.comprobante.entidadEmisora ? inscripcion.compra.comprobante.codigoComprobante : null,
-                entidadEmisora: inscripcion.compra.comprobante.entidadEmisora ? inscripcion.compra.comprobante.entidadEmisora.nombre : null
+            id: inscripcion.detalleCompra.compra.id,
+            metodoPago: inscripcion.detalleCompra.compra.metodoPago,
+            comprobante: inscripcion.detalleCompra.compra.comprobante ? {
+                montoTotalPago: inscripcion.detalleCompra.compra.comprobante.montoTotalPago,
+                fechaHoraPago: inscripcion.detalleCompra.compra.comprobante.fechaHoraPago,
+                nombreApellidoTitularPago: inscripcion.detalleCompra.compra.comprobante.nombreApellidoTitularPago,
+                documentoTitularPago: inscripcion.detalleCompra.compra.comprobante.documentoTitularPago,
+                codigoComprobante: inscripcion.detalleCompra.compra.comprobante.codigoComprobante ?? null,
+                entidadEmisora: inscripcion.detalleCompra.compra.comprobante.entidadEmisora ? inscripcion.detalleCompra.compra.comprobante.entidadEmisora.nombre : null
             } : null,
-            productosComprados: inscripcion.compra.detallesProductos ? inscripcion.compra.detallesProductos.map(d => ({
-                nombre: d.producto.producto.nombreProducto,
-                variante: d.producto.nombreVariante,
-                cantidadComprada: d.cantidad
-            })) : null
+            productosComprados: inscripcion.detalleCompra.compra.detallesCompra.filter(d => d.detalleProducto).length > 0
+                ? inscripcion.detalleCompra.compra.detallesCompra
+                    .filter(d => d.detalleProducto)
+                    .map(d => ({
+                        nombre: d.detalleProducto!.producto.nombreProducto,
+                        variante: d.detalleProducto!.nombreVariante,
+                        cantidadComprada: d.cantidad
+                    }))
+                : null
         }
     };
 }
@@ -55,11 +59,11 @@ export type InscripcionPrisma = Prisma.InscripcionGetPayload<{
         corredor: { include: { persona: true, aptosMedicos: true } },
         distanciaCarrera: { include: { distancia: true, carrera: true } },
         equipo: true,
-        compra: { include: { 
+        detalleCompra: { include: { compra: { include: { 
             comprobante: { include: { entidadEmisora: true } }, 
-            detallesProductos: { include: { producto: { include: { producto: true } } } }
+            detallesCompra: { include: { detalleProducto: { include: { producto: true } } } }
             }
-        }
+        }}}
     }
 }>;
 

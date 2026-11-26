@@ -1,24 +1,33 @@
 //backend/src/services/inscripcionGestion.service.ts
 import { prisma } from "../config/prisma";
 import type { EstadoCarrera, Prisma } from "../generated/prisma/client";
+import { estaPagada } from "../rules/compra.rules";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
 import { ErrorReglaDeNegocio } from "../errors/errorReglaDeNegocio.error";
 import { toInscripcionDetalleDto, toInscripcionListadoDto, toOpcionesInscripcionDto, type ContactoEmergenciaDTO, type InscripcionDetalleDTO, type InscripcionListadoDTO, type OpcionesInscripcionDTO,} from "../dtos/inscripcionGestion.dto";
 import { toPaginaDto, type PaginaDTO } from "../dtos/pagina.dto";
-import type { CrearInscripcion, ListadoInscripciones, ModificarInscripcion } from "../validations/inscripcionGestion.validations";
-
+import type { CrearInscripcion, ListadoInscripciones, ModificarInscripcion, CargarAptoMedico } from "../validations/inscripcionGestion.validations";
+import { requiereAptoMedico } from "../rules/aptoMedico.rules";
 // Etapas de la carrera en las que se aceptan inscripciones presenciales
 const ESTADOS_INSCRIPCION: readonly EstadoCarrera[] = ["Activa", "Entrega_kits"];
 
 const listadoInclude = {
-    corredor: { include: { persona: true } },
+    corredor: { include: { persona: true, aptosMedicos: true } },
     distanciaCarrera: { include: { distancia: true, carrera: true } },
-    compra: true,
+    detalleCompra: { include: { compra: true } },
     entregaKit: true,
 } satisfies Prisma.InscripcionInclude;
 
 const detalleInclude = {
-    compra: { include: { detallesProductos: { include: { producto: { include: { producto: true } } } } } },
+    detalleCompra: {
+        include: {
+            compra: {
+                include: {
+                    detallesCompra: { include: { detalleProducto: { include: { producto: true } } } },
+                },
+            },
+        },
+    },
     corredor: {
         include: {
             persona: { include: { usuario: { select: { email: true } } } },
@@ -47,7 +56,9 @@ export async function listar(f: ListadoInscripciones): Promise<PaginaDTO<Inscrip
     const where: Prisma.InscripcionWhereInput = {
         // Las anuladas (baja lógica) solo se ven si se filtra por ese estado
         estado: f.estado ?? { not: "Anulada" },
-        ...(f.pagado !== undefined ? { compra: { isPagado: f.pagado } } : {}),
+        ...(f.pagado !== undefined
+            ? { detalleCompra: { compra: { estado: f.pagado ? { equals: "Pagada" } : { not: "Pagada" } } } }
+            : {}),
         ...(f.dni ? { corredor: { persona: { dni: { contains: f.dni } } } } : {}),
         ...(f.anio !== undefined
             ? {
@@ -85,6 +96,61 @@ export async function obtener(id: string): Promise<InscripcionDetalleDTO> {
     const inscripcion = await prisma.inscripcion.findUnique({ where: { id }, include: detalleInclude });
     if (!inscripcion) throw new ErrorNoEncontrado("Inscripción no encontrada.");
     return toInscripcionDetalleDto(inscripcion);
+}
+
+// Carga de apto médico para una inscripción existente
+export async function cargarAptoMedico(
+    id: string,
+    datos: CargarAptoMedico
+): Promise<InscripcionDetalleDTO> {
+    await prisma.$transaction(async (tx) => {
+        const inscripcion = await tx.inscripcion.findUnique({
+            where: { id },
+            include: {
+                corredor: true,
+                distanciaCarrera: {
+                    include: {
+                        distancia: true,
+                        carrera: true,
+                    },
+                },
+            },
+        });
+
+        if (!inscripcion) {
+            throw new ErrorNoEncontrado("Inscripción no encontrada.");
+        }
+
+        if (inscripcion.estado === "Anulada") {
+            throw new ErrorReglaDeNegocio(
+                "No se puede cargar un apto médico para una inscripción anulada."
+            );
+        }
+
+        const { distancia, carrera } = inscripcion.distanciaCarrera;
+
+        if (!requiereAptoMedico(distancia.kilometraje, distancia.tipoDistancia)) {
+            throw new ErrorReglaDeNegocio(
+                "Esta inscripción no requiere apto médico."
+            );
+        }
+
+        if (datos.fechaVencimiento < carrera.fechaHoraCarrera) {
+            throw new ErrorReglaDeNegocio(
+                "El apto médico debe estar vigente hasta la fecha de la carrera."
+            );
+        }
+
+        await tx.aptoMedico.create({
+            data: {
+                aprobado: true,
+                fechaVencimiento: datos.fechaVencimiento,
+                corredorId: inscripcion.idCorredor,
+            },
+        });
+    });
+
+    return obtener(id);
 }
 
 // Distancias con precio, productos y cupo para armar el formulario de nueva inscripción
@@ -129,8 +195,22 @@ async function obtenerOCrearCorredor(
     contacto: CrearInscripcion["contactoEmergencia"]
 ) {
     const persona = await tx.persona.findUnique({ where: { dni: corredor.dni }, include: { corredor: true } });
-    if (persona?.corredor) return persona.corredor;
+    if (persona?.corredor) {
+        const personaContacto = await tx.persona.upsert({
+            where: { dni: contacto.dni },
+            update: {
+                nombre: contacto.nombre,
+                apellido: contacto.apellido,
+                telefono: contacto.telefono,
+            },
+            create: contacto,
+        });
 
+        return tx.corredor.update({
+            where: { id: persona.corredor.id },
+            data: { contactoEmergenciaId: personaContacto.id },
+        });
+    }
     const personaContacto = await tx.persona.upsert({
         where: { dni: contacto.dni },
         update: {},
@@ -178,7 +258,24 @@ export async function crear(
                 dc.distancia.tipoDistancia === datos.distancia.tipoDistancia
         );
         if (!distanciaCarrera) throw new ErrorReglaDeNegocio("La carrera no tiene esa distancia.");
+        const necesitaApto = requiereAptoMedico(
+            distanciaCarrera.distancia.kilometraje,
+            distanciaCarrera.distancia.tipoDistancia
+        );
+        if (necesitaApto && !datos.aptoMedico) {
+            throw new ErrorReglaDeNegocio(
+                "Para inscribirse en esta distancia, el corredor debe presentar un apto médico."
+            );
+        }
 
+        if (
+            datos.aptoMedico &&
+            datos.aptoMedico.fechaVencimiento < carrera.fechaHoraCarrera
+        ) {
+            throw new ErrorReglaDeNegocio(
+                "El apto médico debe estar vigente hasta la fecha de la carrera."
+            );
+        }
         const ocupados = await tx.inscripcion.count({ where: ocupanCupo(carreraId) });
         if (ocupados >= carrera.participantesMax) {
             throw new ErrorReglaDeNegocio("La carrera alcanzó el cupo máximo.");
@@ -186,10 +283,13 @@ export async function crear(
 
         const corredor = await obtenerOCrearCorredor(tx, datos.corredor, datos.contactoEmergencia);
 
-        const yaInscripto = await tx.inscripcion.findFirst({
-            where: { ...ocupanCupo(carreraId), idCorredor: corredor.id },
+        // NUna inscripción anulada se reactiva (la unique corredor+carrera no deja crear otra)
+        const previa = await tx.inscripcion.findUnique({
+            where: { idCorredor_idCarrera: { idCorredor: corredor.id, idCarrera: carreraId } },
         });
-        if (yaInscripto) throw new ErrorReglaDeNegocio("El corredor ya está inscripto en esta carrera.");
+        if (previa && previa.estado !== "Anulada") {
+            throw new ErrorReglaDeNegocio("El corredor ya está inscripto en esta carrera.");
+        }
 
         // Productos: se valida el stock y se descuenta
         const variantes = await tx.productoVariante.findMany({
@@ -200,9 +300,13 @@ export async function crear(
             throw new ErrorNoEncontrado("Alguno de los productos elegidos no existe.");
         }
 
+        const lineas = datos.productos.map(({ varianteId, cantidad }) => ({
+            variante: variantes.find((v) => v.id === varianteId)!, // existe: se verificó arriba
+            cantidad,
+        }));
+
         let montoProductos = 0;
-        for (const { varianteId, cantidad } of datos.productos) {
-            const variante = variantes.find((v) => v.id === varianteId)!; // existe: se verificó arriba
+        for (const { variante, cantidad } of lineas) {
             if (variante.stock < cantidad) {
                 throw new ErrorReglaDeNegocio(
                     `No hay stock suficiente de ${variante.producto.nombreProducto} (${variante.nombreVariante}).`
@@ -210,7 +314,7 @@ export async function crear(
             }
             montoProductos += variante.precio * cantidad;
             await tx.productoVariante.update({
-                where: { id: varianteId },
+                where: { id: variante.id },
                 data: { stock: { decrement: cantidad } },
             });
         }
@@ -221,29 +325,64 @@ export async function crear(
             select: { id: true },
         });
 
-        // Una inscripción presencial se paga en el momento
+        const montoTotal = distanciaCarrera.precioDistancia + montoProductos;
+
+        // Una inscripción presencial se paga en el momento: la compra nace Pagada con su comprobante
         const compra = await tx.compra.create({
             data: {
-                montoTotal: distanciaCarrera.precioDistancia + montoProductos,
-                isPagado: true,
+                montoTotal,
+                estado: "Pagada",
                 metodoPago: "Pago_presencial",
                 usuarioId: cuenta?.id ?? registradaPor,
-                detallesProductos: {
-                    create: datos.productos.map((p) => ({ cantidad: p.cantidad, productoId: p.varianteId })),
+                comprobante: {
+                    create: {
+                        montoTotalPago: montoTotal,
+                        fechaHoraPago: new Date(),
+                        documentoTitularPago: datos.corredor.dni,
+                        nombreApellidoTitularPago: `${datos.corredor.nombre} ${datos.corredor.apellido}`,
+                    },
                 },
             },
         });
 
-        const equipo = datos.equipo ? await obtenerOCrearEquipo(tx, datos.equipo) : null;
-        const inscripcion = await tx.inscripcion.create({
+        // Un DetalleCompra por la inscripción y uno por cada producto
+        const { kilometraje, tipoDistancia } = distanciaCarrera.distancia;
+        const detalleInscripcion = await tx.detalleCompra.create({
             data: {
-                estado: "Pagada",
+                tipo: "Inscripcion",
+                descripcion: `Inscripción ${carrera.nombre} ${kilometraje}K ${tipoDistancia}`,
+                monto: distanciaCarrera.precioDistancia,
+                cantidad: 1,
                 idCompra: compra.id,
-                idCorredor: corredor.id,
-                idDistanciaCarrera: distanciaCarrera.id,
-                equipoId: equipo?.id,
             },
         });
+        for (const { variante, cantidad } of lineas) {
+            await tx.detalleCompra.create({
+                data: {
+                    tipo: "Producto",
+                    descripcion: `${variante.producto.nombreProducto} (${variante.nombreVariante})`,
+                    monto: variante.precio, // unitario
+                    cantidad,
+                    idCompra: compra.id,
+                    idDetalleProducto: variante.id,
+                },
+            });
+        }
+
+        const equipo = datos.equipo ? await obtenerOCrearEquipo(tx, datos.equipo) : null;
+
+        const datosInscripcion = {
+            estado: "Pagada",
+            idDetalleCompra: detalleInscripcion.id,
+            idDistancia: distanciaCarrera.idDistancia,
+            equipoId: equipo?.id ?? null,
+        } satisfies Prisma.InscripcionUncheckedUpdateInput;
+
+        const inscripcion = previa
+            ? await tx.inscripcion.update({ where: { id: previa.id }, data: datosInscripcion })
+            : await tx.inscripcion.create({
+                  data: { ...datosInscripcion, idCorredor: corredor.id, idCarrera: carreraId },
+              });
 
         if (datos.aptoMedico) {
             await tx.aptoMedico.create({
@@ -270,7 +409,7 @@ export async function anular(id: string): Promise<void> {
             include: {
                 entregaKit: true,
                 clasificacion: true,
-                compra: { include: { detallesProductos: true } },
+                detalleCompra: { include: { compra: { include: { detallesCompra: true } } } },
             },
         });
         if (!inscripcion) throw new ErrorNoEncontrado("Inscripción no encontrada.");
@@ -281,12 +420,17 @@ export async function anular(id: string): Promise<void> {
             );
         }
 
-        // Los productos de la compra vuelven al stock
-        for (const detalle of inscripcion.compra.detallesProductos) {
-            await tx.productoVariante.update({
-                where: { id: detalle.productoId },
-                data: { stock: { increment: detalle.cantidad } },
-            });
+        // Solo las compras presenciales se manejan acá: stock y reembolso de las web los gestiona el sistema web
+        const { compra } = inscripcion.detalleCompra;
+        if (compra.metodoPago === "Pago_presencial") {
+            for (const detalle of compra.detallesCompra) {
+                if (!detalle.idDetalleProducto) continue;
+                await tx.productoVariante.update({
+                    where: { id: detalle.idDetalleProducto },
+                    data: { stock: { increment: detalle.cantidad } },
+                });
+            }
+            await tx.compra.update({ where: { id: compra.id }, data: { estado: "Anulada" } });
         }
 
         await tx.inscripcion.update({ where: { id }, data: { estado: "Anulada" } });
@@ -299,14 +443,15 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
         const inscripcion = await tx.inscripcion.findUnique({
             where: { id },
             include: {
-                compra: true,
+                detalleCompra: { include: { compra: true } },
                 equipo: true,
                 entregaKit: true,
-                corredor: { include: { persona: true } },
+                corredor: { include: { persona: true , aptosMedicos: true } },
                 distanciaCarrera: { include: { distancia: true, carrera: true } },
             },
         });
         if (!inscripcion) throw new ErrorNoEncontrado("Inscripción no encontrada.");
+            const { compra } = inscripcion.detalleCompra;
         if (inscripcion.estado === "Anulada") throw new ErrorReglaDeNegocio("La inscripción está anulada.");
 
         const { carrera, distancia } = inscripcion.distanciaCarrera;
@@ -320,6 +465,34 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
         const cambiaDistancia =
             datos.distancia.kilometraje !== distancia.kilometraje ||
             datos.distancia.tipoDistancia !== distancia.tipoDistancia;
+        const necesitaApto = requiereAptoMedico(
+            datos.distancia.kilometraje,
+            datos.distancia.tipoDistancia
+        );
+        const aptoExistenteVigente = inscripcion.corredor.aptosMedicos.some(
+            (apto: { aprobado: boolean; fechaVencimiento: Date }) =>
+                apto.aprobado &&
+                apto.fechaVencimiento >= carrera.fechaHoraCarrera
+        );
+
+        const aptoNuevoVigente =
+            datos.aptoMedico &&
+            datos.aptoMedico.fechaVencimiento >= carrera.fechaHoraCarrera;
+
+        if (necesitaApto && !aptoExistenteVigente && !aptoNuevoVigente) {
+            throw new ErrorReglaDeNegocio(
+                "Para cambiar a esta distancia, el corredor debe tener un apto médico aprobado y vigente hasta la fecha de la carrera."
+            );
+        }
+
+        if (
+            datos.aptoMedico &&
+            datos.aptoMedico.fechaVencimiento < carrera.fechaHoraCarrera
+        ) {
+            throw new ErrorReglaDeNegocio(
+                "El apto médico debe estar vigente hasta la fecha de la carrera."
+            );
+        }
         const cambiaEquipo =
             (datos.equipo?.nombre ?? null) !== (inscripcion.equipo?.nombre ?? null) ||
             (datos.equipo?.codigoEquipo ?? null) !== (inscripcion.equipo?.codigoEquipo ?? null);
@@ -328,12 +501,11 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
             throw new ErrorReglaDeNegocio("No se puede cambiar la distancia ni el equipo: el kit ya fue entregado.");
         }
 
-        let idDistanciaCarrera = inscripcion.idDistanciaCarrera;
-        let montoTotal = inscripcion.compra.montoTotal;
+        let nuevaDistancia: { idDistancia: string; precioDistancia: number } | null = null;   // CAMBIO
 
         if (cambiaDistancia) {
             // El pago virtual lo gestiona el sistema web: acá no se puede alterar el monto cobrado
-            if (inscripcion.compra.metodoPago === "Pago_virtual") {
+            if (compra.metodoPago === "Pago_virtual") {
                 throw new ErrorReglaDeNegocio("No se puede cambiar la distancia de una inscripción pagada por la web.");
             }
             const nueva = await tx.distanciaCarrera.findFirst({
@@ -343,9 +515,7 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
                 },
             });
             if (!nueva) throw new ErrorReglaDeNegocio("La carrera no tiene esa distancia.");
-
-            idDistanciaCarrera = nueva.id;
-            montoTotal = montoTotal - inscripcion.distanciaCarrera.precioDistancia + nueva.precioDistancia;
+            nuevaDistancia = { idDistancia: nueva.idDistancia, precioDistancia: nueva.precioDistancia };
         }
 
         const equipo = datos.equipo ? await obtenerOCrearEquipo(tx, datos.equipo) : null;
@@ -384,11 +554,22 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
 
         await tx.inscripcion.update({
             where: { id },
-            data: { idDistanciaCarrera, equipoId: equipo?.id ?? null },
+            data: {
+                ...(nuevaDistancia ? { idDistancia: nuevaDistancia.idDistancia } : {}),   // CAMBIO
+                equipoId: equipo?.id ?? null,
+            },
         });
 
-        if (montoTotal !== inscripcion.compra.montoTotal) {
-            await tx.compra.update({ where: { id: inscripcion.idCompra }, data: { montoTotal } });
+        if (nuevaDistancia) {   // CAMBIO: se ajusta el detalle, la compra y el comprobante
+            const montoTotal =
+                compra.montoTotal - inscripcion.distanciaCarrera.precioDistancia + nuevaDistancia.precioDistancia;
+
+            await tx.detalleCompra.update({
+                where: { id: inscripcion.idDetalleCompra },
+                data: { monto: nuevaDistancia.precioDistancia },
+            });
+            await tx.compra.update({ where: { id: compra.id }, data: { montoTotal } });
+            await tx.comprobante.updateMany({ where: { compraId: compra.id }, data: { montoTotalPago: montoTotal } });
         }
     });
 

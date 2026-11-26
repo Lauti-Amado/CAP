@@ -1,42 +1,77 @@
-import './AccionesNavbar.css'
+//frontend/src/layout/navbar/AccionesNavbar.tsx
 import { Bell, CircleHelp, UserRound, Cloud } from 'lucide-react';
-
+import { Button } from 'react-bootstrap';
+import type { EstadoSincronizacion } from '../../types/sincronizacion';
 import { useAuth } from '../../context/AuthContext';
-
-type EstadoSincronizacion = 'conectado' | 'sincronizando' | 'sin-conexion';
 
 const estadosSincronizacion: Record<
     EstadoSincronizacion,
     { color: string; texto: string }
 > = {
-    conectado: { color: '#22C55E', texto: 'Sincronizado' },
-    sincronizando: { color: '#F59E0B', texto: 'Sincronizando...' },
-    'sin-conexion': { color: '#EF4444', texto: 'Sin conexión: guardando localmente' },
+    conectado: { color: 'success', texto: 'Sincronizado' },
+    sincronizando: { color: 'warning', texto: 'Sincronizando...' },
+    'sin-conexion': {
+        color: 'danger',
+        texto: 'Sin conexión: guardando localmente'
+    },
+    'no-disponible': {
+        color: 'secondary',
+        texto: 'Sincronización no disponible'
+    },
 };
 
 export default function AccionesNavbar() {
-    // Por ahora está fijo en rojo, hasta conectar PowerSync.
-    const estadoSync: EstadoSincronizacion = 'sincronizando'; // Los otros valores son conectado  y sin-conexion (rojo)
-    const { color, texto } = estadosSincronizacion[estadoSync];
+    // Por ahora está fijo, hasta conectar PowerSync.
+    // Pendiente de integrar con PowerSync.
+    const estadoSync: EstadoSincronizacion = 'sincronizando';
 
+    const { color, texto } = estadosSincronizacion[estadoSync];
     const { usuario } = useAuth();
 
     return (
-        <div className="cap-navbar-actions">
+        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            <Button
+                variant="link"
+                className="link-secondary position-relative p-1 d-inline-flex"
+                aria-label={texto}
+                title={texto}
+                type="button"
+            >
+                <Cloud size={20} />
+                <span
+                    className={`position-absolute top-0 end-0 p-1 rounded-circle pe-none bg-${color}`}
+                />
+            </Button>
 
-            <button type="button" className="cap-navbar-sync" aria-label={texto} title={texto}>
-                <Cloud size={20} /> <span className="cap-navbar-sync-dot" style={{ backgroundColor: color }} />
-            </button>
+            <Button
+                variant="link"
+                className="link-secondary p-1 d-inline-flex"
+                aria-label="Notificaciones"
+                type="button"
+            >
+                <Bell size={20} />
+            </Button>
 
-            <button type="button" aria-label="Notificaciones"><Bell size={20} /></button>
+            <Button
+                variant="link"
+                className="link-secondary p-1 d-inline-flex"
+                aria-label="Ayuda"
+                type="button"
+            >
+                <CircleHelp size={20} />
+            </Button>
 
-            <button type="button" aria-label="Ayuda"><CircleHelp size={20} /></button>
-
-            <div className='d-flex justify-content-between align-items-center'>
-                <button type="button" aria-label="Perfil"><UserRound size={20} /></button>
+            <div className="d-flex align-items-center gap-1">
+                <Button
+                    variant="link"
+                    className="link-secondary p-1 d-inline-flex"
+                    aria-label="Perfil"
+                    type="button"
+                >
+                    <UserRound size={20} />
+                </Button>
                 <span>Hola, {usuario?.persona.nombre}!</span>
             </div>
         </div>
-    )
-
+    );
 }

@@ -1,147 +1,273 @@
+//frontend/src/pages/inscripciones/Inscripciones.tsx
 
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Container, Form, Row, Col } from 'react-bootstrap'
-import { Eye, Trash2, UserRoundPlus, Search } from 'lucide-react'
-import './Inscripciones.css'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Badge, Button, Col, Container, Form, InputGroup, Row, Alert,} from 'react-bootstrap'
+import { Eye, UserRoundPlus, Search, Undo2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
 import { Tabla, type Columna } from '../../components/tabla/Tabla'
-import type { Inscripcion, FiltrosInscripciones } from '../../types/inscripcion'
+import { useCarrera } from '../../context/CarreraContext'
+import { obtenerInscripciones } from '../../services/inscripcionService'
+import { filtrosInscripcionesSchema } from '../../schemas/inscripcionFiltrosSchema'
+import type { FiltrosInscripcionesForm } from '../../schemas/inscripcionFiltrosSchema'
 
-// MOCK TEMPORAL
-import { inscripcionesMock } from './inscripcionesMock'
+import type {
+  InscripcionListadoDTO,
+  FiltrosListadoInscripciones,
+  EstadoInscripcionBackend,
+} from '../../types/inscripcion'
+
+const INSCRIPCIONES_POR_PAGINA = 10
+
+const filtrosIniciales: FiltrosInscripcionesForm = {
+  dni: '',
+  carreraId: '',
+  kilometraje: '',
+  tipoDistancia: '',
+  pago: '',
+  estado: '',
+  anio: '',
+}
+
+const colorPago: Record<string, string> = {
+  Pagado: 'success',
+  Pendiente: 'warning',
+}
+
+const colorEstado: Record<EstadoInscripcionBackend, string> = {
+  En_proceso: 'warning',
+  Pagada: 'success',
+  Confirmada: 'primary',
+  Anulada: 'danger',
+}
+
+const nombreEstado: Record<EstadoInscripcionBackend, string> = {
+  En_proceso: 'En proceso',
+  Pagada: 'Pagada',
+  Confirmada: 'Confirmada',
+  Anulada: 'Anulada',
+}
+
+function Pill({ texto, color = 'secondary' }: { texto: string; color?: string }) {
+  return (
+    <Badge pill bg={`${color}-subtle`} text={`${color}-emphasis`}>
+      {texto}
+    </Badge>
+  )
+}
 
 function Inscripciones() {
-  const [dni, setDni] = useState('')
-  const [carrera, setCarrera] = useState('')
-  const [distancia, setDistancia] = useState('')
-  const [pago, setPago] = useState('')
-  const [estado, setEstado] = useState('')
-  const [anio, setAnio] = useState('')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { nombreCarrera } = useParams()
+  const { carreras } = useCarrera()
+
+  // Filtros (formulario validado con el mismo criterio que el backend)
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = useForm<FiltrosInscripcionesForm>({
+    resolver: zodResolver(filtrosInscripcionesSchema),
+    mode: 'onChange',
+    defaultValues: filtrosIniciales,
+  })
+
+  const [dni, carreraId, kilometraje, tipoDistancia, pago, estado, anio] = watch([
+    'dni',
+    'carreraId',
+    'kilometraje',
+    'tipoDistancia',
+    'pago',
+    'estado',
+    'anio',
+  ])
+
   const [paginaActual, setPaginaActual] = useState(1)
 
-  const navigate = useNavigate()
-  const { nombreCarrera } = useParams();
+  // Cada vez que cambia un filtro se vuelve a la primera página
+  const volverAPrimeraPagina = () => setPaginaActual(1)
 
-  const filtros: FiltrosInscripciones = {
+  // Datos del backend
+  const [inscripciones, setInscripciones] = useState<InscripcionListadoDTO[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(1)
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Opciones de distancia obtenidas de las carreras
+  const distancias = useMemo(() => {
+    return [
+      ...new Set(
+        carreras.flatMap((carrera) =>
+          carrera.distancias.map((distancia) => distancia.kilometraje)
+        )
+      ),
+    ].sort((a, b) => a - b)
+  }, [carreras])
+
+  // Parámetros que se envían al backend. Si algún filtro es inválido no se consulta
+  // (el formulario muestra el error) para no mandar al backend un pedido que va a rechazar.
+  const filtros = useMemo<FiltrosListadoInscripciones | null>(() => {
+    const validacion = filtrosInscripcionesSchema.safeParse({
+      dni,
+      carreraId,
+      kilometraje,
+      tipoDistancia,
+      pago,
+      estado,
+      anio,
+    })
+
+    if (!validacion.success) return null
+
+    const datos = validacion.data
+
+    return {
+      ...(datos.carreraId ? { carreraId: datos.carreraId } : {}),
+      ...(datos.dni ? { dni: datos.dni } : {}),
+      ...(datos.kilometraje ? { kilometraje: Number(datos.kilometraje) } : {}),
+      ...(datos.tipoDistancia ? { tipoDistancia: datos.tipoDistancia } : {}),
+      ...(datos.pago !== '' ? { pagado: datos.pago === 'true' } : {}),
+      ...(datos.estado ? { estado: datos.estado } : {}),
+      ...(datos.anio ? { anio: Number(datos.anio) } : {}),
+      pagina: paginaActual,
+      limite: INSCRIPCIONES_POR_PAGINA,
+    }
+  }, [
+    carreraId,
     dni,
-    carrera,
-    distancia,
+    kilometraje,
+    tipoDistancia,
     pago,
     estado,
     anio,
-    pagina: paginaActual,
-  }
+    paginaActual,
+  ])
 
-  // TODO: reemplazar por la consulta al backend
-  // const resultado = await obtenerInscripciones(filtros)
-  // const inscripciones = resultado.datos
-  // const totalPaginas = resultado.totalPaginas
+  // Consulta al backend cada vez que cambian los filtros o la página
+  useEffect(() => {
+    if (!filtros) return
 
-  const inscripciones: Inscripcion[] = inscripcionesMock
+    let cancelado = false
 
-  // Opciones de filtros temporales obtenidas del mock
-  const carreras = [
-    ...new Set(inscripcionesMock.map((inscripcion) => inscripcion.carrera)),
-  ]
+    async function cargarInscripciones(filtrosActuales: FiltrosListadoInscripciones) {
+      try {
+        setCargando(true)
+        setError(null)
 
-  const distancias = [
-    ...new Set(inscripcionesMock.map((inscripcion) => inscripcion.distancia)),
-  ]
+        const resultado = await obtenerInscripciones(filtrosActuales)
 
-  const pagos = [
-    ...new Set(inscripcionesMock.map((inscripcion) => inscripcion.pago)),
-  ]
+        if (cancelado) return
 
-  const estados = [
-    ...new Set(inscripcionesMock.map((inscripcion) => inscripcion.estado)),
-  ]
+        setInscripciones(resultado.datos)
+        setTotal(resultado.total)
+        setTotalPaginas(resultado.totalPaginas)
+      } catch (err) {
+        if (cancelado) return
 
-  const anios = [
-    ...new Set(
-      inscripcionesMock.map((inscripcion) => inscripcion.fecha.slice(-4)),
-    ),
-  ]
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'No se pudieron cargar las inscripciones.'
+        )
+        setInscripciones([])
+        setTotal(0)
+        setTotalPaginas(1)
+      } finally {
+        if (!cancelado) setCargando(false)
+      }
+    }
 
-  const columnas: Columna<Inscripcion>[] = [
-    { titulo: 'DNI', key: 'dni' },
-    { titulo: 'Corredor', key: 'corredor' },
-    { titulo: 'Carrera', key: 'carrera' },
-    { titulo: 'Distancia', key: 'distancia' },
-    { titulo: 'Fecha', key: 'fecha' },
+    void cargarInscripciones(filtros)
+
+    return () => {
+      cancelado = true
+    }
+  }, [filtros])
+
+  const columnas: Columna<InscripcionListadoDTO>[] = [
     {
-      titulo: 'Tipo',
-      key: 'tipo',
-      render: (inscripcion) => (
-        <span
-          className={`inscripciones__badge inscripciones__badge--tipo-${inscripcion.tipo
-            .toLowerCase()
-            .replace(/\s+/g, '-')}`}
-        >
-          {inscripcion.tipo}
-        </span>
-      ),
+      titulo: 'DNI',
+      key: 'dni',
+      render: (inscripcion) => inscripcion.corredor.dni,
+    },
+    {
+      titulo: 'Corredor',
+      key: 'corredor',
+      render: (inscripcion) =>
+        `${inscripcion.corredor.nombre} ${inscripcion.corredor.apellido}`,
+    },
+    {
+      titulo: 'Carrera',
+      key: 'carrera',
+      render: (inscripcion) => inscripcion.carrera.nombre,
+    },
+    {
+      titulo: 'Distancia',
+      key: 'distancia',
+      render: (inscripcion) => `${inscripcion.distancia.kilometraje}K`,
+    },
+    {
+      titulo: 'Modalidad',
+      key: 'tipoDistancia',
+      render: (inscripcion) => inscripcion.distancia.tipoDistancia,
+    },
+    {
+      titulo: 'Fecha',
+      key: 'fechaHoraCreacion',
+      render: (inscripcion) =>
+        new Date(inscripcion.fechaHoraCreacion).toLocaleDateString('es-AR'),
     },
     {
       titulo: 'Pago',
       key: 'pago',
-      render: (inscripcion) => (
-        <span
-          className={`inscripciones__badge inscripciones__badge--pago-${inscripcion.pago.toLowerCase()}`}
-        >
-          {inscripcion.pago}
-        </span>
-      ),
+      render: (inscripcion) => {
+        const texto = inscripcion.pago.pagado ? 'Pagado' : 'Pendiente'
+        return <Pill texto={texto} color={colorPago[texto]} />
+      },
     },
     {
       titulo: 'Estado',
       key: 'estado',
       render: (inscripcion) => (
-        <span
-          className={`inscripciones__badge inscripciones__badge--estado-${inscripcion.estado
-            .toLowerCase()
-            .replace(/\s+/g, '-')}`}
-        >
-          {inscripcion.estado}
-        </span>
+        <Pill
+          texto={nombreEstado[inscripcion.estado]}
+          color={colorEstado[inscripcion.estado]}
+        />
       ),
     },
     {
       titulo: 'Acciones',
       key: 'acciones',
-      render: (inscripcion: Inscripcion) => (
-        <div className="inscripciones__acciones">
-          <div className="inscripciones__acciones-superiores">
-            <Button
-              type="button"
-              variant="outline-primary"
-              size="sm"
-              aria-label="Ver detalle de inscripción"
-              title="Ver detalle"
-              onClick={() =>
-                navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/${inscripcion.id}`)
-              }
-            >
-              <Eye size={13} />
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline-danger"
-              size="sm"
-              aria-label="Eliminar inscripción"
-              title="Eliminar inscripción"
-            >
-              <Trash2 size={13} />
-            </Button>
-          </div>
+      render: (inscripcion) => (
+        <div className="d-flex flex-column align-items-center gap-1">
+          <Button
+            type="button"
+            variant="outline-primary"
+            size="sm"
+            className="d-inline-flex p-1"
+            aria-label="Ver detalle de inscripción"
+            title="Ver detalle"
+            onClick={() =>
+              navigate(
+                `/clasificador/entrega-kits/${nombreCarrera}/inscripciones/${inscripcion.id}`
+              )
+            }
+          >
+            <Eye size={13} />
+          </Button>
 
           <Button
             type="button"
-            className="inscripciones__dar-kit"
+            variant="success"
             size="sm"
+            className="rounded-pill px-3"
             onClick={() =>
               navigate(
-                `/clasificador/entrega-kits/${nombreCarrera}/${encodeURIComponent(inscripcion.dni)}`,
+                `/clasificador/entrega-kits/${nombreCarrera}/${encodeURIComponent(inscripcion.corredor.dni)}`,
                 { state: { desde: 'inscripciones' } }
               )
             }
@@ -153,60 +279,76 @@ function Inscripciones() {
     },
   ]
 
+  const handleIrAtras = () => {
+    const pathVolver = location.pathname.replace(/\/inscripciones\/?$/, '/buscar-corredor');
+
+    navigate({
+      pathname: pathVolver,
+      search: location.search,
+    });
+  };
+
   return (
-    <Container fluid className="inscripciones">
-      <header className="inscripciones__encabezado">
+    <Container fluid className="p-4">
+      <header className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
         <div>
-          <h1>Inscripciones</h1>
-          <p>
-            Gestiona las inscripciones de todas las carreras activas y
-            publicadas.
+          <h1 className="h2 fw-bold mb-1">Inscripciones</h1>
+          <p className="small text-secondary mb-0">
+            Gestiona las inscripciones de todas las carreras activas y publicadas.
           </p>
         </div>
 
-        <Button
-          type="button"
-          className="inscripciones__nueva"
-          onClick={() =>
-            navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)
-          }
-        >
-          <UserRoundPlus size={15} />
-          <span>Nueva inscripción</span>
-        </Button>
+        <div className='d-flex flex-column flex-sm-row gap-3'>
+          <Button
+            type="button"
+            variant="secondary"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={handleIrAtras}
+          >
+            <Undo2 size={15} />
+            Volver a buscar corredor
+          </Button>
+          <Button
+            type="button"
+            variant="success"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={() => navigate(`/clasificador/entrega-kits/${nombreCarrera}/inscripciones/nueva`)}
+          >
+            <UserRoundPlus size={15} />
+            Nueva inscripción
+          </Button>
+        </div>
       </header>
 
-      <Form className="inscripciones__filtros">
+      <Form className="mb-3" onSubmit={(event) => event.preventDefault()}>
         <Row className="g-3 align-items-center">
           <Col xs={12} sm={6} lg={2}>
-            <div className="inscripciones__buscador">
-              <Search size={14} />
+            <InputGroup size="sm" hasValidation>
+              <InputGroup.Text className="bg-white">
+                <Search size={14} aria-hidden="true" />
+              </InputGroup.Text>
               <Form.Control
                 type="text"
-                value={dni}
-                onChange={(event) => {
-                  setDni(event.target.value)
-                  setPaginaActual(1)
-                }}
+                inputMode="numeric"
                 placeholder="Buscar por DNI"
                 aria-label="Buscar por DNI"
+                isInvalid={!!errors.dni}
+                {...register('dni', { onChange: volverAPrimeraPagina })}
               />
-            </div>
+              <Form.Control.Feedback type="invalid">{errors.dni?.message}</Form.Control.Feedback>
+            </InputGroup>
           </Col>
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={carrera}
+              size="sm"
               aria-label="Filtrar por carrera"
-              onChange={(event) => {
-                setCarrera(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('carreraId', { onChange: volverAPrimeraPagina })}
             >
-              <option value="">Carrera</option>
-              {carreras.map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
+              <option value="">Todas las carreras</option>
+              {carreras.map((carrera) => (
+                <option key={carrera.id} value={carrera.id}>
+                  {carrera.nombre}
                 </option>
               ))}
             </Form.Select>
@@ -214,17 +356,14 @@ function Inscripciones() {
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={distancia}
+              size="sm"
               aria-label="Filtrar por distancia"
-              onChange={(event) => {
-                setDistancia(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('kilometraje', { onChange: volverAPrimeraPagina })}
             >
-              <option value="">Distancia</option>
-              {distancias.map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
+              <option value="">Todas las distancias</option>
+              {distancias.map((km) => (
+                <option key={km} value={km}>
+                  {km}K
                 </option>
               ))}
             </Form.Select>
@@ -232,72 +371,78 @@ function Inscripciones() {
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={pago}
+              size="sm"
+              aria-label="Filtrar por modalidad"
+              {...register('tipoDistancia', { onChange: volverAPrimeraPagina })}
+            >
+              <option value="">Todas las modalidades</option>
+              <option value="Participativa">Participativa</option>
+              <option value="Competitiva">Competitiva</option>
+            </Form.Select>
+          </Col>
+
+          <Col xs={12} sm={6} lg>
+            <Form.Select
+              size="sm"
               aria-label="Filtrar por pago"
-              onChange={(event) => {
-                setPago(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('pago', { onChange: volverAPrimeraPagina })}
             >
-              <option value="">Pago</option>
-              {pagos.map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
-                </option>
-              ))}
+              <option value="">Todos los pagos</option>
+              <option value="true">Pagado</option>
+              <option value="false">Pendiente</option>
             </Form.Select>
           </Col>
 
           <Col xs={12} sm={6} lg>
             <Form.Select
-              value={estado}
+              size="sm"
               aria-label="Filtrar por estado"
-              onChange={(event) => {
-                setEstado(event.target.value)
-                setPaginaActual(1)
-              }}
+              {...register('estado', { onChange: volverAPrimeraPagina })}
             >
-              <option value="">Estado</option>
-              {estados.map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
-                </option>
-              ))}
+              <option value="">Todos los estados</option>
+              <option value="En_proceso">En proceso</option>
+              <option value="Pagada">Pagada</option>
+              <option value="Confirmada">Confirmada</option>
+              <option value="Anulada">Anulada</option>
             </Form.Select>
           </Col>
 
-          <Col xs={12} sm={6} lg>
-            <Form.Select
-              value={anio}
+          <Col xs={12} sm={6} lg={1}>
+            <Form.Control
+              type="number"
+              min={2000}
+              max={2100}
+              size="sm"
+              placeholder="Año"
               aria-label="Filtrar por año"
-              onChange={(event) => {
-                setAnio(event.target.value)
-                setPaginaActual(1)
-              }}
-            >
-              <option value="">Año</option>
-              {anios.map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
-                </option>
-              ))}
-            </Form.Select>
+              isInvalid={!!errors.anio}
+              {...register('anio', { onChange: volverAPrimeraPagina })}
+            />
+            <Form.Control.Feedback type="invalid">{errors.anio?.message}</Form.Control.Feedback>
           </Col>
         </Row>
       </Form>
 
-      <section className="inscripciones__tabla">
-        <Tabla
-          columnas={columnas}
-          datos={inscripciones}
-          paginaActual={paginaActual}
-          // TODO: reemplazar cuando se integre el backend
-          totalPaginas={2}
-          onCambiarPagina={setPaginaActual}
-          mostrarNumeros={false}
-          textoPaginacion={`Mostrando ${inscripciones.length} de ${inscripciones.length} inscripciones`}
-        />
-      </section>
+      {error && (
+        <Alert variant="danger">
+          {error}
+        </Alert>
+      )}
+
+      {cargando && (
+        <p className="text-secondary small">Cargando inscripciones...</p>
+      )}
+
+      <Tabla
+        columnas={columnas}
+        datos={inscripciones}
+        mensajeVacio={cargando ? 'Cargando...' : 'No se encontraron inscripciones.'}
+        paginaActual={paginaActual}
+        totalPaginas={totalPaginas}
+        onCambiarPagina={setPaginaActual}
+        mostrarNumeros={false}
+        textoPaginacion={`Mostrando ${inscripciones.length} de ${total} inscripciones`}
+      />
     </Container>
   )
 }

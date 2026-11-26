@@ -12,12 +12,12 @@ const carreraSelect = {
     id: true,
     estado: true,
     fechaHoraCarrera: true,
-    distanciaCarrera: { select: { id: true, distancia: { select: { kilometraje: true, tipoDistancia: true } } } },
+    distanciaCarrera: { select: { idDistancia: true, distancia: { select: { kilometraje: true, tipoDistancia: true } } } },
 } satisfies Prisma.CarreraSelect;
 
 type CarreraParaGenerar = Prisma.CarreraGetPayload<{ select: typeof carreraSelect }>;
 type CategoriaConCriterios = Prisma.CategoriaGetPayload<{ include: { criterios: true } }>;
-type ParticipanteDistancia = reglas.Participante & { idDistanciaCarrera: string };
+type ParticipanteDistancia = reglas.Participante & { idDistancia: string };
 
 type Calculo =
     | { ok: true; asignaciones: reglas.AsignacionCategoria[]; dto: GeneracionCategoriaDTO }
@@ -39,7 +39,7 @@ async function cargarParticipantes(tx: Tx, carreraId: string): Promise<Participa
                 select: {
                     inscripcion: {
                         select: {
-                            idDistanciaCarrera: true,
+                            idDistancia: true,
                             corredor: { select: { sexo: true, fechaNacimiento: true, discapacidad: true } },
                         },
                     },
@@ -51,7 +51,7 @@ async function cargarParticipantes(tx: Tx, carreraId: string): Promise<Participa
     return resultados.map((r) => ({
         resultadoId: r.id,
         puestoGeneral: r.puestoGeneral,
-        idDistanciaCarrera: r.clasificacion.inscripcion.idDistanciaCarrera,
+        idDistancia: r.clasificacion.inscripcion.idDistancia,
         ...r.clasificacion.inscripcion.corredor,
     }));
 }
@@ -75,7 +75,7 @@ function calcular(
     const distancias: GeneracionCategoriaDTO["distancias"] = [];
 
     for (const dc of carrera.distanciaCarrera) {
-        const deEstaDistancia = participantes.filter((p) => p.idDistanciaCarrera === dc.id);
+        const deEstaDistancia = participantes.filter((p) => p.idDistancia === dc.idDistancia);
         const resultado = reglas.asignarPuestosPorGrupo(deEstaDistancia, grupos, carrera.fechaHoraCarrera);
         const { kilometraje, tipoDistancia } = dc.distancia;
 

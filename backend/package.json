@@ -10,7 +10,8 @@
     "prisma:migrate-init": "npx prisma migrate dev --name init",
     "prisma:migrate-deploy": "npx prisma migrate deploy",
     "prisma:migrate-reset": "npx prisma migrate reset --force",
-    "prisma:seed": "npx prisma db seed"
+    "prisma:seed": "npx prisma db seed",
+    "test": "tsx --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.0",
@@ -21,6 +22,7 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

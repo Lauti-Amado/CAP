@@ -1,21 +1,13 @@
-
+//frontend/src/pages/carreras/Carreras.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Form } from 'react-bootstrap'
+import { Alert, Button, ButtonGroup, Card, Col, Container, Form, Pagination, Row, Spinner } from 'react-bootstrap'
 import CarreraCard from '../../components/carreras/CarreraCard'
 import { Tabla } from '../../components/tabla/Tabla'
-import type { Carrera } from '../../types/carrera'
-import './Carreras.css'
-
-// Borrar cuando se conecte con el backend
-import { carrerasMock } from './carrerasMock'
+import { useCarrera } from '../../context/CarreraContext'
 
 function Carreras() {
   const navigate = useNavigate()
-
-  const [carreras, setCarreras] = useState<Carrera[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const [busqueda, setBusqueda] = useState('')
   const [filtroAnio, setFiltroAnio] = useState('todos')
@@ -26,36 +18,10 @@ function Carreras() {
 
   const carrerasPorPagina = 3
 
-  useEffect(() => {
-    const obtenerCarreras = async () => {
-      try {
-        setCargando(true)
+  // Las carreras las trae el CarreraProvider (ya no hay mock ni fetch propio)
+  const { carreras, cargando, error } = useCarrera()
 
-        // MOCK: borrar cuando se conecte con el backend
-        setCarreras(carrerasMock)
-        setError(null)
-
-        // Cuando se defina el endpoint:
-        // const respuesta = await fetch('/api/carreras')
-        //
-        // if (!respuesta.ok) {
-        //   throw new Error('No se pudieron obtener las carreras')
-        // }
-        //
-        // const datos: Carrera[] = await respuesta.json()
-        // setCarreras(datos)
-      } catch (error) {
-        console.error(error)
-        setError('No se pudieron cargar las carreras')
-      } finally {
-        setCargando(false)
-      }
-    }
-
-    obtenerCarreras()
-  }, [])
-
-    const aniosDisponibles = useMemo(() => {
+  const aniosDisponibles = useMemo(() => {
     const anios = carreras.map((carrera) =>
       new Date(carrera.fechaHoraCarrera).getFullYear()
     )
@@ -109,153 +75,146 @@ function Carreras() {
     setPaginaActual(1)
   }, [busqueda, filtroAnio, filtroEstado])
 
-    const verCarrera = (id: string) => {
+  const verCarrera = (id: string) => {
     navigate(`/administrador/carreras/${id}`)
   }
 
   const verRanking = (id: string) => {
-    navigate(`/resultados?carreraId=${id}`)
+    navigate(`/administrador/carreras/${id}/clasificacion/completa`)
   }
 
   return (
-    <main className="carreras">
-      <header className="carreras-header">
-        <div>
-          <h1>Listado de Carreras</h1>
-
-          <p>
-            Consulta las carreras disponibles y configura sus clasificaciones.
-          </p>
-        </div>
+    <Container fluid as="main" className="p-4">
+      <header className="mb-4">
+        <h1 className="h2 fw-bold mb-0">Listado de Carreras</h1>
+        <p className="mt-2 mb-0 small text-secondary">
+          Consulta las carreras disponibles y configura sus clasificaciones.
+        </p>
       </header>
 
-      <section className="carreras-filtros">
-        <Form.Control
-          type="search"
-          aria-label="Buscar carrera"
-          placeholder="Buscar carrera..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+      <Card as="section" className="mb-4 shadow-sm">
+        <Card.Body className="p-3">
+          <Row className="g-3 align-items-center">
+            <Col xs={12} md>
+              <Form.Control
+                type="search"
+                aria-label="Buscar carrera"
+                placeholder="Buscar carrera..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </Col>
 
-        <Form.Select
-          aria-label="Filtrar por año"
-          value={filtroAnio}
-          onChange={(e) => setFiltroAnio(e.target.value)}
-        >
-          <option value="todos">Todos los años</option>
+            <Col xs={12} sm={6} md="auto">
+              <Form.Select
+                aria-label="Filtrar por año"
+                value={filtroAnio}
+                onChange={(e) => setFiltroAnio(e.target.value)}
+              >
+                <option value="todos">Todos los años</option>
+                {aniosDisponibles.map((anio) => (
+                  <option key={anio} value={anio}>{anio}</option>
+                ))}
+              </Form.Select>
+            </Col>
 
-          {aniosDisponibles.map((anio) => (
-            <option key={anio} value={anio}>
-              {anio}
-            </option>
-          ))}
-        </Form.Select>
+            <Col xs={12} sm={6} md="auto">
+              <Form.Select
+                aria-label="Filtrar por estado"
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value)}
+              >
+                <option value="todos">Todos los estados</option>
+                {estadosDisponibles.map((estado) => (
+                  <option key={estado} value={estado}>{estado}</option>
+                ))}
+              </Form.Select>
+            </Col>
 
-        <Form.Select
-          aria-label="Filtrar por estado"
-          value={filtroEstado}
-          onChange={(e) => setFiltroEstado(e.target.value)}
-        >
-          <option value="todos">Todos los estados</option>
+            <Col xs={12} md="auto" className="d-flex justify-content-md-end">
+              <ButtonGroup aria-label="Selector de vista">
+                <Button
+                  type="button"
+                  variant="outline-success"
+                  active={vista === 'cards'}
+                  aria-label="Vista de tarjetas"
+                  aria-pressed={vista === 'cards'}
+                  onClick={() => setVista('cards')}
+                >
+                  ▦
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline-success"
+                  active={vista === 'tabla'}
+                  aria-label="Vista de tabla"
+                  aria-pressed={vista === 'tabla'}
+                  onClick={() => setVista('tabla')}
+                >
+                  ▤
+                </Button>
+              </ButtonGroup>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
-          {estadosDisponibles.map((estado) => (
-            <option key={estado} value={estado}>
-              {estado}
-            </option>
-          ))}
-        </Form.Select>
+      {/* =========================
+          CONTENIDO
+      ========================= */}
+      <section>
+        {cargando && (
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="success" />
+            <p className="mt-2 text-secondary">Cargando carreras...</p>
+          </div>
+        )}
 
-        <div className="carreras-vistas">
-          <button
-            type="button"
-            className={vista === 'cards' ? 'activo' : ''}
-            onClick={() => setVista('cards')}
-            aria-label="Vista de tarjetas"
-            aria-pressed={vista === 'cards'}
-          >
-            ▦
-          </button>
+        {error && (
+          <Alert variant="danger">
+            {error}
+          </Alert>
+        )}
 
-          <button
-            type="button"
-            className={vista === 'tabla' ? 'activo' : ''}
-            onClick={() => setVista('tabla')}
-            aria-label="Vista de tabla"
-            aria-pressed={vista === 'tabla'}
-          >
-            ▤
-          </button>
-        </div>
-      </section>
-
-      <section className="carreras-contenido">
-        {cargando && <p>Cargando carreras...</p>}
-
-        {error && <p>{error}</p>}
-
-        {!cargando &&
-          !error &&
-          carrerasFiltradas.length === 0 && (
-            <p>No se encontraron carreras.</p>
-          )}
+        {!cargando && !error && carrerasFiltradas.length === 0 && (
+          <div className="text-center py-5 text-secondary">
+            No se encontraron carreras.
+          </div>
+        )}
 
         {!cargando && !error && carrerasFiltradas.length > 0 && (
           <>
             {vista === 'cards' && (
               <>
-                <div className="carreras-grid">
+                <Row className="g-4">
                   {carrerasPaginadas.map((carrera) => (
-                    <CarreraCard
-                      key={carrera.id}
-                      carrera={carrera}
-                    />
+                    <Col xs={12} md={6} xl={4} key={carrera.id}>
+                      <CarreraCard carrera={carrera} />
+                    </Col>
                   ))}
-                </div>
+                </Row>
 
-                <div className="carreras-paginacion">
-                  <button
-                    type="button"
-                    className="carreras-paginacion__flecha"
+                <Pagination className="justify-content-center mt-4 mb-0">
+                  <Pagination.Prev
                     disabled={paginaActual === 1}
-                    onClick={() => setPaginaActual((pagina) => pagina - 1)}
                     aria-label="Página anterior"
-                  >
-                    ‹
-                  </button>
-
-                  {Array.from({ length: totalPaginas }, (_, index) => {
-                    const pagina = index + 1
-
-                    return (
-                      <button
-                        key={pagina}
-                        type="button"
-                        className={
-                          paginaActual === pagina
-                            ? 'carreras-paginacion__pagina activa'
-                            : 'carreras-paginacion__pagina'
-                        }
-                        onClick={() => setPaginaActual(pagina)}
-                        aria-current={
-                          paginaActual === pagina ? 'page' : undefined
-                        }
-                      >
-                        {pagina}
-                      </button>
-                    )
-                  })}
-
-                  <button
-                    type="button"
-                    className="carreras-paginacion__flecha"
+                    onClick={() => setPaginaActual((pagina) => pagina - 1)}
+                  />
+                  {Array.from({ length: totalPaginas }, (_, index) => (
+                    <Pagination.Item
+                      key={index + 1}
+                      active={paginaActual === index + 1}
+                      onClick={() => setPaginaActual(index + 1)}
+                    >
+                      {index + 1}
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Next
                     disabled={paginaActual === totalPaginas}
-                    onClick={() => setPaginaActual((pagina) => pagina + 1)}
                     aria-label="Página siguiente"
-                  >
-                    ›
-                  </button>
-                </div>
+                    onClick={() => setPaginaActual((pagina) => pagina + 1)}
+                  />
+                </Pagination>
               </>
             )}
 
@@ -286,10 +245,11 @@ function Carreras() {
                     titulo: 'Acciones',
                     key: 'acciones',
                     render: (carrera) => (
-                      <div className="acciones-carrera">
+                      <div className="d-flex align-items-center gap-1">
                         <Button
                           type="button"
                           variant="light"
+                          size="sm"
                           onClick={() => verCarrera(carrera.id)}
                           title="Ver detalle"
                           aria-label={`Ver detalle de ${carrera.nombre}`}
@@ -301,15 +261,14 @@ function Carreras() {
                           <Button
                             type="button"
                             variant="light"
+                            size="sm"
                             onClick={() => verRanking(carrera.id)}
                             title="Ver ranking"
                             aria-label={`Ver ranking de ${carrera.nombre}`}
                           >
                             🏆
                           </Button>
-                        ) : (
-                          <></>
-                        )}
+                        ) : null}
                       </div>
                     ),
                   },
@@ -325,7 +284,7 @@ function Carreras() {
           </>
         )}
       </section>
-    </main>
+    </Container>
   )
 }
 

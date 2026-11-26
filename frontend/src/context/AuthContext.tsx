@@ -1,7 +1,8 @@
+//frontend/src/context/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from 'react';
 
-import type { Credenciales } from "../types/sesion";
+import type { Credenciales, CredencialesContingencia } from "../types/sesion";
 import type { Usuario, Rol } from "../types/usuario";
 
 import { apiFetch } from "../services/apiService";
@@ -13,6 +14,7 @@ interface AuthContextType {
   estaAutenticado: boolean;
   tieneRol: (rol: Rol) => boolean;
   login: (credenciales: Credenciales) => Promise<void>;
+  loginContingencia: (datos: CredencialesContingencia) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -25,8 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }){
 
     //Al iniciar la sesión, checkea si el usuario ya tenía una cookie válida
     useEffect(() => {
-        apiFetch<Usuario>('/auth/yo')
-            .then((usuario) => setUsuario(usuario))
+         apiFetch<Usuario>('/auth/yo')
+            .then((usuario) => {
+                setUsuario(Array.isArray(usuario?.roles) ? usuario : null)
+    })
             .catch(() => setUsuario(null))
             .finally(() => setCargando(false));
     }, []);
@@ -39,6 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }){
         const usuarioFetch = await apiFetch<Usuario>('/auth/login', {
             method: 'POST',
             body: JSON.stringify(credenciales)
+        });
+
+        setUsuario(usuarioFetch);
+    };
+
+    //Login de contingencia: email + clave de respaldo de uso único
+    const loginContingencia = async (datos: CredencialesContingencia) => {
+        const usuarioFetch = await apiFetch<Usuario>('/auth/contingencia', {
+            method: 'POST',
+            body: JSON.stringify(datos)
         });
 
         setUsuario(usuarioFetch);
@@ -69,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }){
             estaAutenticado: usuario !== null, 
             tieneRol: (rol: Rol) => usuario?.roles.some(r => r === rol) ?? false,
             login, 
+            loginContingencia,
             logout 
         }}>
 

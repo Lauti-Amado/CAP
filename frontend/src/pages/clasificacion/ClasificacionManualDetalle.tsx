@@ -1,106 +1,214 @@
 //frontend/src/pages/clasificacion/ClasificacionManualDetalle.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CircleCheck } from 'lucide-react'
-import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap'
-import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
-import '../../components/corredor/DetalleCorredor.css'
-import { corredoresClasificacionMock } from './corredoresClasificacionMock'
-import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-// MOCK TEMPORAL
-// TODO BACKEND: cantidad real de participantes de la carrera
-const TOTAL_PARTICIPANTES = 1248
+import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
+import { useRutasClasificacion } from '../../hooks/useRutasClasificacion'
+import { useCarreraActual } from '../../hooks/useCarreraActual'
+import {
+  obtenerClasificaciones,
+  registrarResultadoClasificacion,
+  type ClasificacionDTO,
+} from '../../services/clasificacionService'
+import { puestoManualSchema } from '../../schemas/clasificacionSchema'
+import type { PuestoManualForm } from '../../schemas/clasificacionSchema'
+import { ApiError } from '../../services/apiService'
 
 function ClasificacionManualDetalle() {
   const { dni } = useParams<{ dni: string }>()
   const navigate = useNavigate()
   const rutas = useRutasClasificacion()
-  const [puesto, setPuesto] = useState('')
-  const [guardado, setGuardado] = useState(false)
+  const carrera = useCarreraActual()
 
-  // MOCK TEMPORAL
-  // TODO BACKEND: GET /api/corredores?dni={dni}
-  const corredor = corredoresClasificacionMock.find(
-    (c) => c.dni.replace(/\D/g, '') === dni
-  )
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<PuestoManualForm>({
+    resolver: zodResolver(puestoManualSchema),
+    mode: 'onChange',
+    defaultValues: { puesto: '' },
+  })
 
-  const volverATiempoReal = () => navigate(rutas.listado, { replace: true })
+  const puestoRegistro = register('puesto')
+  const puesto = watch('puesto')
 
-  if (!corredor) {
+  const [clasificacion, setClasificacion] = useState<ClasificacionDTO | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [mensaje, setMensaje] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelado = false
+
+    const cargar = async () => {
+      if (!carrera || !dni) {
+        setError('No se pudo identificar la carrera o el corredor.')
+        setCargando(false)
+        return
+      }
+
+      setCargando(true)
+      setError(null)
+
+      try {
+        const dniBuscado = dni.replace(/\D/g, '')
+
+        const clasificaciones = await obtenerClasificaciones(carrera.id, {
+          busqueda: dniBuscado,
+        })
+
+        if (cancelado) return
+
+        const encontrada = clasificaciones.find(
+          (item) => item.corredor.dni.replace(/\D/g, '') === dniBuscado,
+        )
+
+        if (!encontrada) {
+          setError('No se encontró una clasificación para ese corredor.')
+          return
+        }
+
+        setClasificacion(encontrada)
+
+        if (encontrada.resultado) {
+          reset({ puesto: String(encontrada.resultado.puestoGeneral) })
+        }
+      } catch (e) {
+        if (cancelado) return
+
+        setError(
+          e instanceof ApiError
+            ? e.message
+            : 'No se pudo cargar la información del corredor.',
+        )
+      } finally {
+        if (!cancelado) setCargando(false)
+      }
+    }
+
+    void cargar()
+
+    return () => {
+      cancelado = true
+    }
+  }, [carrera?.id, dni, reset])
+
+  const volverATiempoReal = () => {
+    navigate(rutas.listado, { replace: true })
+  }
+
+  if (cargando) {
     return (
-      <Container fluid as="main" className="detalle-corredor">
-        <div className="detalle-corredor__no-encontrado">
-          <h1>Corredor no encontrado</h1>
-          <Button
-            type="button"
-            variant="link"
-            className="detalle-corredor__volver"
-            onClick={volverATiempoReal}
-          >
-            ← Volver a clasificación en tiempo real
+      <Container fluid as="main" className="p-4">
+        <div className="d-flex justify-content-center py-5">
+          <Spinner animation="border" />
+        </div>
+      </Container>
+    )
+  }
+
+  if (error && !clasificacion) {
+    return (
+      <Container fluid as="main" className="p-4">
+        <div className="d-flex flex-column align-items-start gap-3">
+          <Alert variant="danger">{error}</Alert>
+          <Button variant="outline-success" onClick={volverATiempoReal}>
+            ← Volver a clasificación
           </Button>
         </div>
       </Container>
     )
   }
 
-  // Para clasificarlo tiene que tener la inscripción paga y el dorsal asignado
-  const habilitado = corredor.estadoInscripcion === 'pagado' && corredor.dorsal !== ''
+  if (!clasificacion) {
+    return (
+      <Container fluid as="main" className="p-4">
+        <div className="d-flex flex-column align-items-start gap-3">
+          <Alert variant="danger">Corredor no encontrado.</Alert>
+          <Button variant="outline-success" onClick={volverATiempoReal}>
+            ← Volver a clasificación
+          </Button>
+        </div>
+      </Container>
+    )
+  }
 
-  const puestoNumero = Number(puesto)
-  const puestoValido = /^\d+$/.test(puesto) && puestoNumero >= 1 && puestoNumero <= TOTAL_PARTICIPANTES
-  const puestoFueraDeRango = puesto !== '' && !puestoValido
-  const puedeGuardar = habilitado && puestoValido && !guardado
+  const habilitado = clasificacion.estado !== 'Descalificado'
+  const mostrarErrorPuesto = puesto !== '' && !!errors.puesto
+  const puedeGuardar = habilitado && isValid && !guardando
 
-  const guardarClasificacion = () => {
-  if (!puedeGuardar) return
+  const guardarClasificacion = async ({ puesto: puestoIngresado }: PuestoManualForm) => {
+    if (!puedeGuardar || !carrera) return
 
-  // MOCK TEMPORAL: simula el guardado.
-  // TODO BACKEND: PUT /api/clasificaciones/{id}/resultado con { puestoGeneral }
-  // (responder 409 si el puesto ya fue tomado por otro corredor).
-  console.log('Guardar clasificación', { dni: corredor.dni, puestoGeneral: puestoNumero })
+    setGuardando(true)
+    setError(null)
+    setMensaje(null)
 
-  // Al guardar vuelve directo a tiempo real
-  navigate(rutas.listado, { replace: true })
-}
+    try {
+      const datos =
+        carrera.estado === 'Finalizada'
+          ? { puestoGeneral: Number(puestoIngresado), tiempoLlegada: null }
+          : { puestoGeneral: Number(puestoIngresado) }
+
+      await registrarResultadoClasificacion(clasificacion.id, datos)
+
+      setMensaje(
+        `Clasificación guardada correctamente para el dorsal ${clasificacion.dorsal}.`,
+      )
+
+      // Al guardar vuelve directo a tiempo real
+      navigate(rutas.listado, { replace: true })
+    } catch (e) {
+      setError(
+        e instanceof ApiError ? e.message : 'No se pudo guardar la clasificación.',
+      )
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  const categoria =
+    clasificacion.resultado?.categorias.map((item) => item.nombre).join(', ') ||
+    'Sin categoría asignada'
 
   return (
-    <Container fluid as="main" className="detalle-corredor">
-      {/* ENCABEZADO */}
-      <header className="detalle-corredor__encabezado">
-        <h1>Detalle de Corredor</h1>
+    <Container fluid as="main" className="p-4">
+      <header className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+        <h1 className="h3 fw-bold mb-0">Detalle de Corredor</h1>
 
-        <Button
-          type="button"
-          variant="link"
-          className="detalle-corredor__volver"
-          onClick={volverATiempoReal}
-        >
-          ← Volver a clasificación en tiempo real
+        <Button variant="outline-success" size="sm" onClick={volverATiempoReal}>
+          ← Volver a clasificación
         </Button>
       </header>
 
-      <Row className="detalle-corredor__contenido g-3">
-        {/* COLUMNA IZQUIERDA */}
+      {error && <Alert variant="danger">{error}</Alert>}
+      {mensaje && <Alert variant="success">{mensaje}</Alert>}
+
+      <Row className="g-3">
         <Col xs={12} md={5} lg={4} xl={3}>
           <TarjetasCorredor
-            nombre={corredor.nombre}
-            dni={corredor.dni}
-            categoria={corredor.categoria}
-            distancia={corredor.distancia}
-            talleRemera={corredor.talleRemera}
-            clubTeam={corredor.clubTeam}
-            estadoInscripcion={corredor.estadoInscripcion}
-            estadoAptoMedico={corredor.estadoAptoMedico}
+            nombre={`${clasificacion.corredor.nombre} ${clasificacion.corredor.apellido}`}
+            dni={clasificacion.corredor.dni}
+            categoria={categoria}
+            distancia={`${clasificacion.distancia.kilometraje} km`}
+            clubTeam={clasificacion.equipo ?? undefined}
           />
         </Col>
 
-        {/* COLUMNA DERECHA */}
         <Col xs={12} md={7} lg={8} xl={9}>
-          <Card className="detalle-corredor__kit">
-            <div
-              className={`detalle-corredor__kit-header ${habilitado ? 'habilitado' : 'no-habilitado'}`}
+          <Card className="h-100 shadow-sm overflow-hidden">
+            <Card.Header
+              className={`d-flex align-items-center justify-content-center gap-2 fw-bold text-center ${
+                habilitado ? 'bg-success text-white' : 'bg-warning text-dark'
+              }`}
             >
               {habilitado ? (
                 <>
@@ -108,68 +216,87 @@ function ClasificacionManualDetalle() {
                   HABILITADO PARA CLASIFICAR
                 </>
               ) : (
-                <>NO HABILITADO PARA CLASIFICAR</>
+                'NO HABILITADO PARA CLASIFICAR'
               )}
-            </div>
+            </Card.Header>
 
-            <Card.Body className="detalle-corredor__kit-contenido">
-              <span className="detalle-corredor__kit-titulo">DATOS DE LA CLASIFICACIÓN</span>
+            <Card.Body
+              as="form"
+              onSubmit={handleSubmit(guardarClasificacion)}
+              noValidate
+              className="d-flex flex-column p-4"
+            >
+              <Card.Subtitle className="text-center text-secondary small fw-semibold mb-3">
+                DATOS DE LA CLASIFICACIÓN
+              </Card.Subtitle>
 
-              <div className="detalle-corredor__kit-datos">
-                <div className="detalle-corredor__kit-dato">
-                  <Form.Label>DORSAL</Form.Label>
-                  <strong className="detalle-corredor__valor-grande">{corredor.dorsal}</strong>
-                </div>
+              <Row className="g-3">
+                <Col xs={12} sm={6}>
+                  <div className="h-100 border rounded bg-body-tertiary p-3 d-flex flex-column align-items-center justify-content-center">
+                    <Form.Label className="small fw-medium text-secondary">
+                      DORSAL
+                    </Form.Label>
+                    <strong className="fs-2 text-success">
+                      {clasificacion.dorsal ?? '—'}
+                    </strong>
+                  </div>
+                </Col>
 
-                <div className="detalle-corredor__kit-dato">
-                  <Form.Label>CHIP RFID</Form.Label>
-                  <strong className="detalle-corredor__chip">{corredor.chipRfid}</strong>
-                </div>
+                <Col xs={12} sm={6}>
+                  <div className="h-100 border rounded bg-body-tertiary p-3 d-flex flex-column align-items-center justify-content-center">
+                    <Form.Label className="small fw-medium text-secondary">
+                      EQUIPO
+                    </Form.Label>
+                    <strong className="fs-4">{clasificacion.equipo ?? '—'}</strong>
+                  </div>
+                </Col>
 
-                <div className="detalle-corredor__kit-dato detalle-corredor__kit-dato--editable">
-                  <Form.Label htmlFor="puesto-general">Puesto General</Form.Label>
+                <Col xs={12} sm={6}>
+                  <div className="h-100 border border-primary-subtle rounded bg-primary-subtle p-3">
+                    <Form.Label
+                      htmlFor="puesto-general"
+                      className="small fw-medium text-secondary"
+                    >
+                      Puesto General
+                    </Form.Label>
 
-                  <Form.Control
-                    id="puesto-general"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    className="detalle-corredor__puesto"
-                    value={puesto}
-                    placeholder="Ej. 42"
-                    disabled={!habilitado || guardado}
-                    isInvalid={puestoFueraDeRango}
-                    onChange={(event) => {
-                      setPuesto(event.target.value.replace(/\D/g, ''))
-                      setGuardado(false)
-                    }}
-                  />
+                    <Form.Control
+                      id="puesto-general"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      size="lg"
+                      className="fw-bold"
+                      {...puestoRegistro}
+                      onChange={(event) => {
+                        event.target.value = event.target.value.replace(/\D/g, '')
+                        void puestoRegistro.onChange(event)
+                      }}
+                      placeholder="Ej. 42"
+                      disabled={!habilitado || guardando}
+                      isInvalid={mostrarErrorPuesto}
+                    />
 
-                  {puestoFueraDeRango && (
-                    <div className="text-danger small mt-1">
-                      El puesto debe estar entre 1 y {TOTAL_PARTICIPANTES.toLocaleString('es-AR')}.
-                    </div>
-                  )}
-                </div>
+                    {mostrarErrorPuesto && (
+                      <div className="text-danger small mt-1">
+                        {errors.puesto?.message}
+                      </div>
+                    )}
+                  </div>
+                </Col>
+              </Row>
+
+              <div className="text-center mt-auto pt-4">
+                <Button
+                  type="submit"
+                  variant="success"
+                  size="lg"
+                  className="rounded-pill px-4"
+                  disabled={!puedeGuardar}
+                >
+                  {guardando ? 'Guardando...' : 'Guardar clasificación'}
+                </Button>
               </div>
-
-              {guardado && (
-                <div className="detalle-corredor__confirmacion" role="status">
-                  <CircleCheck size={17} />
-                  Clasificación simulada correctamente para el dorsal {corredor.dorsal} en el puesto{' '}
-                  {puestoNumero}.
-                </div>
-              )}
-
-              <Button
-                type="button"
-                variant="success"
-                className="detalle-corredor__entregar"
-                disabled={!puedeGuardar}
-                onClick={guardarClasificacion}
-              >
-                {guardado ? 'Clasificación guardada' : 'Guardar clasificación'}
-              </Button>
             </Card.Body>
           </Card>
         </Col>

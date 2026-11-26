@@ -11,13 +11,17 @@ const router = Router();
 // Ambos roles acceden a la clasificación y pueden descalificar (ver permisos de acceso)
 const protegido = [authenticate, authorize("Administrador", "Clasificador")];
 
-//GET clasificaciones de una carrera (con o sin resultado)
+//GET clasificaciones de una carrera paginadas (con filtros opcionales)
 router.get("/carreras/:id/clasificacion",
     ...protegido, validateParams(idParamSchema), clasificacionController.getByCarrera);
 
 //GET datos para la vista de clasificación en tiempo real
 router.get("/carreras/:id/clasificacion/tiempo-real",
     ...protegido, validateParams(idParamSchema), clasificacionController.getTiempoReal);
+
+//GET (Server-Sent Events) avisos de que cambió la clasificación de la carrera
+router.get("/carreras/:id/clasificacion/eventos",
+    ...protegido, validateParams(idParamSchema), clasificacionController.getEventos);
 
 //GET clasificación de una inscripción
 router.get("/clasificaciones/:id",

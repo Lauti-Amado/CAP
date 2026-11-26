@@ -1,31 +1,83 @@
 //frontend/src/pages/administracion/RolesPermisos.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Badge, ListGroup } from 'react-bootstrap'
 import { Check } from 'lucide-react'
-import type { RolUsuario } from '../../types/administracion'
-// MOCK TEMPORAL
-import { opcionesRolMock, usuariosMock } from './administracionMock'
-import './Administracion.css'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { RolUsuario, UsuarioAdministracion } from '../../types/administracion'
+import { ApiError } from '../../services/apiService'
+import { actualizarRolesUsuario, obtenerUsuario } from '../../services/usuarioGestionService'
+import { useAuth } from '../../context/AuthContext'
+import { opcionesRol } from './opcionesRol'
+import { rolesUsuarioSchema } from '../../schemas/rolSchema'
+import type { RolesUsuarioForm } from '../../schemas/rolSchema'
 
 function RolesPermisos() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { usuario: sesion } = useAuth()
 
-  // MOCK TEMPORAL
-  // TODO BACKEND: GET /api/usuarios/{id}
-  const usuario = usuariosMock.find((u) => u.id === Number(id))
+  const [usuario, setUsuario] = useState<UsuarioAdministracion | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [errorCarga, setErrorCarga] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const [rolSeleccionado, setRolSeleccionado] = useState<RolUsuario | null>(
-    usuario?.rol ?? null
-  )
+  const {
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<RolesUsuarioForm>({
+    resolver: zodResolver(rolesUsuarioSchema),
+    mode: 'onChange',
+    defaultValues: { roles: [] },
+  })
+
+  const rolesSeleccionados = watch('roles')
+
+  useEffect(() => {
+    if (!id) return
+    let activo = true
+
+    obtenerUsuario(id)
+      .then((encontrado) => {
+        if (!activo) return
+        setUsuario(encontrado)
+        reset({ roles: encontrado.roles })
+      })
+      .catch((e) => {
+        if (!activo) return
+        // 404 = el usuario no existe. Cualquier otro error se muestra tal cual
+        if (!(e instanceof ApiError && e.status === 404)) {
+          setErrorCarga(e instanceof Error ? e.message : 'No se pudo cargar el usuario')
+        }
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+
+    return () => { activo = false }
+  }, [id, reset])
 
   const volverAAdministracion = () => navigate('/administrador/configuraciones')
+
+  if (cargando) {
+    return (
+      <main className="main-content p-4">
+        <span className="spinner-border" role="status" aria-label="Cargando" />
+      </main>
+    )
+  }
 
   if (!usuario) {
     return (
       <main className="main-content p-4">
-        <h1 className="h3 fw-bold">Usuario no encontrado</h1>
-        <p className="text-secondary">No se encontró un usuario con el identificador indicado.</p>
+        <h1 className="h3 fw-bold">{errorCarga ? 'No se pudo cargar el usuario' : 'Usuario no encontrado'}</h1>
+        <p className="text-secondary">
+          {errorCarga ?? 'No se encontró un usuario con el identificador indicado.'}
+        </p>
         <button type="button" className="btn btn-outline-secondary btn-sm" onClick={volverAAdministracion}>
           Volver a administración
         </button>
@@ -40,9 +92,32 @@ function RolesPermisos() {
     .slice(0, 2)
     .toUpperCase()
 
-  const guardarCambios = () => {
-    // TODO BACKEND: PATCH /api/usuarios/{id} con { rol: rolSeleccionado }
-    volverAAdministracion()
+  // Nadie puede quitarse a sí mismo el rol de Administrador (el backend también lo rechaza)
+  const esPropio = sesion?.id === usuario.id
+  const rolProtegido = (rol: RolUsuario) => esPropio && rol === 'Administrador' && rolesSeleccionados.includes(rol)
+
+  const huboCambios =
+    rolesSeleccionados.length !== usuario.roles.length ||
+    rolesSeleccionados.some((rol) => !usuario.roles.includes(rol))
+
+  // marca o desmarca un rol (un usuario puede tener varios)
+  const alternarRol = (rol: RolUsuario) => {
+    if (rolProtegido(rol)) return
+    const nuevosRoles = rolesSeleccionados.includes(rol)
+      ? rolesSeleccionados.filter((r) => r !== rol)
+      : [...rolesSeleccionados, rol]
+    setValue('roles', nuevosRoles, { shouldValidate: true })
+  }
+
+  // Solo se ejecuta si el schema valida
+  const guardarCambios = async (datos: RolesUsuarioForm) => {
+    setError(null)
+    try {
+      await actualizarRolesUsuario(usuario.id, datos.roles)
+      volverAAdministracion()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudieron guardar los cambios')
+    }
   }
 
   return (
@@ -57,12 +132,21 @@ function RolesPermisos() {
           <section className="card h-100">
             <div className="card-body">
               <div className="d-flex align-items-center gap-3 pb-3 mb-3 border-bottom">
-                <span className="admin-avatar">{iniciales}</span>
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success fw-bold"
+                  style={{ width: 44, height: 44 }}
+                >
+                  {iniciales}
+                </span>
                 <div>
                   <div className="fw-bold">{usuario.nombre}</div>
-                  <span className={`admin-pill ${usuario.estado === 'Activo' ? 'admin-badge--activo' : 'admin-badge--inactivo'}`}>
+                  <Badge
+                    pill
+                    bg={usuario.estado === 'Activo' ? 'success-subtle' : 'secondary-subtle'}
+                    text={usuario.estado === 'Activo' ? 'success-emphasis' : 'secondary-emphasis'}
+                  >
                     {usuario.estado}
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
@@ -79,54 +163,75 @@ function RolesPermisos() {
             ASIGNACIÓN DE ROL
         ========================= */}
         <div className="col-12 col-lg-8">
-          <section className="card h-100">
+          <form className="card h-100" onSubmit={handleSubmit(guardarCambios)} noValidate>
             <div className="card-body">
-              <h2 className="h5 fw-bold mb-1">Asignación de Rol</h2>
+              <h2 className="h5 fw-bold mb-1">Asignación de Roles</h2>
               <p className="text-secondary small mb-3">
-                Seleccione el rol que definirá los permisos y accesos del usuario en la plataforma.
+                Seleccione los roles que definirán los permisos y accesos del usuario en la plataforma.
               </p>
 
-              <div className="d-grid gap-2 pb-3 mb-3 border-bottom" role="radiogroup" aria-label="Rol">
-                {opcionesRolMock.map(({ rol, descripcion }) => {
-                  const seleccionado = rolSeleccionado === rol
-                  return (
-                    <button
-                      type="button"
-                      key={rol}
-                      role="radio"
-                      aria-checked={seleccionado}
-                      className={`admin-rol d-flex justify-content-between align-items-center${seleccionado ? ' admin-rol--seleccionado' : ''}`}
-                      onClick={() => setRolSeleccionado(rol)}
-                    >
-                      <span>
-                        <span className="admin-rol__titulo d-block fw-bold small">{rol}</span>
-                        <span className="d-block text-secondary small">{descripcion}</span>
-                      </span>
-                      {seleccionado && (
-                        <span className="admin-rol__check">
-                          <Check size={12} aria-hidden="true" />
+              <div className="pb-3 mb-3 border-bottom">
+                <ListGroup role="group" aria-label="Roles">
+                  {opcionesRol.map(({ rol, descripcion }) => {
+                    const seleccionado = rolesSeleccionados.includes(rol)
+                    const bloqueado = rolProtegido(rol)
+                    return (
+                      <ListGroup.Item
+                        key={rol}
+                        as="button"
+                        type="button"
+                        action
+                        role="checkbox"
+                        aria-checked={seleccionado}
+                        disabled={bloqueado}
+                        variant={seleccionado ? 'success' : undefined}
+                        title={bloqueado ? 'No podés quitarte tu propio rol de Administrador' : undefined}
+                        className="d-flex justify-content-between align-items-center"
+                        onClick={() => alternarRol(rol)}
+                      >
+                        <span>
+                          <span className="d-block fw-bold small">{rol}</span>
+                          <span className="d-block text-secondary small">{descripcion}</span>
                         </span>
-                      )}
-                    </button>
-                  )
-                })}
+                        {seleccionado && (
+                          <Badge pill bg="success">
+                            <Check size={12} aria-hidden="true" />
+                          </Badge>
+                        )}
+                      </ListGroup.Item>
+                    )
+                  })}
+                </ListGroup>
               </div>
+
+              {errors.roles && (
+                <div className="text-danger small mb-3" role="alert">
+                  {errors.roles.message ?? errors.roles.root?.message}
+                </div>
+              )}
+
+              {esPropio && (
+                <p className="text-secondary small">
+                  Estás editando tu propio usuario: no podés quitarte el rol de Administrador.
+                </p>
+              )}
+
+              {error && <div className="alert alert-danger py-2 small">{error}</div>}
 
               <div className="d-flex justify-content-end gap-2">
                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={volverAAdministracion}>
                   Cancelar
                 </button>
                 <button
-                  type="button"
-                  className="btn btn-sm admin-btn-primary"
-                  disabled={!rolSeleccionado}
-                  onClick={guardarCambios}
+                  type="submit"
+                  className="btn btn-sm btn-success"
+                  disabled={!isValid || !huboCambios || isSubmitting}
                 >
-                  Guardar cambios
+                  {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
                 </button>
               </div>
             </div>
-          </section>
+          </form>
         </div>
       </div>
     </main>

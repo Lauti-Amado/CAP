@@ -1,162 +1,370 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion';
-import { llegadasMock } from '../llegadasMock';
-import './ModClasifCorredor.css';
+//frontend/src/pages/clasificacion/modClasifCorredor/modClasifCorredor.tsx
+import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Col,
+  Container,
+  Form,
+  InputGroup,
+  Row,
+  Spinner,
+} from 'react-bootstrap'
+import { Clock, Lock, Pencil, Save, User } from 'lucide-react'
+import { useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+import { useRutasClasificacion } from '../../../hooks/useRutasClasificacion'
+import { useCarreraActual } from '../../../hooks/useCarreraActual'
+import {
+  obtenerClasificacionPorId,
+  registrarResultadoClasificacion,
+  type ClasificacionDTO,
+} from '../../../services/clasificacionService'
+import { resultadoClasificacionSchema } from '../../../schemas/clasificacionSchema'
+import type {
+  ResultadoClasificacionOutput,
+} from '../../../schemas/clasificacionSchema'
+import { z } from 'zod';
+
+const milisegundosATiempo = (valor: number | null): string => {
+  if (valor === null) return ''
+
+  const horas = Math.floor(valor / 3600000)
+  const minutos = Math.floor((valor % 3600000) / 60000)
+  const segundos = Math.floor((valor % 60000) / 1000)
+  const milisegundos = valor % 1000
+
+  return [
+    String(horas).padStart(2, '0'),
+    String(minutos).padStart(2, '0'),
+    `${String(segundos).padStart(2, '0')}.${String(milisegundos).padStart(3, '0')}`,
+  ].join(':')
+}
+
+const CampoBloqueado: React.FC<{
+  id: string
+  etiqueta: string
+  valor: string
+}> = ({ id, etiqueta, valor }) => (
+  <Form.Group controlId={id}>
+    <Form.Label className="small fw-semibold text-secondary">{etiqueta}</Form.Label>
+    <Form.Control type="text" value={valor} disabled readOnly />
+  </Form.Group>
+)
 
 const ModClasifCorredor: React.FC = () => {
-  const { id, corredorId } = useParams();
-  const llegadaId = corredorId ?? id;
-  return <FormularioModificacion key={llegadaId} id={llegadaId} />;
-};
+  const { id, corredorId } = useParams()
+  const llegadaId = corredorId ?? id
+
+  return <FormularioModificacion key={llegadaId} id={llegadaId} />
+}
 
 const FormularioModificacion: React.FC<{ id?: string }> = ({ id }) => {
-  const navigate = useNavigate();
-  const { search } = useLocation();
-  const rutas = useRutasClasificacion();
+  const navigate = useNavigate()
+  const { search } = useLocation()
+  const rutas = useRutasClasificacion()
+  const carrera = useCarreraActual()
 
-  // TODO BACKEND: GET /api/clasificaciones/{id}
-  const llegada = llegadasMock.find((l) => String(l.id) === id);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<
+    z.input<typeof resultadoClasificacionSchema>,
+    unknown,
+    z.output<typeof resultadoClasificacionSchema>
+>({
+    resolver: zodResolver(resultadoClasificacionSchema) as Resolver<
+        z.input<typeof resultadoClasificacionSchema>,
+        unknown,
+        z.output<typeof resultadoClasificacionSchema>
+    >,
+})
 
-  const [tiempoOficial, setTiempoOficial] = useState(llegada?.tiempo ?? '01:45:23.450');
-  const [puestoGeneral, setPuestoGeneral] = useState(String(llegada?.puesto ?? 42));
-  const [categoria, setCategoria] = useState('Masc 35 a 39 años');
+  const [clasificacion, setClasificacion] = useState<ClasificacionDTO | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleGuardar = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Guardando modificaciones para el registro:', id);
-    // TODO BACKEND: PATCH /api/clasificaciones/{id}
-    // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
-    navigate(rutas.trasGuardar(search), { replace: true });
-  };
+  useEffect(() => {
+    if (!carrera?.id || !id) {
+      setCargando(false)
+      setError('No se pudo identificar la carrera o la clasificación.')
+      return
+    }
+
+    let activo = true
+
+    const cargarClasificacion = async () => {
+      try {
+        setCargando(true)
+        setError('')
+
+        const encontrada = await obtenerClasificacionPorId(id)
+
+        if (!activo) return
+
+        setClasificacion(encontrada)
+        reset({
+          tiempoOficial: milisegundosATiempo(encontrada.resultado?.tiempoLlegada ?? null),
+          puestoGeneral: encontrada.resultado?.puestoGeneral
+            ? String(encontrada.resultado.puestoGeneral)
+            : '',
+        })
+      } catch (err) {
+        if (activo) {
+          setError(
+            err instanceof Error ? err.message : 'No se pudo cargar la clasificación.',
+          )
+        }
+      } finally {
+        if (activo) setCargando(false)
+      }
+    }
+
+    void cargarClasificacion()
+
+    return () => {
+      activo = false
+    }
+  }, [carrera?.id, id, reset])
+
+  // datos ya viene transformado: { puestoGeneral, tiempoLlegada en milisegundos }
+  const handleGuardar = async (datos: ResultadoClasificacionOutput) => {
+    if (!clasificacion) return
+
+    try {
+      setGuardando(true)
+      setError('')
+
+      await registrarResultadoClasificacion(clasificacion.id, {
+        puestoGeneral: datos.puestoGeneral,
+        tiempoLlegada: datos.tiempoLlegada,
+      })
+
+      // Pasa al siguiente corredor de la cola o, si era el último, a tiempo real
+      navigate(rutas.trasGuardar(search), { replace: true })
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'No se pudo guardar la modificación.',
+      )
+    } finally {
+      setGuardando(false)
+    }
+  }
 
   const handleCancelar = () => {
-    navigate(rutas.listado, { replace: true });
-  };
+    navigate(rutas.listado, { replace: true })
+  }
+
+  if (cargando) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" />
+        <p className="text-secondary mt-3">Cargando clasificación...</p>
+      </Container>
+    )
+  }
+
+  if (!clasificacion) {
+    return (
+      <Container className="py-4">
+        <Alert variant="danger">{error || 'No se encontró la clasificación.'}</Alert>
+        <Button variant="outline-secondary" onClick={handleCancelar}>
+          Volver
+        </Button>
+      </Container>
+    )
+  }
+
+  const corredor = clasificacion.corredor
+  const categoria =
+    clasificacion.resultado?.categorias.map((item) => item.nombre).join(', ') ||
+    'Sin categoría asignada'
 
   return (
-    <div className="mod-container">
-      <div className="mod-content">
-        
-        {/* Encabezado y Botones superiores */}
-        <div className="mod-header-main">
-          <div className="mod-title-group">
-            <h1>Modificar Clasificación del corredor</h1>
-            <p className="mod-id-registro">ID Registro: #{id ? `CL-2024-${id}` : 'CL-2024-8921'}</p>
-          </div>
-          <div className="mod-actions-top">
-            <button className="btn-secondary-mod" type="button" onClick={handleCancelar}>
-              Cancelar
-            </button>
-            <button className="btn-primary-mod" type="button" onClick={handleGuardar}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              Guardar modificación
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleGuardar} className="mod-form-container">
-          
-          {/* Sección 1: Información del Corredor (Solo Lectura) */}
-          <div className="mod-section-card">
-            <div className="mod-section-title-row">
-              <div className="mod-title-with-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <h2>Información del Corredor</h2>
-              </div>
-              <span className="mod-badge-locked">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                Datos de Inscripción
-              </span>
+    <Container as="main" className="py-4">
+      <Row className="justify-content-center">
+        <Col xs={12} xl={10}>
+          <header className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+              <h1 className="h3 fw-bold mb-1">Modificar Clasificación del corredor</h1>
+              <p className="small text-secondary mb-0">
+                ID Registro: {clasificacion.id}
+              </p>
             </div>
 
-            <div className="mod-grid-inputs">
-              <div className="mod-input-group">
-                <label>Nombre y apellido</label>
-                <input type="text" value={llegada?.apellidosNombres ?? 'Juan Pérez Mónaco'} disabled />
-              </div>
-              <div className="mod-input-group">
-                <label>DNI</label>
-                <input type="text" value={llegada?.dni ?? '34.567.890'} disabled />
-              </div>
-              <div className="mod-input-group">
-                <label>Sexo</label>
-                <input type="text" value={llegada?.sexo ?? 'Masculino'} disabled /> 
-              </div>
-              <div className="mod-input-group">
-                <label>Dorsal</label>
-                <input type="text" value={`# ${llegada?.dorsal ?? '1045'}`} disabled /> 
-              </div>
-              <div className="mod-input-group">
-                <label>Organización / Club</label>
-                <input type="text" value={llegada?.club ?? 'Running Team Sur'} disabled />
-              </div>
-              <div className="mod-input-group">
-                <label>Equipo</label>
-                <input type="text" value={llegada?.equipo ?? 'Elite'} disabled />  
-              </div>
+            <div className="d-flex gap-2">
+              <Button
+                type="button"
+                variant="outline-secondary"
+                onClick={handleCancelar}
+                disabled={guardando}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="submit"
+                form="form-clasificacion"
+                variant="success"
+                className="d-inline-flex align-items-center gap-2"
+                disabled={guardando}
+              >
+                {guardando ? (
+                  <Spinner size="sm" animation="border" />
+                ) : (
+                  <Save size={16} aria-hidden="true" />
+                )}
+                {guardando ? 'Guardando...' : 'Guardar modificación'}
+              </Button>
             </div>
-          </div>
+          </header>
 
-          {/* Sección 2: Datos de Clasificación (Editables) */}
-          <div className="mod-section-card mod-editable-card">
-            <div className="mod-section-title-row">
-              <div className="mod-title-with-icon mod-icon-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                <h2>Datos de Clasificación</h2>
-              </div>
-            </div>
-            <p className="mod-section-subtitle">Modifique los resultados oficiales de carrera.</p>
+          {error && <Alert variant="danger">{error}</Alert>}
 
-            <div className="mod-inner-box">
-              <div className="mod-input-group mb-20">
-                <label>Tipo de clasificación</label>
-                <input type="text" value="General" disabled />
-              </div>
+          <Form id="form-clasificacion" onSubmit={handleSubmit(handleGuardar)} noValidate>
+            {/* Sección 1: información del corredor (solo lectura) */}
+            <Card className="mb-4">
+              <Card.Header className="d-flex justify-content-between align-items-center bg-transparent">
+                <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
+                  <User size={18} aria-hidden="true" />
+                  Información del Corredor
+                </h2>
 
-              <div className="mod-grid-editable">
-                <div className="mod-input-group">
-                  <label>Tiempo Oficial</label>
-                  <div className="mod-input-with-icon">
-                    <input 
-                      type="text" 
-                      value={tiempoOficial} 
-                      onChange={(e) => setTiempoOficial(e.target.value)} 
+                <Badge
+                  bg="secondary-subtle"
+                  text="secondary-emphasis"
+                  className="d-inline-flex align-items-center gap-1"
+                >
+                  <Lock size={12} aria-hidden="true" />
+                  Datos de Inscripción
+                </Badge>
+              </Card.Header>
+
+              <Card.Body>
+                <Row className="g-3">
+                  <Col md={4}>
+                    <CampoBloqueado
+                      id="infoNombre"
+                      etiqueta="Nombre y apellido"
+                      valor={`${corredor.nombre} ${corredor.apellido}`}
                     />
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  </div>
+                  </Col>
+                  <Col md={4}>
+                    <CampoBloqueado id="infoDni" etiqueta="DNI" valor={corredor.dni} />
+                  </Col>
+                  <Col md={4}>
+                    <CampoBloqueado id="infoSexo" etiqueta="Sexo" valor={corredor.sexo} />
+                  </Col>
+                  <Col md={4}>
+                    <CampoBloqueado
+                      id="infoDorsal"
+                      etiqueta="Dorsal"
+                      valor={clasificacion.dorsal ?? 'Sin dorsal'}
+                    />
+                  </Col>
+                  <Col md={4}>
+                    <CampoBloqueado
+                      id="infoEquipo"
+                      etiqueta="Equipo"
+                      valor={clasificacion.equipo ?? 'Sin equipo'}
+                    />
+                  </Col>
+                  <Col md={4}>
+                    <CampoBloqueado
+                      id="infoDistancia"
+                      etiqueta="Distancia"
+                      valor={`${clasificacion.distancia.kilometraje} km`}
+                    />
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
+            {/* Sección 2: datos de clasificación (editables) */}
+            <Card className="border-start border-success border-4">
+              <Card.Body>
+                <h2 className="h6 fw-bold d-flex align-items-center gap-2 mb-1">
+                  <Pencil size={18} className="text-success" aria-hidden="true" />
+                  Datos de Clasificación
+                </h2>
+
+                <p className="small text-secondary">
+                  Modificá los resultados oficiales de carrera.
+                </p>
+
+                <div className="bg-body-tertiary border rounded p-3">
+                  <Row className="g-3">
+                    <Col md={4}>
+                      <CampoBloqueado
+                        id="tipoClasificacion"
+                        etiqueta="Tipo de clasificación"
+                        valor="General"
+                      />
+                    </Col>
+
+                    <Col md={4}>
+                      <CampoBloqueado id="categoria" etiqueta="Categoría" valor={categoria} />
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="puestoGeneral">
+                        <Form.Label className="small fw-semibold text-secondary">
+                          Puesto General
+                        </Form.Label>
+
+                        <Form.Control
+                          type="text"
+                          inputMode="numeric"
+                          {...register('puestoGeneral')}
+                          isInvalid={!!errors.puestoGeneral}
+                        />
+
+                        <Form.Control.Feedback type="invalid">
+                          {errors.puestoGeneral?.message}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={6}>
+                      <Form.Group controlId="tiempoOficial">
+                        <Form.Label className="small fw-semibold text-secondary">
+                          Tiempo Oficial
+                        </Form.Label>
+
+                        <InputGroup hasValidation>
+                          <Form.Control
+                            type="text"
+                            placeholder="HH:MM:SS.mmm"
+                            {...register('tiempoOficial')}
+                            isInvalid={!!errors.tiempoOficial}
+                          />
+
+                          <InputGroup.Text>
+                            <Clock size={16} aria-hidden="true" />
+                          </InputGroup.Text>
+
+                          <Form.Control.Feedback type="invalid">
+                            {errors.tiempoOficial?.message}
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+                  </Row>
                 </div>
+              </Card.Body>
+            </Card>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
+  )
+}
 
-                <div className="mod-input-group">
-                  <label>Puesto General</label>
-                  <input 
-                    type="text" 
-                    value={puestoGeneral} 
-                    onChange={(e) => setPuestoGeneral(e.target.value)} 
-                  />
-                </div>
-
-                <div className="mod-input-group">
-                  <label>Categoría</label>
-                  <select 
-                    value={categoria} 
-                    onChange={(e) => setCategoria(e.target.value)}
-                  >
-                    <option value="Masc 18 a 29 años">Masc 18 a 29 años</option>
-                    <option value="Masc 30 a 34 años">Masc 30 a 34 años</option>
-                    <option value="Masc 35 a 39 años">Masc 35 a 39 años</option>
-                    <option value="Masc 40 a 44 años">Masc 40 a 44 años</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </form>
-
-      </div>
-    </div>
-  );
-};
-
-export default ModClasifCorredor;
+export default ModClasifCorredor

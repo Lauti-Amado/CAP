@@ -5,14 +5,33 @@
 | Método | Ruta | Propósito |
 |---|---|---|
 | `POST` | `/api/auth/login` | Iniciar sesión |
+| `POST` | `/api/auth/contingencia` | Iniciar sesión con email y clave de respaldo de uso único |   <!-- NUEVA -->
 | `POST` | `/api/auth/logout` | Cerrar sesión |
 | `GET` | `/api/auth/yo` | Obtener el usuario autenticado |
+
+#### Usuarios (solo Administrador)
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/api/usuarios?pagina={n}` | Listar los usuarios del personal, paginados de a 10 |
+| `GET` | `/api/usuarios/{id}` | Consultar un usuario |
+| `PATCH` | `/api/usuarios/{id}` | Reemplazar sus roles. Body: `{ "roles": ["Administrador", "Clasificador"] }` |
+
+#### Claves de respaldo (solo Administrador)
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/api/claves-respaldo/cuentas` | Listar las cuentas de clasificadores con la cantidad de claves disponibles de cada una |
+| `GET` | `/api/claves-respaldo?usuarioId={id}` | Consultar las claves de respaldo de una cuenta |
+| `PUT` | `/api/claves-respaldo?usuarioId={id}` | Anular las claves disponibles de una cuenta y generar un juego nuevo de 8 |
 
 #### Carreras
 | Método | Ruta | Propósito |
 |---|---|---|
 | `GET` | `/api/carreras` | Listar carreras, con filtros por estado y fecha |
 | `GET` | `/api/carreras/{id}` | Consultar el detalle de una carrera, su lugar y sus distancias |
+| `GET` | `/api/carreras/{id}/detalle` | Consultar el detalle de una carrera, con la cantidad de inscriptos, inscriptos confirmados (pagados o con kit retirado), kits entregados y clasificados |
+| `GET` | `/api/carreras/{id}/actividad?limite={n}` | Últimos movimientos de una carrera (kits entregados, inscripciones presenciales y lecturas RFID), los más recientes primero |
 | `PATCH` | `/api/carreras/{id}` | Modificar los datos o el estado de una carrera |
 
 #### Corredores e inscripciones
@@ -40,9 +59,10 @@
 |---|---|---|
 | `GET` | `/api/carreras/{id}/clasificacion` | Consultar los resultados de una carrera |
 | `GET` | `/api/clasificaciones/{id}` | Consultar el estado de clasificación de una inscripción |
-| `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación, por ejemplo, registrar una descalificación |
+| `PATCH` | `/api/clasificaciones/{id}` | Actualizar el estado de una clasificación: descalificar, marcar "No finalizó" o "No largó" |
 | `PUT` | `/api/clasificaciones/{id}/resultado` | Registrar o corregir el tiempo, el puesto y el estado de un resultado |
 | `GET` | `/api/carreras/{id}/clasificacion/tiempo-real` | Obtener los datos para la vista de clasificación en tiempo real, si el frontend lo necesita |
+| `GET` | `/api/carreras/{id}/clasificacion/eventos` | Conexión de avisos en vivo (Server-Sent Events): el servidor emite un evento `clasificacion` cada vez que cambia la clasificación de la carrera, y el frontend vuelve a pedir los datos |
 
 #### Datos auxiliares
 

@@ -1,8 +1,8 @@
 //frontend/src/pages/clasificacion/modales/CargaManualModal.tsx
 import { useNavigate, useParams } from 'react-router-dom'
 import BuscarCorredorModal from '../../../components/corredor/BuscarCorredorModal'
-import { corredoresClasificacionMock } from '../corredoresClasificacionMock'
-import { llegadasMock } from '../llegadasMock'
+import { useCarreraActual } from '../../../hooks/useCarreraActual'
+import { obtenerClasificaciones } from '../../../services/clasificacionService'
 import { normalizarDni } from '../../../utils/dni'
 
 type CargaManualModalProps = {
@@ -12,25 +12,46 @@ type CargaManualModalProps = {
 
 function CargaManualModal({ show, onCerrar }: CargaManualModalProps) {
   const navigate = useNavigate()
-  const { nombreCarrera } = useParams();
+  const { nombreCarrera } = useParams()
+  const carrera = useCarreraActual()
 
-  // Devuelve un mensaje de error, o null si encontró al corredor
-  const buscar = (dni: string): string | null => {
-    const dniBuscado = normalizarDni(dni)
-
-    // TODO BACKEND: GET /api/corredores?dni={dni} (corredor inscripto en la carrera)
-    const corredor = corredoresClasificacionMock.find((c) => normalizarDni(c.dni) === dniBuscado)
-    if (!corredor) return 'No se encontró un corredor inscripto con ese DNI.'
-
-    // Regla de negocio: un corredor no puede tener más de una clasificación válida por carrera.
-    // TODO BACKEND: consultar si el corredor ya tiene Clasificacion/Resultado.
-    if (llegadasMock.some((llegada) => normalizarDni(llegada.dni) === dniBuscado)) {
-      return 'Este corredor ya tiene una clasificación. Use "Modificar clasificación".'
+  const buscar = async (dni: string): Promise<string | null> => {
+    if (!carrera) {
+      return 'No se pudo identificar la carrera.'
     }
 
-    onCerrar()
-    navigate(`/clasificador/clasificaciones/${nombreCarrera}/manual/${dniBuscado}`)
-    return null
+    const dniBuscado = normalizarDni(dni)
+
+    try {
+      const clasificaciones = await obtenerClasificaciones(carrera.id, {
+        busqueda: dniBuscado,
+      })
+
+      const clasificacion = clasificaciones.find(
+        (item) => normalizarDni(item.corredor.dni) === dniBuscado,
+      )
+
+      if (!clasificacion) {
+        return 'No se encontró un corredor habilitado para clasificar con ese DNI.'
+      }
+
+      if (clasificacion.estado === 'Descalificado') {
+        return 'Este corredor está descalificado.'
+      }
+
+      if (clasificacion.resultado) {
+        return 'Este corredor ya tiene una clasificación. Use "Modificar clasificación".'
+      }
+
+      onCerrar()
+      navigate(
+        `/clasificador/clasificaciones/${nombreCarrera}/manual/${dniBuscado}`,
+      )
+
+      return null
+    } catch {
+      return 'No se pudo consultar la clasificación. Intente nuevamente.'
+    }
   }
 
   return (

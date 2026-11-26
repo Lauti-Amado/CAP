@@ -1,10 +1,11 @@
 import { prisma } from "../src/config/prisma";
-import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion,} from "../src/generated/prisma/client";
+import { Rol, Sexo, TipoDistancia, EstadoCarrera, EstadoInscripcion, EstadoCompra, MetodoPago, TipoDetalle, EstadoClasificacion, EstadoResultado } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
+import "dotenv/config";
 
 const usuarios = [
     {
-        email: "corredor@cap.test", 
+        email: process.env.SEED_EMAIL_CORREDOR ?? "corredor@cap.test",
         password: "Corredor1234", 
         rolesAdministrativos: [],
         persona: { dni: "22222222", nombre: "Bianca", apellido: "Petz", telefono: "2210000000" },
@@ -66,7 +67,17 @@ const carreras = [
         participantesMax: 500, 
         lugarNombre: "Club Villa San Carlos",
         estado: EstadoCarrera.Entrega_kits,
-    }
+    },
+    {
+        nombre: "Carrera de Prueba (Finalizada)",
+        fechaHoraCarrera: new Date('2026-10-18T08:00:00.000Z'),
+        fechaHoraEntregaKits: new Date('2026-10-17T10:00:00.000Z'),
+        imagenUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScWSQ8Qa-Gq_f8YeoQRu2JVESzFOZJoUlTgii_QXdu5e7asJWpG5284I_G&s=10",
+        descripcion: "Carrera finalizada para probar resultados y certificados.",
+        participantesMax: 100,
+        lugarNombre: "Paseo del Bosque",
+        estado: EstadoCarrera.Finalizada,
+    },
 ];
 
 const distancias = [
@@ -84,7 +95,8 @@ const distanciasCarreras = [
     { fechaHoraCarrera: new Date('2027-03-19T08:00:00.000Z'), kilometraje: 10, tipoDistancia: TipoDistancia.Competitiva, precioDistancia: 20000 },
     { fechaHoraCarrera: new Date('2027-03-19T08:00:00.000Z'), kilometraje: 10, tipoDistancia: TipoDistancia.Participativa, precioDistancia: 15000 },
     { fechaHoraCarrera: new Date('2027-06-22T08:00:00.000Z'), kilometraje: 5,  tipoDistancia: TipoDistancia.Competitiva, precioDistancia: 15000 },
-    { fechaHoraCarrera: new Date('2027-06-22T08:00:00.000Z'), kilometraje: 5,  tipoDistancia: TipoDistancia.Participativa, precioDistancia: 15000 }
+    { fechaHoraCarrera: new Date('2027-06-22T08:00:00.000Z'), kilometraje: 5,  tipoDistancia: TipoDistancia.Participativa, precioDistancia: 15000 },
+        { fechaHoraCarrera: new Date('2026-10-18T08:00:00.000Z'), kilometraje: 5, tipoDistancia: TipoDistancia.Competitiva, precioDistancia: 15000 },
 ];
 
 const productos = [
@@ -203,8 +215,113 @@ async function seedCategorias() {
   }
 }
 
+async function seedPlantillaCertificado() {
+    if ((await prisma.plantillaCertificado.count()) > 0) return;
+
+    await prisma.plantillaCertificado.create({
+        data: {
+            nombre: "Certificado CAP",
+            activa: true,
+            colorPrimario: "#175f35",
+            colorSecundario: "#20bf63",
+            colorFondo: "#ffffff",
+            fuente: "Arial, Helvetica, sans-serif",
+        },
+    });
+}
+
+async function seedAfiliacionBianca() {
+    const corredor = await prisma.corredor.findFirst({ where: { persona: { dni: "22222222" } } });
+    if (!corredor) return;
+
+    await prisma.afiliacion.upsert({
+        where: { afiliadoId: corredor.id },
+        update: {},
+        create: { numeroSocio: 1, afiliadoId: corredor.id },
+    });
+}
+
+async function sembrarInscripcionPrueba(o: {
+    corredorId: string; carreraId: string; idDistancia: string;
+    precio: number; usuarioId: string; pagada: boolean;
+}) {
+    const estadoCompra = o.pagada ? EstadoCompra.Pagada : EstadoCompra.En_proceso;
+    const estadoInscripcion = o.pagada ? EstadoInscripcion.Pagada : EstadoInscripcion.En_proceso;
+
+    const existente = await prisma.inscripcion.findUnique({
+        where: { idCorredor_idCarrera: { idCorredor: o.corredorId, idCarrera: o.carreraId } },
+        include: { detalleCompra: true },
+    });
+
+    if (existente) {
+        await prisma.compra.update({ where: { id: existente.detalleCompra.idCompra }, data: { estado: estadoCompra } });
+        await prisma.inscripcion.update({ where: { id: existente.id }, data: { estado: estadoInscripcion } });
+        return;
+    }
+
+    const compra = await prisma.compra.create({
+        data: { montoTotal: o.precio, estado: estadoCompra, metodoPago: MetodoPago.Pago_virtual, usuarioId: o.usuarioId },
+    });
+    const detalle = await prisma.detalleCompra.create({
+        data: {tipo: TipoDetalle.Inscripcion ,descripcion: "Inscripcion", monto: o.precio, cantidad: 1, idCompra: compra.id },
+    });
+    await prisma.inscripcion.create({
+        data: {
+            estado: estadoInscripcion,
+            idDetalleCompra: detalle.id,
+            idCorredor: o.corredorId,
+            idCarrera: o.carreraId,
+            idDistancia: o.idDistancia,
+        },
+    });
+}
+
+async function sembrarFinalista(o: {
+    dni: string; carreraId: string; idDistancia: string; precio: number;
+    usuarioId: string; dorsal: string; puesto: number; tiempoMs: number;
+}) {
+    const corredor = await prisma.corredor.findFirst({ where: { persona: { dni: o.dni } } });
+    if (!corredor) return;
+
+    await sembrarInscripcionPrueba({
+        corredorId: corredor.id, carreraId: o.carreraId, idDistancia: o.idDistancia,
+        precio: o.precio, usuarioId: o.usuarioId, pagada: true,
+    });
+
+    const inscripcion = await prisma.inscripcion.findUnique({
+        where: { idCorredor_idCarrera: { idCorredor: corredor.id, idCarrera: o.carreraId } },
+    });
+    if (!inscripcion) return;
+
+    await prisma.inscripcion.update({ where: { id: inscripcion.id }, data: { estado: EstadoInscripcion.Confirmada } });
+
+    const entrega = await prisma.entregaKit.findUnique({ where: { inscripcionId: inscripcion.id } });
+    if (!entrega) {
+        const dorsal = await prisma.dorsal.create({ data: { numero: o.dorsal } });
+        await prisma.entregaKit.create({ data: { inscripcionId: inscripcion.id, dorsalId: dorsal.id } });
+    }
+
+    const clasificacion = await prisma.clasificacion.upsert({
+        where: { inscripcionId: inscripcion.id },
+        update: { estado: EstadoClasificacion.Finalizo },
+        create: { inscripcionId: inscripcion.id, estado: EstadoClasificacion.Finalizo },
+    });
+
+    await prisma.resultado.upsert({
+        where: { clasificacionId: clasificacion.id },
+        update: {},
+        create: {
+            clasificacionId: clasificacion.id,
+            puestoGeneral: o.puesto,
+            tiempoLlegada: o.tiempoMs,
+            estado: EstadoResultado.Oficial,
+        },
+    });
+}
+
 async function main() {
     await seedCategorias();
+    await seedPlantillaCertificado();
 
     //Roles administrativos
     const rolesEnum = [Rol.Administrador, Rol.Tesorero, Rol.Clasificador];
@@ -267,6 +384,8 @@ async function main() {
             }
         }
     }
+
+    await seedAfiliacionBianca();
 
     //Localidades y Lugares
     for (const localidad of localidades) {
@@ -369,50 +488,17 @@ async function main() {
     });
 
     if (corredor && carrera && distanciaCarrera && usuarioAdmin) {
-    const inscripcionExistente = await prisma.inscripcion.findFirst({
-        where: {
-        idCorredor: corredor.id,
-        distanciaCarrera: {
-            idCarrera: carrera.id,
-        },
-        },
-        include: {
-        compra: true,
-        },
-    });
-
-    if (inscripcionExistente) {
-        await prisma.compra.update({
-        where: { id: inscripcionExistente.idCompra },
-        data: { isPagado: true },
-        });
-
-        await prisma.inscripcion.update({
-        where: { id: inscripcionExistente.id },
-        data: { estado: EstadoInscripcion.Pagada },
-        });
-    } else {
-        const compra = await prisma.compra.create({
-        data: {
-            montoTotal: distanciaCarrera.precioDistancia,
-            isPagado: true,
+        await sembrarInscripcionPrueba({
+            corredorId: corredor.id,
+            carreraId: carrera.id,
+            idDistancia: distanciaCarrera.idDistancia,
+            precio: distanciaCarrera.precioDistancia,
             usuarioId: usuarioAdmin.id,
-        },
+            pagada: true,
         });
-
-        await prisma.inscripcion.create({
-        data: {
-            idCompra: compra.id,
-            idCorredor: corredor.id,
-            idDistanciaCarrera: distanciaCarrera.id,
-            estado: EstadoInscripcion.Pagada,
-        },
-        });
-    }
-
-    console.log("Inscripción de prueba para Entrega de Kits creada/verificada.");
+        console.log("Inscripción de prueba para Entrega de Kits creada/verificada.");
     } else {
-    console.error("No se pudo crear la inscripción de prueba: faltan datos relacionados.");
+        console.error("No se pudo crear la inscripción de prueba: faltan datos relacionados.");
     }
 
     // Corredor de prueba para validar entrega de kits (sin usuario)
@@ -451,52 +537,23 @@ async function main() {
 
     // Inscripción paga de Lucas en Maratón Villera
     if (carrera && distanciaCarrera && usuarioAdmin) {
-        const inscripcionLucas = await prisma.inscripcion.findFirst({
-            where: {
-                idCorredor: corredorLucas.id,
-                distanciaCarrera: { idCarrera: carrera.id },
-            },
-            include: { compra: true },
+        await sembrarInscripcionPrueba({
+            corredorId: corredorLucas.id,
+            carreraId: carrera.id,
+            idDistancia: distanciaCarrera.idDistancia,
+            precio: distanciaCarrera.precioDistancia,
+            usuarioId: usuarioAdmin.id,
+            pagada: true,
         });
-
-        if (inscripcionLucas) {
-            await prisma.compra.update({
-                where: { id: inscripcionLucas.idCompra },
-                data: { isPagado: true },
-            });
-
-            await prisma.inscripcion.update({
-                where: { id: inscripcionLucas.id },
-                data: { estado: EstadoInscripcion.Pagada },
-            });
-        } else {
-            const compraLucas = await prisma.compra.create({
-                data: {
-                    montoTotal: distanciaCarrera.precioDistancia,
-                    isPagado: true,
-                    usuarioId: usuarioAdmin.id,
-                },
-            });
-
-            await prisma.inscripcion.create({
-                data: {
-                    idCompra: compraLucas.id,
-                    idCorredor: corredorLucas.id,
-                    idDistanciaCarrera: distanciaCarrera.id,
-                    estado: EstadoInscripcion.Pagada,
-                },
-            });
-        }
-
         console.log("Inscripción de Lucas creada/verificada.");
     }
 
     // Corredora de prueba para validar que no se entregue el kit si no pagó
     const personaMartina = await prisma.persona.upsert({
-        where: { dni: "44444444" },
+        where: { dni: "55555555" },
         update: {},
         create: {
-            dni: "44444444",
+            dni: "55555555",
             nombre: "Martina",
             apellido: "López",
             telefono: "2210000044",
@@ -527,43 +584,35 @@ async function main() {
 
     // Inscripción impaga de Martina en Maratón Villera
     if (carrera && distanciaCarrera && usuarioAdmin) {
-        const inscripcionMartina = await prisma.inscripcion.findFirst({
-            where: {
-                idCorredor: corredorMartina.id,
-                distanciaCarrera: { idCarrera: carrera.id },
-            },
+        await sembrarInscripcionPrueba({
+            corredorId: corredorMartina.id,
+            carreraId: carrera.id,
+            idDistancia: distanciaCarrera.idDistancia,
+            precio: distanciaCarrera.precioDistancia,
+            usuarioId: usuarioAdmin.id,
+            pagada: false,
         });
-
-        if (inscripcionMartina) {
-            await prisma.compra.update({
-                where: { id: inscripcionMartina.idCompra },
-                data: { isPagado: false },
-            });
-
-            await prisma.inscripcion.update({
-                where: { id: inscripcionMartina.id },
-                data: { estado: EstadoInscripcion.En_proceso },
-            });
-        } else {
-            const compraMartina = await prisma.compra.create({
-                data: {
-                    montoTotal: distanciaCarrera.precioDistancia,
-                    isPagado: false,
-                    usuarioId: usuarioAdmin.id,
-                },
-            });
-
-            await prisma.inscripcion.create({
-                data: {
-                    idCompra: compraMartina.id,
-                    idCorredor: corredorMartina.id,
-                    idDistanciaCarrera: distanciaCarrera.id,
-                    estado: EstadoInscripcion.En_proceso,
-                },
-            });
-        }
-
         console.log("Inscripción impaga de Martina creada/verificada.");
+    }
+
+        // Carrera finalizada: Bianca (socia) y Lucas (no socio) terminaron
+    const carreraFinalizada = await prisma.carrera.findUnique({
+        where: { fechaHoraCarrera: new Date('2026-10-18T08:00:00.000Z') },
+    });
+    const distanciaFinalizada = carreraFinalizada
+        ? await prisma.distanciaCarrera.findFirst({ where: { idCarrera: carreraFinalizada.id } })
+        : null;
+
+    if (carreraFinalizada && distanciaFinalizada && usuarioAdmin) {
+        const base = {
+            carreraId: carreraFinalizada.id,
+            idDistancia: distanciaFinalizada.idDistancia,
+            precio: distanciaFinalizada.precioDistancia,
+            usuarioId: usuarioAdmin.id,
+        };
+        await sembrarFinalista({ ...base, dni: "22222222", dorsal: "9001", puesto: 1, tiempoMs: 1294000 }); // 00:21:34
+        await sembrarFinalista({ ...base, dni: "33333333", dorsal: "9002", puesto: 2, tiempoMs: 1390000 }); // 00:23:10
+        console.log("Carrera finalizada con finalistas creada/verificada.");
     }
 
     //Productos
@@ -574,7 +623,6 @@ async function main() {
                 update: {},
                 create: {
                     nombreProducto: prod.nombreProducto,
-                    imagenUrl: prod.imagenUrl,
                     variantes: {
                         create: prod.variantes
                     }

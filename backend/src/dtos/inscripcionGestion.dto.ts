@@ -1,15 +1,8 @@
 //backend/src/dtos/inscripcionGestion.dto.ts
-import type {
-    Discapacidad,
-    EstadoCarrera,
-    EstadoInscripcion,
-    MetodoPago,
-    Prisma,
-    Sexo,
-    TipoDistancia,
-} from "../generated/prisma/client";
+import type { Discapacidad, EstadoCarrera, EstadoInscripcion, MetodoPago, Prisma, Sexo, TipoDistancia,} from "../generated/prisma/client";
 import { requiereAptoMedico, vencimientoVigente } from "../rules/aptoMedico.rules";
 import { toEntregaKitDto, type EntregaKitDTO } from "./dorsal.dto";
+import { estaPagada } from "../rules/compra.rules";
 
 // ---------- DTOs ----------
 
@@ -89,14 +82,24 @@ type InscripcionListadoPrisma = Prisma.InscripcionGetPayload<{
     include: {
         corredor: { include: { persona: true } };
         distanciaCarrera: { include: { distancia: true; carrera: true } };
-        compra: true;
+        detalleCompra: { include: { compra: true } };
         entregaKit: true;
     };
 }>;
 
 type InscripcionDetallePrisma = Prisma.InscripcionGetPayload<{
     include: {
-        compra: { include: { detallesProductos: { include: { producto: { include: { producto: true } } } } } };
+        detalleCompra: {
+            include: {
+                compra: {
+                    include: {
+                        detallesCompra: {
+                            include: { detalleProducto: { include: { producto: true } } };
+                        };
+                    };
+                };
+            };
+        };
         corredor: {
             include: {
                 persona: { include: { usuario: { select: { email: true } } } };
@@ -127,7 +130,7 @@ export function toInscripcionListadoDto(i: InscripcionListadoPrisma): Inscripcio
         corredor: { nombre: persona.nombre, apellido: persona.apellido, dni: persona.dni },
         carrera: { id: carrera.id, nombre: carrera.nombre },
         distancia: { kilometraje: distancia.kilometraje, tipoDistancia: distancia.tipoDistancia },
-        pago: { pagado: i.compra.isPagado, metodo: i.compra.metodoPago },
+        pago: { pagado: estaPagada(i.detalleCompra.compra), metodo: i.detalleCompra.compra.metodoPago },
         kitEntregado: i.entregaKit !== null,
     };
 }
@@ -136,6 +139,7 @@ export function toInscripcionDetalleDto(i: InscripcionDetallePrisma): Inscripcio
     const { corredor } = i;
     const { persona, contactoEmergencia } = corredor;
     const { carrera, distancia } = i.distanciaCarrera;
+    const { compra } = i.detalleCompra;
 
     const vencimiento = vencimientoVigente(corredor.aptosMedicos, carrera.fechaHoraCarrera);
 
@@ -172,14 +176,18 @@ export function toInscripcionDetalleDto(i: InscripcionDetallePrisma): Inscripcio
             },
         },
         pago: {
-            pagado: i.compra.isPagado,
-            metodo: i.compra.metodoPago,
-            total: i.compra.montoTotal,
-            productos: i.compra.detallesProductos.map((d) => ({
-                nombre: d.producto.producto.nombreProducto,
-                variante: d.producto.nombreVariante,
-                cantidad: d.cantidad,
-            })),
+            pagado: estaPagada(compra),
+            metodo: compra.metodoPago,
+            total: compra.montoTotal,
+            productos: compra.detallesCompra.flatMap((d) =>
+                d.detalleProducto
+                    ? [{
+                          nombre: d.detalleProducto.producto.nombreProducto,
+                          variante: d.detalleProducto.nombreVariante,
+                          cantidad: d.cantidad,
+                      }]
+                    : []
+            ),
         },
         aptoMedico: {
             requerido: requiereAptoMedico(distancia.kilometraje, distancia.tipoDistancia),

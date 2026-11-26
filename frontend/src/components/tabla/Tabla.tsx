@@ -1,6 +1,12 @@
-//frontend/src/components/tabla.Tabla.tsx
+
+// frontend/src/components/tabla.Tabla.tsx
+
 import React from 'react';
-import './Tabla.css';
+import {
+  Table,
+  Pagination,
+  Card,
+} from 'react-bootstrap';
 
 export interface Columna<T> {
   titulo: string;
@@ -10,119 +16,172 @@ export interface Columna<T> {
 
 interface TablaProps<T> {
   columnas: Columna<T>[];
-  datos: T[]; // Los datos que se mostrarán en la tabla
+  datos: T[];
   mensajeVacio?: string;
-  
-  // Controles de paginación que vienen de la API/Base de datos
+
+  // Paginación conectada al backend
   paginaActual: number;
   totalPaginas: number;
   onCambiarPagina: (nuevaPagina: number) => void;
-  textoPaginacion: string; // Ej: "Mostrando 1 - 50 de 1245 resultados"
+  textoPaginacion: string;
+
   onRowClick?: (fila: T) => void;
   mostrarNumeros?: boolean;
 }
 
-export function Tabla<T extends { id: string | number }>({ 
-  columnas, 
-  datos, 
-  mensajeVacio = "No se encontraron registros.",
+export function Tabla<T extends { id: string | number }>({
+  columnas,
+  datos,
+  mensajeVacio = 'No se encontraron registros.',
   paginaActual,
   totalPaginas,
   onCambiarPagina,
   textoPaginacion,
   onRowClick,
-  mostrarNumeros = true
+  mostrarNumeros = true,
 }: TablaProps<T>) {
 
-  // Generador de botones de páginas
+  // Generar números de página
   const generarBotonesPaginas = () => {
     const botones = [];
 
     for (let i = 1; i <= totalPaginas; i++) {
       botones.push(
-        <button
+        <Pagination.Item
           key={i}
-          className={`page-num-btn ${paginaActual === i ? 'active' : ''}`}
+          active={paginaActual === i}
           onClick={() => onCambiarPagina(i)}
         >
           {i}
-        </button>
+        </Pagination.Item>
       );
     }
+
     return botones;
   };
 
   return (
-    <div className="table-wrapper-component">
-      <div className="table-container">
-        <table className="participants-table">
-          <thead>
+    <Card className="w-100 shadow-sm border">
+
+      {/* Contenedor de la tabla */}
+      <div
+        style={{
+          maxHeight: '400px',
+          overflow: 'auto',
+        }}
+      >
+        <Table
+          className="mb-0 align-middle"
+          style={{
+            width: '100%',
+            backgroundColor: '#ffffff',
+            borderCollapse: 'separate',
+            borderSpacing: 0,
+            fontSize: '10px',
+          }}
+        >
+          <thead className="table-light">
             <tr>
               {columnas.map((col, index) => (
-                <th key={index}>{col.titulo}</th>
+                <th
+                  key={index}
+                  style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 2,
+                    padding: '0 10px',
+                    height: '40px',
+                    backgroundColor: '#f0f3ff',
+                    color: '#344054',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    borderBottom: '1px solid #dfe3eb',
+                  }}
+                >
+                  {col.titulo}
+                </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
             {datos.length > 0 ? (
               datos.map((fila) => (
-                <tr key={fila.id}
-                  onClick={() => onRowClick && onRowClick(fila)}
-                  style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                <tr
+                  key={fila.id}
+                  onClick={() => onRowClick?.(fila)}
+                  style={{
+                    cursor: onRowClick ? 'pointer' : 'default',
+                  }}
                 >
                   {columnas.map((col, colIndex) => {
-                    const valor = col.render 
-                      ? col.render(fila) 
+                    const valor = col.render
+                      ? col.render(fila)
                       : (fila[col.key as keyof T] as React.ReactNode);
 
-                    return <td key={colIndex}>{valor}</td>;
+                    return (
+                      <td
+                        key={colIndex}
+                        style={{
+                          height: '64px',
+                          padding: '7px 10px',
+                          color: '#344054',
+                          fontSize: '0.8rem',
+                          verticalAlign: 'middle',
+                          borderBottom: '1px solid #e4e7ec',
+                        }}
+                      >
+                        {valor}
+                      </td>
+                    );
                   })}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={columnas.length} className="empty-state">
+                <td
+                  colSpan={columnas.length}
+                  className="text-center text-muted py-5"
+                >
                   {mensajeVacio}
                 </td>
               </tr>
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
-      {/* Barra de Paginación inferior conectada al backend */}
+      {/* Paginación */}
       {totalPaginas > 0 && (
-        <div className="pagination-footer">
-          <span className="pagination-info">{textoPaginacion}</span>
-          
+        <Card.Footer className="d-flex justify-content-between align-items-center flex-wrap gap-2 bg-white">
+
+          <small className="text-muted">
+            {textoPaginacion}
+          </small>
+
           {totalPaginas > 1 && (
-            <div className="pagination-controls">
-              <button 
-                className="page-nav-btn" 
+            <Pagination size="sm" className="mb-0">
+
+              <Pagination.Prev
                 disabled={paginaActual === 1}
                 onClick={() => onCambiarPagina(paginaActual - 1)}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
+              />
 
               {mostrarNumeros && generarBotonesPaginas()}
 
-              <button 
-                className="page-nav-btn" 
+              <Pagination.Next
                 disabled={paginaActual === totalPaginas}
                 onClick={() => onCambiarPagina(paginaActual + 1)}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
+              />
+
+            </Pagination>
           )}
-        </div>
+
+        </Card.Footer>
       )}
-    </div>
+
+    </Card>
   );
 }
 

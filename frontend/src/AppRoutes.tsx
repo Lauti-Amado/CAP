@@ -2,12 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
 import { CarreraProvider } from './context/CarreraContext';
-import { SeleccionarCarreraProvider } from './context/SeleccionarCarreraContext';
 
 import MainLayout from './layout/MainLayout';
 import { PrivateRoute } from './layout/PrivateRoute';
 
 import Login from './pages/login/login';
+import AccesoContingencia from './pages/login/AccesoContingencia';
 import SeleccionarCarrera from './pages/seleccionarCarrera/seleccionarCarrera';
 import DashboardClasificacion from './pages/clasificacion/DashboardClasificacion';
 import GrandPrix from './pages/grandPrix/GrandPrix';
@@ -29,6 +29,8 @@ import ConfiguracionClasificaciones from './pages/administracion/categorias/Conf
 import NuevaCategoria from './pages/administracion/categorias/NuevaCategoria';
 import ClasificacionManualDetalle from './pages/clasificacion/ClasificacionManualDetalle';
 import ModificarClasificacionCarrera from './pages/clasificacion/ModificarClasificacionCarrera';
+import { CarreraSeleccionProvider } from './context/SeleccionarCarreraContext';
+import { SeccionRedirect } from './components/redirect/SeccionRedirect';
 
 export default function AppRoutes() {
   return (
@@ -36,19 +38,21 @@ export default function AppRoutes() {
       <Routes>
 
         <Route path='/' element={<Login />} />
+        <Route path='/contingencia' element={<AccesoContingencia />} />
 
         <Route element={<PrivateRoute roles={["Administrador", "Clasificador"]} />}>
           <Route element={<CarreraProvider />}>
-            <Route element={<MainLayout />}>
+            <Route element={<CarreraSeleccionProvider><MainLayout /></CarreraSeleccionProvider>}>
 
               {/*HOME------------------------------------*/}
               <Route path='home' element={<Dashboard />} />
 
               {/*CLASIFICADOR----------------------------*/}
-              <Route path='clasificador'>
+              <Route path="clasificador">
 
                 {/*Entrega de kits*/}
-                <Route path="entrega-kits" element={<SeleccionarCarreraProvider />}>
+                <Route path="entrega-kits">
+                  <Route index element={<SeccionRedirect seccion="entrega-kits" />} />
                   <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
                   <Route path=':nombreCarrera'>
                     <Route index element={<Navigate to="buscar-corredor" replace />} />
@@ -62,7 +66,8 @@ export default function AppRoutes() {
                 </Route>
 
                 {/*Clasificaciones*/}
-                <Route path="clasificaciones" element={<SeleccionarCarreraProvider />}>
+                <Route path="clasificaciones">
+                  <Route index element={<SeccionRedirect seccion="clasificaciones" />} />
                   <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
                   <Route path=':nombreCarrera'>
                     <Route index element={<Navigate to="dashboard-clasificaciones" replace />} />
@@ -75,7 +80,8 @@ export default function AppRoutes() {
                 </Route>
 
                 {/*Resultados*/}
-                <Route path="resultados" element={<SeleccionarCarreraProvider />}>
+                <Route path="resultados">
+                  <Route index element={<SeccionRedirect seccion="resultados" />} />
                   <Route path='seleccionar-carrera' element={<SeleccionarCarrera />} />
                   <Route path=':nombreCarrera'>
                     <Route index element={<Navigate to="resultado" replace />} />
@@ -89,22 +95,26 @@ export default function AppRoutes() {
               </Route>
 
               {/*ADMINISTRADOR-----------------------------*/}
-              <Route path='administrador'>
-                {/*Carreras*/}
-                <Route path="carreras" element={<Carreras />} />
-                <Route path="carreras/:id" element={<DetalleCarrera />} />
-                <Route path="carreras/:id/clasificacion" element={<ModificarClasificacionCarrera />} />
-                <Route path="carreras/:id/clasificacion/completa" element={<ClasificacionTiempoReal />} />
-                <Route path="carreras/:id/clasificacion/:corredorId" element={<ModClasifCorredor />} />
+              <Route element={<PrivateRoute roles={["Administrador"]} />}>
+                <Route path='administrador'>
 
-                {/*Administracion*/}
-                <Route path='configuraciones'>
-                  <Route index element={<Administracion />} />
-                  <Route path="categorias" element={<ConfiguracionClasificaciones />} />
-                  <Route path="categorias/nueva" element={<NuevaCategoria />} />
-                  <Route path="categorias/:id" element={<NuevaCategoria />} />
-                  <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
-                  <Route path=":id" element={<RolesPermisos />} />
+                  {/*Carreras*/}
+                  <Route path="carreras" element={<Carreras />} />
+                  <Route path="carreras/:id" element={<DetalleCarrera />} />
+                  <Route path="carreras/:id/clasificacion" element={<ModificarClasificacionCarrera />} />
+                  <Route path="carreras/:id/clasificacion/completa" element={<ClasificacionTiempoReal />} />
+                  <Route path="carreras/:id/clasificacion/:corredorId" element={<ModClasifCorredor />} />
+
+                  {/*Administracion*/}
+                  <Route path='configuraciones'>
+                    <Route index element={<Administracion />} />
+                    <Route path="categorias" element={<ConfiguracionClasificaciones />} />
+                    <Route path="categorias/nueva" element={<NuevaCategoria />} />
+                    <Route path="categorias/:id" element={<NuevaCategoria />} />
+                    <Route path="certificados" element={<Certificates onEditorChange={() => { }} />} />
+                    <Route path=":id" element={<RolesPermisos />} />
+                  </Route>
+
                 </Route>
               </Route>
 

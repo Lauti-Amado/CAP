@@ -1,3 +1,4 @@
+//backend/src/controllers/auth.controller.ts
 import { Request, Response } from "express";
 import * as authService from "../services/usuario.services";
 
@@ -32,4 +33,18 @@ export async function yo(req: Request, res: Response) {
     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
     
     return res.json(usuario);
+}
+
+export async function loginContingencia(req: Request, res: Response) {
+    const resultado = await authService.loginContingencia(req.body);
+    if (!resultado) return res.status(401).json({ error: "Email o clave de respaldo inválidos" });
+
+    res.cookie("token", resultado.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 1000 * 60 * 60 * 2 //Igual que el JWT: 2 horas
+    });
+
+    return res.json(resultado.usuario);
 }

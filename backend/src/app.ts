@@ -11,14 +11,21 @@ import dorsalRoutes from './routes/dorsal.routes'
 import entregaKitRoutes from './routes/entregaKit.routes'
 import inscripcionRoutes from './routes/inscripcionGestion.routes'
 import carreraRoutes from "./routes/carrera.routes";
+import carreraEstadoRoutes from "./routes/carreraEstado.routes"; 
 import clasificacionRoutes from './routes/clasificacion.routes'
+import claveRespaldoRoutes from "./routes/claveRespaldo.routes"
 import categoriaRoutes from "./routes/categoria.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
+import usuarioGestionRoutes from "./routes/usuarioGestion.routes"
+import plantillaCertificadoRoutes from "./routes/plantillaCertificado.routes"
+import actividadRoutes from "./routes/actividad.routes"
 import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
 import grandPrixRoutes from "./routes/grandPrix.routes";
 import { registrarListenerGrandPrix } from "./listeners/grandPrix.listener";
 
+import { registrarListenerClasificacionEnVivo } from "./listeners/clasificacionEnVivo.listener";
+import { iniciarMantenimientoClaves } from "./jobs/claveRespaldo.job";
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.IS_PACKAGED === "true";
 
@@ -35,7 +42,8 @@ app.use(cookieParser());
 app.use(cors( { origin: allowedOrigins, credentials: true } ));
 z.config(z.locales.es())
 
-app.get("/", (req, res) => {
+app.get("/", (req, res, next) => {
+  if (process.env.IS_PACKAGED === "true") return next();
   res.json({ message: "Backend Sistema de clasificaciones CAP funcionando" });
 });
 
@@ -46,10 +54,15 @@ app.use('/api', dorsalRoutes)
 app.use('/api', entregaKitRoutes)
 app.use('/api', inscripcionRoutes)
 app.use("/api/carreras", carreraRoutes);
+app.use('/api', carreraEstadoRoutes)
 app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
 app.use("/api/grand-prix", grandPrixRoutes);
+app.use("/api/claves-respaldo", claveRespaldoRoutes);
+app.use("/api/usuarios", usuarioGestionRoutes);
+app.use("/api/plantillas-certificado", plantillaCertificadoRoutes);
+app.use('/api', actividadRoutes)
 
 //EN PRODUCCIÓN: El backend sirve el frontend (enviando html estático) además de responder por los endpoints de la API.
 if (isProduction) {
@@ -57,7 +70,7 @@ if (isProduction) {
   app.use(express.static(frontendPath));
   
   //Servir el frontend cuando la app ingresa a una URL que no comienza con "/api"
-  app.get("*", (req, res) => {
+  app.get("/{*splat}", (req, res) => {
     if (!req.path.startsWith('/api')) res.sendFile(path.join(frontendPath, "index.html"));
     else res.status(404).json({ error: "Ruta API no encontrada" });
   });
@@ -72,5 +85,7 @@ app.use(errorHandler);
 
 registrarListenerResultadosCategoria();
 registrarListenerGrandPrix();
+registrarListenerClasificacionEnVivo();
+iniciarMantenimientoClaves();
 
 export default app

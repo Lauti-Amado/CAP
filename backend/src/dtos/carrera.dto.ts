@@ -1,3 +1,4 @@
+//backend/src/dtos/carrera.dto.ts
 import { EstadoCarrera, TipoDistancia } from "../generated/prisma/client";
 import { Prisma } from "../generated/prisma/client";
 
@@ -19,17 +20,21 @@ export function toCarreraDto(carrera: CarreraPrisma): CarreraDTO {
             kilometraje: dc.distancia.kilometraje,
             tipoDistancia: dc.distancia.tipoDistancia,
             precio: dc.precioDistancia
-        }))
+        })),
+        fechaHoraModificacion: carrera.fechaHoraModificacion,
+        fechaHoraInicio: carrera.ejecucion?.fechaHoraInicio ?? null,
+        fechaHoraFin: carrera.ejecucion?.fechaHoraFin ?? null,
     }
 }
 
 
-type CarreraPrisma = Prisma.CarreraGetPayload<{
-    include: {
-        lugar: { include: { localidad: true } },
-        distanciaCarrera: { include: { distancia: true } }
-    }
-}>;
+export const carreraInclude = {
+    lugar: { include: { localidad: true } },
+    distanciaCarrera: { include: { distancia: true } },
+    ejecucion: true,
+} satisfies Prisma.CarreraInclude;
+
+type CarreraPrisma = Prisma.CarreraGetPayload<{ include: typeof carreraInclude }>;
 
 
 export type CarreraDTO = {
@@ -44,6 +49,9 @@ export type CarreraDTO = {
     lugar: LugarDTO;
 
     distancias: DistanciaDTO[]
+    fechaHoraModificacion: Date; // Auditoría: no usar como hora de fin
+    fechaHoraInicio: Date | null; // Hora real de largada (null si todavía no largó)
+    fechaHoraFin: Date | null;    // Hora real en que se finalizó
 }
 
 export type DistanciaDTO = {

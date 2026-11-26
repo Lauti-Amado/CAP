@@ -31,8 +31,9 @@ export default function CarreraFiltros({
           <Search aria-hidden />
         </InputGroup.Text>
         <Form.Control
+          style={{fontSize:"14px"}}
           type="search"
-          placeholder="Buscar carrera por nombre"
+          placeholder="Buscar Ca..."
           aria-label="Buscar carrera por nombre"
           value={busqueda}
           onChange={(e) => onBusquedaChange(e.target.value)}

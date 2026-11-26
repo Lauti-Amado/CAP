@@ -2,7 +2,6 @@
 import type { ReactNode } from 'react'
 import { Button, Modal, Spinner } from 'react-bootstrap'
 import { AlertTriangle } from 'lucide-react'
-import './ConfirmacionModal.css'
 
 type ConfirmacionModalProps = {
   show: boolean
@@ -10,10 +9,8 @@ type ConfirmacionModalProps = {
   descripcion?: string
   textoConfirmar: string
   iconoConfirmar?: ReactNode
-  /** destacado: encabezado rosado con descripción. simple: encabezado blanco con botón de cerrar. */
+  /** destacado: encabezado rosado. simple: encabezado blanco con botón de cerrar. */
   encabezado?: 'destacado' | 'simple'
-  /** danger: rojo. danger-oscuro: rojo oscuro. */
-  variante?: 'danger' | 'danger-oscuro'
   cargando?: boolean
   children?: ReactNode
   onConfirmar: () => void
@@ -27,50 +24,50 @@ function ConfirmacionModal({
   textoConfirmar,
   iconoConfirmar,
   encabezado = 'destacado',
-  variante = 'danger',
   cargando = false,
   children,
   onConfirmar,
   onCancelar,
 }: ConfirmacionModalProps) {
+  const destacado = encabezado === 'destacado'
+
   return (
-    <Modal
-      show={show}
-      onHide={onCancelar}
-      centered
-      dialogClassName="confirmacion-modal__dialog"
-      contentClassName="confirmacion-modal"
-      aria-labelledby="confirmacion-modal-titulo"
-    >
-      <div className={`confirmacion-modal__encabezado confirmacion-modal__encabezado--${encabezado}`}>
-        <span className="confirmacion-modal__icono">
-          <AlertTriangle size={encabezado === 'destacado' ? 22 : 18} aria-hidden="true" />
-        </span>
-
-        <div className="confirmacion-modal__textos">
-          <h2 id="confirmacion-modal-titulo">{titulo}</h2>
+    <Modal show={show} onHide={onCancelar} centered aria-labelledby="confirmacion-modal-titulo">
+      <Modal.Header
+        closeButton={!destacado}
+        className={destacado ? 'bg-danger-subtle border-danger-subtle' : undefined}
+      >
+        <div className="d-flex align-items-center gap-3">
+          <span
+            className={`d-inline-flex text-danger rounded-circle ${
+              destacado ? 'bg-danger bg-opacity-10 p-2' : ''
+            }`}
+          >
+            <AlertTriangle size={destacado ? 22 : 18} aria-hidden="true" />
+          </span>
+          <Modal.Title as="h2" id="confirmacion-modal-titulo" className="h5 fw-bold mb-0">
+            {titulo}
+          </Modal.Title>
         </div>
-
-        {encabezado === 'simple' && (
-          <button type="button" className="btn-close" aria-label="Cerrar" onClick={onCancelar} />
-        )}
-      </div>
+      </Modal.Header>
 
       {(descripcion || children) && (
-        <Modal.Body className="confirmacion-modal__cuerpo">
-          {descripcion && <p className="confirmacion-modal__descripcion">{descripcion}</p>}
+        <Modal.Body>
+          {descripcion && (
+            <p className={`text-secondary ${children ? 'mb-3' : 'mb-0'}`}>{descripcion}</p>
+          )}
           {children}
         </Modal.Body>
       )}
 
-      <Modal.Footer className="confirmacion-modal__pie">
+      <Modal.Footer className="bg-body-tertiary border-0">
         <Button variant="outline-secondary" disabled={cargando} onClick={onCancelar}>
           Cancelar
         </Button>
 
         <Button
           variant="danger"
-          className={`confirmacion-modal__confirmar confirmacion-modal__confirmar--${variante}`}
+          className="d-inline-flex align-items-center gap-2"
           disabled={cargando}
           onClick={onConfirmar}
         >

@@ -1,8 +1,10 @@
+//backend/src/routes/usuario.routes.ts
 import { Router } from "express";
 import * as authController from "../controllers/auth.controller";
 import { validate } from "../middlewares/validate.middleware";
 
-import { registroCorredorSchema, loginSchema } from "../validations/usuario.validations";
+import { registroCorredorSchema, loginSchema, loginContingenciaSchema } from "../validations/usuario.validations";
+import { limitarContingencia } from "../middlewares/limitarContingencia.middleware";
 import { authenticate } from "../middlewares/auth.middleware";
 
 const router = Router();
@@ -11,6 +13,13 @@ const router = Router();
 router.post("/login",    
     validate(loginSchema),           
     authController.login
+);
+
+//Acceso de contingencia con clave de respaldo
+router.post("/contingencia",
+    limitarContingencia,
+    validate(loginContingenciaSchema),
+    authController.loginContingencia
 );
 
 //Logout

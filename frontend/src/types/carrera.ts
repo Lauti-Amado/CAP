@@ -1,28 +1,48 @@
-type EstadoCarrera = "Creada" | "Publicada" | "Activa" | "Entrega_kits" | "En_curso" | "Finalizada" | "Cancelada"
-type TipoDistancia = "Participativa" | "Competitiva"
+//frontend/src/types/carrera.ts
+export type EstadoCarrera =
+  | "Creada"
+  | "Publicada"
+  | "Activa"
+  | "Entrega_kits"
+  | "En_curso"
+  | "Finalizada"
+  | "Cancelada";
 
-//este Carrera type es igual a como lo manda en el payload el backend
+export type TipoDistancia =
+  | "Participativa"
+  | "Competitiva";
+
 export type Carrera = {
   id: string;
   estado: EstadoCarrera;
   nombre: string;
-  fechaHoraCarrera: Date;
-  fechaHoraEntregaKits: Date;
+  fechaHoraCarrera: string; // hora ESTIMADA que publica la web
+  fechaHoraInicio: string | null; // hora real de largada
+  fechaHoraFin: string | null;    // hora real en que se finalizó
+  fechaHoraEntregaKits: string;
+  fechaHoraModificacion: Date;
   imagenUrl: string;
   descripcion: string;
   participantesMax: number;
   lugar: Lugar;
-
-  distancias: Distancia[]
-}
+  distancias: Distancia[];
+};
 
 export type Distancia = {
   kilometraje: number;
   tipoDistancia: TipoDistancia;
   precio: number;
-}
+};
 
 export type Lugar = {
   nombre: string;
   localidad: string;
-}
+};
+
+// Detalle de una carrera: la carrera + los conteos que calcula el backend
+export type CarreraDetalle = Carrera & {
+  cantidadInscriptos: number;
+  cantidadInscriptosConfirmados: number;
+  cantidadKitsEntregados: number;
+  cantidadClasificados: number;
+};
