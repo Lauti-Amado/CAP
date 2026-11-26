@@ -32,6 +32,7 @@ model Corredor {
 
     afiliacion           Afiliacion? //Utilizado para el Grand Prix (sólo participan afiliados)
     inscripciones        Inscripcion[]
+    participacionesGrandPrix ParticipacionGrandPrix[]
 }
 
 //DIFIERE: archivoUrl
@@ -73,6 +74,7 @@ model Usuario {
     personaId             String @unique //La persona a la que pertenece
     persona               Persona @relation(fields: [personaId], references: [id])
     roles                 UsuarioRol[] //Los roles administrativos que tiene (si tiene alguno)
+    cambiosGrandPrix      CambioGrandPrix[]
 
     compras Compra[]
 
@@ -300,6 +302,7 @@ model DistanciaCarrera { //Tabla intermedia explicita entre Carrera y Distancia
     @@unique([idCarrera, idDistancia])
 
     inscripciones   Inscripcion[]
+    pruebasGrandPrix GrandPrixPrueba[]
 }
 
 model Localidad {
@@ -492,6 +495,7 @@ model Resultado {
     clasificacion         Clasificacion @relation(fields: [clasificacionId], references: [id], onDelete: Cascade)
 
     resultadosCategoria   ResultadoCategoria[]
+    puntajesGrandPrix     PuntajeGrandPrix[]
 
     fechaHoraCreacion     DateTime           @default(now())
     fechaHoraModificacion DateTime           @updatedAt
@@ -611,8 +615,150 @@ enum MetodoPago {
     Pago_presencial
 }
 
-enum EstadoClaveRespaldo {
-    Disponible
-    Utilizada
-    Invalidada //Se generó un lote nuevo y esta clave quedó anulada
+
+// GRAND PRIX: ediciones, reglas versionadas y aportes por prueba.
+model GrandPrix {
+  id String @id @default(uuid())
+  nombre String
+  fechaInicio DateTime
+  fechaFin DateTime
+  fechaReferenciaEdad DateTime
+  estado EstadoGrandPrix @default(Borrador)
+  minimoCarrerasCalendario Int @default(0)
+  minimoParticipacionesCorredor Int @default(0)
+  exigeAfiliacion Boolean @default(false)
+  admiteResultadosPrevios Boolean @default(false)
+  necesitaRecalculo Boolean @default(false)
+  pruebas GrandPrixPrueba[]
+  categorias CategoriaGrandPrix[]
+  participaciones ParticipacionGrandPrix[]
+  reglamentos ReglamentoGrandPrix[]
+  cambios CambioGrandPrix[]
+  fechaHoraCreacion DateTime @default(now())
+  fechaHoraModificacion DateTime @updatedAt
+}
+
+model CategoriaGrandPrix {
+  id String @id @default(uuid())
+  grandPrixId String
+  grandPrix GrandPrix @relation(fields: [grandPrixId], references: [id], onDelete: Restrict)
+  nombre String
+  sexo Sexo?
+  edadMinima Int?
+  edadMaxima Int?
+  discapacidad Discapacidad?
+  participaciones ParticipacionGrandPrix[]
+  @@unique([grandPrixId, nombre])
+}
+
+model GrandPrixPrueba {
+  id String @id @default(uuid())
+  grandPrixId String
+  grandPrix GrandPrix @relation(fields: [grandPrixId], references: [id], onDelete: Restrict)
+  distanciaCarreraId String
+  distanciaCarrera DistanciaCarrera @relation( fields: [distanciaCarreraId], references: [id], onDelete: Restrict)
+  incluida Boolean @default(true)
+  reglamentoId String?
+  reglamento ReglamentoGrandPrix? @relation( "ReglamentoAsignado", fields: [reglamentoId], references: [id], onDelete: Restrict)
+  reglas ReglaPuntajeGrandPrix[]
+  puntajes PuntajeGrandPrix[]
+  @@unique([grandPrixId, distanciaCarreraId])
+  @@index([reglamentoId])
+}
+
+model ParticipacionGrandPrix {
+  id String @id @default(uuid())
+  grandPrixId String
+  grandPrix GrandPrix @relation(fields: [grandPrixId], references: [id], onDelete: Restrict)
+  corredorId String
+  corredor Corredor @relation(fields: [corredorId], references: [id], onDelete: Restrict)
+  categoriaId String
+  categoria CategoriaGrandPrix @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  estado EstadoParticipacionGrandPrix @default(Activa)
+  fechaInscripcion DateTime @default(now())
+  afiliacionVerificada Boolean @default(false)
+  puntajes PuntajeGrandPrix[]
+  @@unique([grandPrixId, corredorId])
+  @@index([grandPrixId, categoriaId, estado])
+}
+
+model ReglamentoGrandPrix {
+  id String @id @default(uuid())
+  grandPrixId String
+  grandPrix GrandPrix @relation(fields: [grandPrixId], references: [id], onDelete: Restrict)
+  version Int
+  estado EstadoReglamentoGrandPrix @default(Borrador)
+  basePuesto BasePuestoGrandPrix
+  fechaPublicacion DateTime?
+  fechaHoraCreacion DateTime @default(now())
+  pruebasAsignadas GrandPrixPrueba[] @relation("ReglamentoAsignado")
+  reglas ReglaPuntajeGrandPrix[]
+  puntajes PuntajeGrandPrix[]
+  @@unique([grandPrixId, version])
+}
+
+model ReglaPuntajeGrandPrix {
+  id String @id @default(uuid())
+  reglamentoId String
+  reglamento ReglamentoGrandPrix @relation( fields: [reglamentoId], references: [id], onDelete: Restrict)
+  pruebaId String
+  prueba GrandPrixPrueba @relation(fields: [pruebaId], references: [id], onDelete: Restrict)
+  puesto Int
+  puntos Int
+  @@unique([reglamentoId, pruebaId, puesto])
+}
+
+model PuntajeGrandPrix {
+  id String @id @default(uuid())
+  participacionId String
+  participacion ParticipacionGrandPrix @relation( fields: [participacionId], references: [id], onDelete: Restrict)
+  pruebaId String
+  prueba GrandPrixPrueba @relation(fields: [pruebaId], references: [id], onDelete: Restrict)
+  resultadoId String
+  resultado Resultado @relation(fields: [resultadoId], references: [id], onDelete: Restrict)
+  reglamentoId String
+  reglamento ReglamentoGrandPrix @relation( fields: [reglamentoId], references: [id], onDelete: Restrict)
+  puestoCategoria Int
+  puntos Int
+  vigente Boolean @default(true)
+  fechaCalculo DateTime @default(now())
+  @@unique([participacionId, pruebaId])
+  @@index([pruebaId, vigente])
+}
+
+model CambioGrandPrix {
+  id String @id @default(uuid())
+  grandPrixId String
+  grandPrix GrandPrix @relation(fields: [grandPrixId], references: [id], onDelete: Restrict)
+  usuarioId String?
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  accion String
+  motivo String
+  datosAntes String?
+  datosDespues String?
+  fechaHora DateTime @default(now())
+  @@index([grandPrixId, fechaHora])
+}
+
+enum EstadoGrandPrix {
+  Borrador
+  Activo
+  Cerrado
+  Cancelado
+}
+
+enum EstadoParticipacionGrandPrix {
+  Activa
+  Retirada
+  Excluida
+}
+
+enum EstadoReglamentoGrandPrix {
+  Borrador
+  Publicado
+}
+
+enum BasePuestoGrandPrix {
+  TodosCarrera
+  ParticipantesGrandPrix
 }

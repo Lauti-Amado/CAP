@@ -21,6 +21,9 @@ import usuarioGestionRoutes from "./routes/usuarioGestion.routes"
 import plantillaCertificadoRoutes from "./routes/plantillaCertificado.routes"
 import actividadRoutes from "./routes/actividad.routes"
 import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
+import grandPrixRoutes from "./routes/grandPrix.routes";
+import { registrarListenerGrandPrix } from "./listeners/grandPrix.listener";
+
 import { registrarListenerClasificacionEnVivo } from "./listeners/clasificacionEnVivo.listener";
 import { iniciarMantenimientoClaves } from "./jobs/claveRespaldo.job";
 
@@ -55,6 +58,7 @@ app.use('/api', carreraEstadoRoutes)
 app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
 app.use("/api/categorias", categoriaRoutes);
+app.use("/api/grand-prix", grandPrixRoutes);
 app.use("/api/claves-respaldo", claveRespaldoRoutes);
 app.use("/api/usuarios", usuarioGestionRoutes);
 app.use("/api/plantillas-certificado", plantillaCertificadoRoutes);
@@ -80,6 +84,7 @@ else {
 app.use(errorHandler);
 
 registrarListenerResultadosCategoria();
+registrarListenerGrandPrix();
 registrarListenerClasificacionEnVivo();
 iniciarMantenimientoClaves();
 
