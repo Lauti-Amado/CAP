@@ -5,6 +5,7 @@ import { PackageCheck, Info, CircleCheck } from 'lucide-react'
 import { Alert, Container, Row, Col, Card, Form, Button, InputGroup, Spinner} from 'react-bootstrap'
 import TarjetasCorredor from '../../components/corredor/TarjetasCorredor'
 import { useCarreraActual } from '../../hooks/useCarreraActual'
+import { useBreadcrumbLabel } from '../../hooks/useBreadcrumbLabel'
 import { ApiError } from '../../services/apiService'
 import { buscarCorredorPorDni, registrarEntregaKit,} from '../../services/entregaKitService'
 import { useForm } from 'react-hook-form'
@@ -32,6 +33,16 @@ function DetalleCorredor() {
   const [entregando, setEntregando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [entregaConfirmada, setEntregaConfirmada] = useState(false)
+
+  const labelBreadcrumb = cargando
+    ? 'Cargando...'
+    : corredor
+      ? `${corredor.corredor.nombre} ${corredor.corredor.apellido}`
+      : error
+        ? 'Detalle de corredor'
+        : 'Corredor no encontrado'
+
+  useBreadcrumbLabel(labelBreadcrumb)
 
   const {
     register,

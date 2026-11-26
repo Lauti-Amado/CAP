@@ -1,5 +1,5 @@
 // src/context/CarreraSeccionesContext.tsx
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 export type SeccionClasificador = 'entrega-kits' | 'clasificaciones' | 'resultados';
 
@@ -27,36 +27,41 @@ export function CarreraSeleccionProvider({ children }: { children: ReactNode }) 
     }
   });
 
-  const guardarCarrera = (seccion: SeccionClasificador, carrera: CarreraGuardada) => {
+  const guardarCarrera = useCallback((seccion: SeccionClasificador, carrera: CarreraGuardada) => {
     setSelecciones((prev) => {
       const nuevo = { ...prev, [seccion]: { id: carrera.id, nombre: carrera.nombre } };
       sessionStorage.setItem('cap_carreras_secciones', JSON.stringify(nuevo));
       return nuevo;
     });
-  };
+  }, []);
 
-  const limpiarCarrera = (seccion: SeccionClasificador) => {
+  const limpiarCarrera = useCallback((seccion: SeccionClasificador) => {
     setSelecciones((prev) => {
       const nuevo = { ...prev };
       delete nuevo[seccion];
       sessionStorage.setItem('cap_carreras_secciones', JSON.stringify(nuevo));
       return nuevo;
     });
-  };
+  }, []);
 
-  const obtenerIdCarrera = (seccion: SeccionClasificador): string | null => {
+  const obtenerIdCarrera = useCallback((seccion: SeccionClasificador): string | null => {
     const item = selecciones[seccion];
     return item && typeof item === 'object' ? item.id : null;
-  };
+  }, [selecciones]);
 
-  const obtenerCarrera = (seccion: SeccionClasificador): string | null => {
+  const obtenerCarrera = useCallback((seccion: SeccionClasificador): string | null => {
     const item = selecciones[seccion];
     if (!item) return null;
     return typeof item === 'object' ? item.nombre : item;
-  };
+  }, [selecciones]);
+
+  const value = useMemo(
+    () => ({ obtenerIdCarrera, obtenerCarrera, guardarCarrera, limpiarCarrera }),
+    [obtenerIdCarrera, obtenerCarrera, guardarCarrera, limpiarCarrera]
+  );
 
   return (
-    <CarreraSeleccionContext.Provider value={{ obtenerIdCarrera, obtenerCarrera, guardarCarrera, limpiarCarrera }}>
+    <CarreraSeleccionContext.Provider value={value}>
       {children}
     </CarreraSeleccionContext.Provider>
   );

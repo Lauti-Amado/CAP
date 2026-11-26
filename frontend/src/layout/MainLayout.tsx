@@ -3,9 +3,11 @@ import { Outlet } from 'react-router-dom';
 import MainNavbar from './navbar/MainNavbar';
 import MainAsidebar from './asidebar/MainAsidebar';
 import { Col, Container, Row } from 'react-bootstrap';
+import { BreadcrumbProvider } from '../context/BreadcrumbContext';
 
 export default function MainLayout() {
   return (
+    <BreadcrumbProvider>
       <Container fluid className='vh-100 overflow-hidden p-0'>
         <Row className="h-100 g-0 flex-nowrap">
           
@@ -31,5 +33,6 @@ export default function MainLayout() {
 
         </Row>
       </Container>
+    </BreadcrumbProvider>
   );
 }
