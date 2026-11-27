@@ -1,6 +1,7 @@
 //frontend/src/layout/asidebar/Navegacion.tsx
 import { Archive, BarChart3, Footprints, LayoutDashboard, Settings, Timer, Trophy } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import type { CSSProperties } from 'react';
 import { Nav, Button } from 'react-bootstrap';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +9,20 @@ import { useAuth } from '../../context/AuthContext';
 
 type ItemNavegacion = { label: string; icon: LucideIcon; path: string };
 type SeccionNavegacion = { label: string; items: ItemNavegacion[] };
+
+// Ítem activo: verde claro sobre el verde oscuro (bg-success) del sidebar.
+// Se pisan las variables del botón de Bootstrap para que hover/focus mantengan el mismo color.
+const VERDE_CLARO = '#1cbb5f';
+const VERDE_TEXTO_ACTIVO = '#183f2b';
+
+const estiloActivo = {
+    '--bs-btn-bg': VERDE_CLARO,
+    '--bs-btn-hover-bg': VERDE_CLARO,
+    '--bs-btn-active-bg': VERDE_CLARO,
+    '--bs-btn-color': VERDE_TEXTO_ACTIVO,
+    '--bs-btn-hover-color': VERDE_TEXTO_ACTIVO,
+    '--bs-btn-active-color': VERDE_TEXTO_ACTIVO,
+} as CSSProperties;
 
 export default function Navegacion() {
     const navigate = useNavigate();
@@ -79,8 +94,9 @@ export default function Navegacion() {
                         return (
                             <Button
                                 key={label}
-                                variant={isActive ? 'light' : 'success'}
-                                className={`w-100 d-flex align-items-center gap-2 rounded-0 border-0 px-3 py-2 small fw-semibold text-start text-nowrap ${isActive ? 'text-success' : ''}`}
+                                variant="success"
+                                className="w-100 d-flex align-items-center gap-2 rounded-0 border-0 px-3 py-2 small fw-semibold text-start text-nowrap"
+                                style={isActive ? estiloActivo : undefined}
                                 aria-current={isActive ? 'page' : undefined}
                                 onClick={() => navigate(path)}
                             >

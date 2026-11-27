@@ -56,39 +56,19 @@ Los atributos del Corredor (`fechaNacimiento`, `sexo`, `discapacidad`) se toman 
 3. En la siguiente descarga llega la canónica; el sistema local la detecta y ejecuta la fusión local.
 
 ### Implementación local
-Detector:
+Está en `backend/src/rules/fusionPersonas.rules.ts` y `backend/src/services/personaFusion.service.ts`.
 
-```sql
-SELECT dni, COUNT(*) AS cantidad
-FROM Persona
-GROUP BY dni
-HAVING COUNT(*) > 1;
-```
+- **Detector:** `buscarDnisDuplicados()` agrupa las Personas por `dni` y devuelve las que aparecen más de una vez.
+- **Foto de cada Persona:** `cargarResumenPersona(tx, id)` lee la Persona con su usuario, corredor, afiliación, aptos médicos, inscripciones (con su kit entregado) y los corredores que la tienen como contacto de emergencia.
+- **Plan:** `planificarFusion(canonica, duplicada)` es una función pura. Recibe esas dos fotos y devuelve la lista ordenada de operaciones (`repuntar`, `eliminar`, `conflicto`), sin tocar la base. Si el plan contiene algún `conflicto`, no se ejecuta ninguna operación (`tieneConflictos`). Las eliminaciones van siempre al final y la Persona duplicada es lo último.
+- **Tests:** `backend/tests/fusionPersonas.rules.test.ts` (14 casos; se ejecutan con `npm test`).
 
-Plan de fusión (función pura, separada de la ejecución para que solo cambie el ejecutor según la decisión [03]):
-
-```ts
-type OperacionFusion =
-  | { tipo: 'repuntar'; tabla: string; campo: string; id: string; hacia: string }
-  | { tipo: 'eliminar'; tabla: 'Persona' | 'Corredor'; id: string }
-  | { tipo: 'conflicto'; motivo: string; detalle: Record<string, string> }
-
-function planificarFusion(canonicaId: string, duplicadaId: string): OperacionFusion[]
-```
-
-Si el plan contiene algún `conflicto`, no se ejecuta ninguna operación.
-
-| Caso de prueba | Resultado esperado |
-|---|---|
-| La duplicada solo es contacto de emergencia de un corredor | Se repunta el contacto y se elimina |
-| La duplicada tiene Corredor y la canónica no | Se repunta `Corredor.personaId` y se elimina |
-| Ambas tienen Corredor sin inscripciones en común | Se fusionan los Corredores |
-| Ambas tienen Corredor con inscripción en la misma carrera | `conflicto` |
-| Ambas tienen Usuario | `conflicto` |
-| Ambos corredores son socios | `conflicto` |
+Motivos de conflicto: `AMBAS_TIENEN_USUARIO`, `AMBOS_SON_SOCIOS`, `INSCRIPCION_REPETIDA_EN_CARRERA` (con la inscripción sugerida) y `CONTACTO_DE_EMERGENCIA_PROPIO`.
 
 ## Pendiente
-- Dónde se dispara la fusión local al sincronizar: depende del spike [03].
+- **Ejecutor del plan:** escribe con el SDK de PowerSync dentro de una `writeTransaction` (decisión [03], opción A). Depende de la capa de escritura local.
+- **Disparador al sincronizar:** una consulta del detector observada con `db.watch()`. Falta comprobar que avise de los cambios que llegan por sync (decisión [03], verificación 10).
+- **Registro de conflictos manuales:** decidir dónde se guardan hasta que una persona los resuelva.
 
 ## A coordinar con la web
 - Implementar el contrato de ambos casos: el vínculo al registrarse una cuenta (caso principal) y la traducción de ids ante un DNI duplicado (caso excepcional).

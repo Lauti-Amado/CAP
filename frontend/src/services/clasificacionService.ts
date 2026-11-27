@@ -1,78 +1,52 @@
-
+//frontend/src/services/clasificacionService.ts
 import { apiFetch } from './apiService'
-import type { EstadoClasificacion } from '../types/clasificacion'
+import type {
+  ClasificacionDTO,
+  ClasificacionTiempoRealDTO,
+  EstadoManualClasificacion,
+  FiltrosClasificacion,
+  PaginaClasificacion,
+  RegistrarResultadoBody,
+} from '../types/clasificacionApi'
 
-export type CorredorClasificacionDTO = {
-  dni: string
-  nombre: string
-  apellido: string
-  sexo: 'Masculino' | 'Femenino'
-  discapacidad: string | null
-}
+export type { ClasificacionDTO, ClasificacionTiempoRealDTO }
 
-export type ClasificacionDTO = {
-  id: string
-  estado: string
-  inscripcionId: string
-  corredor: CorredorClasificacionDTO
-  dorsal: string | null
-  equipo: string | null
-  distancia: {
-    kilometraje: number
-    tipoDistancia: string
-  }
-  resultado: {
-    id: string
-    tiempoLlegada: number | null
-    puestoGeneral: number
-    estado: string
-    categorias: {
-      categoriaId: string
-      nombre: string
-      puesto: number
-    }[]
-  } | null
-}
+const LIMITE_MAXIMO = 100 // tope que acepta el backend por página
 
-export type ResumenClasificacionDTO = {
-  participantes: number
-  llegados: number
-  pendientes: number
-  noFinalizaron: number
-  noLargaron: number
-  descalificados: number
-  progreso: number
-}
-
-export type ClasificacionTiempoRealDTO = {
-  carrera: {
-    id: string
-    estado: string
-    fechaHoraCarrera: string
-  }
-  resumen: ResumenClasificacionDTO
-  llegadas: ClasificacionDTO[]
-}
-
-export function obtenerClasificaciones(
-  carreraId: string,
-  filtros?: {
-    estado?: EstadoClasificacion
-    busqueda?: string
-  }
-): Promise<ClasificacionDTO[]> {
+function buildQuery(filtros: Partial<FiltrosClasificacion>): string {
   const params = new URLSearchParams()
-
-  if (filtros?.estado) params.set('estado', filtros.estado)
-  if (filtros?.busqueda) params.set('busqueda', filtros.busqueda)
-
-  const query = params.toString()
-
-  return apiFetch<ClasificacionDTO[]>(
-    `/carreras/${carreraId}/clasificacion${query ? `?${query}` : ''}`
-  )
+  if (filtros.estado)    params.set('estado',    filtros.estado)
+  if (filtros.busqueda)  params.set('busqueda',  filtros.busqueda)
+  if (filtros.distancia) params.set('distancia', String(filtros.distancia))
+  if (filtros.sexo)      params.set('sexo',      filtros.sexo)
+  if (filtros.categoria) params.set('categoria', filtros.categoria)
+  if (filtros.pagina)    params.set('pagina',    String(filtros.pagina))
+  if (filtros.limite)    params.set('limite',    String(filtros.limite))
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
 }
 
+/** Resultados paginados con filtros */
+export function listarClasificacion(
+  carreraId: string,
+  filtros: Partial<FiltrosClasificacion> = {}
+): Promise<PaginaClasificacion> {
+  return apiFetch<PaginaClasificacion>(`/carreras/${carreraId}/clasificacion${buildQuery(filtros)}`)
+}
+
+/**
+ * Una sola página (hasta 100) de clasificaciones, sin metadatos de paginación.
+ * Pensada para búsquedas puntuales (por ejemplo, por DNI); para listados usar `listarClasificacion`.
+ */
+export async function obtenerClasificaciones(
+  carreraId: string,
+  filtros: Partial<FiltrosClasificacion> = {}
+): Promise<ClasificacionDTO[]> {
+  const pagina = await listarClasificacion(carreraId, { limite: LIMITE_MAXIMO, ...filtros })
+  return pagina.datos
+}
+
+/** Resumen + últimas llegadas de la carrera (más recientes primero) */
 export function obtenerClasificacionTiempoReal(
   carreraId: string,
   limite = 20
@@ -81,34 +55,30 @@ export function obtenerClasificacionTiempoReal(
     `/carreras/${carreraId}/clasificacion/tiempo-real?limite=${limite}`
   )
 }
-export type RegistrarResultadoPayload = {
-  puestoGeneral: number
-  tiempoLlegada?: number | null
+
+/** Una clasificación puntual por id */
+export function obtenerClasificacionPorId(id: string): Promise<ClasificacionDTO> {
+  return apiFetch<ClasificacionDTO>(`/clasificaciones/${id}`)
 }
 
-export function registrarResultadoClasificacion(
-  clasificacionId: string,
-  datos: RegistrarResultadoPayload,
-): Promise<ClasificacionDTO> {
-  return apiFetch<ClasificacionDTO>(
-    `/clasificaciones/${clasificacionId}/resultado`,
-    {
-      method: 'PUT',
-      body: JSON.stringify(datos),
-    },
-  )
-}
-export type EstadoManualClasificacion = 'Descalificado' | 'No_largo'
-
+/** Descalificar / marcar "No largó" / "No finalizó" */
 export function cambiarEstadoClasificacion(
-  clasificacionId: string,
+  id: string,
   estado: EstadoManualClasificacion
 ): Promise<ClasificacionDTO> {
-  return apiFetch<ClasificacionDTO>(
-    `/clasificaciones/${clasificacionId}`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({ estado }),
-    }
-  )
+  return apiFetch<ClasificacionDTO>(`/clasificaciones/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ estado }),
+  })
+}
+
+/** Registra o corrige el resultado (puesto y tiempo) de una clasificación */
+export function registrarResultadoClasificacion(
+  id: string,
+  datos: RegistrarResultadoBody
+): Promise<ClasificacionDTO> {
+  return apiFetch<ClasificacionDTO>(`/clasificaciones/${id}/resultado`, {
+    method: 'PUT',
+    body: JSON.stringify(datos),
+  })
 }

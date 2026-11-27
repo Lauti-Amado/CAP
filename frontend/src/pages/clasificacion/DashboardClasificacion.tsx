@@ -1,7 +1,7 @@
-
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Col, Row, Spinner } from 'react-bootstrap';
+//frontend/src/pages/clasificacion/DashboardClasificacion.tsx
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button, Card, Col, Row } from 'react-bootstrap';
 import {
   AlertTriangle,
   CalendarDays,
@@ -21,80 +21,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useCarrera } from '../../context/CarreraContext';
 import { useCarreraActual } from '../../hooks/useCarreraActual';
 import { ApiError } from '../../services/apiService';
-import {
-  iniciarCarrera,
-  finalizarCarrera,
-} from '../../services/carreraService';
-import {
-  obtenerClasificaciones,
-  obtenerClasificacionTiempoReal,
-  type ClasificacionDTO,
-  type ResumenClasificacionDTO,
-} from '../../services/clasificacionService';
-import type { ParticipanteClasificacion } from '../../types/clasificacion';
-
-const resumenInicial: ResumenClasificacionDTO = {
-  participantes: 0,
-  llegados: 0,
-  pendientes: 0,
-  noFinalizaron: 0,
-  noLargaron: 0,
-  descalificados: 0,
-  progreso: 0,
-};
-
-const formatearTiempo = (milisegundos: number | null): string | undefined => {
-  if (milisegundos === null) return undefined;
-
-  const totalSegundos = Math.floor(milisegundos / 1000);
-  const horas = Math.floor(totalSegundos / 3600);
-  const minutos = Math.floor((totalSegundos % 3600) / 60);
-  const segundos = totalSegundos % 60;
-
-  return [horas, minutos, segundos]
-    .map((valor) => String(valor).padStart(2, '0'))
-    .join(':');
-};
-
-const mapearParticipante = (
-  clasificacion: ClasificacionDTO,
-  carreraEnCurso: boolean,
-): ParticipanteClasificacion => {
-  let estado: ParticipanteClasificacion['estado'];
-
-  switch (clasificacion.estado) {
-    case 'Finalizo':
-      estado = 'LLEGADO';
-      break;
-    case 'Descalificado':
-      estado = 'DESCALIFICADO';
-      break;
-    case 'No_finalizo':
-      estado = 'NO FINALIZÓ';
-      break;
-    case 'No_largo':
-      estado = 'NO LARGÓ';
-      break;
-    default:
-      estado = carreraEnCurso ? 'EN CURSO' : 'PENDIENTE';
-  }
-
-  return {
-    id: clasificacion.id,
-    dorsal: clasificacion.dorsal
-      ? `#${clasificacion.dorsal}`
-      : '—',
-    atleta: `${clasificacion.corredor.nombre} ${clasificacion.corredor.apellido}`,
-    dni: clasificacion.corredor.dni,
-    categoria: clasificacion.resultado?.categorias[0]?.nombre ?? '—',
-    estado,
-    tiempo: formatearTiempo(clasificacion.resultado?.tiempoLlegada ?? null),
-  };
-};
+import { iniciarCarrera, finalizarCarrera } from '../../services/carreraService';
+import { useClasificacion } from '../../hooks/useClasificacion';
+import { useResumenClasificacion } from '../../hooks/useResumenClasificacion';
+import { clasificacionAParticipante } from '../../utils/clasificacionUtils';
+import type { EstadoClasificacionApi } from '../../types/clasificacionApi';
 
 const DashboardClasificacion = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { nombreCarrera } = useParams();
   const { tieneRol } = useAuth();
   const { recargar } = useCarrera();
@@ -105,60 +39,20 @@ const DashboardClasificacion = () => {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [participantes, setParticipantes] = useState<ParticipanteClasificacion[]>([]);
-  const [estadisticas, setEstadisticas] =
-    useState<ResumenClasificacionDTO>(resumenInicial);
-  const [cargandoDatos, setCargandoDatos] = useState(false);
-  const [errorDatos, setErrorDatos] = useState<string | null>(null);
+  // Clasificación paginada desde el backend
+  const {
+    datos,
+    total,
+    totalPaginas,
+    cargando: cargandoClasificacion,
+    error: errorDatos,
+    filtros,
+    cambiarFiltro,
+    cambiarPagina,
+  } = useClasificacion(carrera?.id);
 
-  useEffect(() => {
-    if (!carrera) return;
-
-    let cancelado = false;
-
-    const cargarDatos = async () => {
-      setCargandoDatos(true);
-      setErrorDatos(null);
-
-      try {
-        const [clasificaciones, tiempoReal] = await Promise.all([
-          obtenerClasificaciones(carrera.id),
-          obtenerClasificacionTiempoReal(carrera.id),
-        ]);
-
-        if (cancelado) return;
-
-        setParticipantes(
-          clasificaciones.map((clasificacion) =>
-            mapearParticipante(
-              clasificacion,
-              carrera.estado === 'En_curso',
-            ),
-          ),
-        );
-
-        setEstadisticas(tiempoReal.resumen);
-      } catch (e) {
-        if (cancelado) return;
-
-        setErrorDatos(
-          e instanceof ApiError
-            ? e.message
-            : 'No se pudieron cargar los datos de clasificación.',
-        );
-      } finally {
-        if (!cancelado) setCargandoDatos(false);
-      }
-    };
-
-    void cargarDatos();
-
-    return () => {
-      cancelado = true;
-    };
-  // location.key cambia al navegar y permite volver a consultar los datos
-  // cuando se regresa desde la pantalla de registro de llegadas.
-  }, [carrera?.id, carrera?.estado, location.key]);
+  // Totales de la carrera (independientes de la página y los filtros de la tabla)
+  const resumen = useResumenClasificacion(carrera?.id, true);
 
   const ejecutar = async (accion: (id: string) => Promise<unknown>) => {
     if (!carrera || procesando) return;
@@ -356,96 +250,92 @@ const DashboardClasificacion = () => {
         </div>
       )}
 
-      {cargandoDatos ? (
-        <div className="d-flex justify-content-center align-items-center py-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Cargando clasificación...</span>
-          </Spinner>
-        </div>
-      ) : (
-        <>
-          <EstadisticasClasificacion
-            participantes={estadisticas.participantes}
-            llegados={estadisticas.llegados}
-            pendientes={estadisticas.pendientes}
-            progreso={estadisticas.progreso}
+      <EstadisticasClasificacion
+        participantes={resumen?.participantes ?? 0}
+        llegados={resumen?.llegados ?? 0}
+        pendientes={resumen?.pendientes ?? 0}
+        progreso={resumen?.progreso ?? 0}
+      />
+
+      <Row className="g-4">
+        {/* Participantes */}
+        <Col xs={12} lg={8}>
+          <ParticipantesCard
+            participantes={datos.map(clasificacionAParticipante)}
+            onVerClasificacion={(p) =>
+              navigate(`/clasificador/clasificaciones/${nombreCarrera}/${p.id}`)
+            }
+            paginaActual={filtros.pagina ?? 1}
+            totalPaginas={totalPaginas}
+            total={total}
+            onCambiarPagina={cambiarPagina}
+            busqueda={filtros.busqueda ?? ''}
+            onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
+            filtroEstado={filtros.estado ?? ''}
+            onFiltroEstadoChange={(v) =>
+              cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)
+            }
+            filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
+            onFiltroDistanciaChange={(v) =>
+              cambiarFiltro('distancia', v ? Number(v) : undefined)
+            }
+            filtroSexo={filtros.sexo ?? ''}
+            onFiltroSexoChange={(v) =>
+              cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)
+            }
+            cargando={cargandoClasificacion}
           />
+        </Col>
 
-          <Row className="g-4">
-            <Col xs={12} lg={8}>
-              <ParticipantesCard
-                participantes={participantes}
-                onVerClasificacion={(p) =>
-                  navigate(
-                    `/clasificador/clasificaciones/${nombreCarrera}/${p.id}`,
-                  )
-                }
-              />
-            </Col>
-
-            <Col xs={12} lg={4}>
-              <Card
-                className="h-100 shadow-sm border"
-                style={{ borderRadius: '8px' }}
+        {/* Acciones rápidas */}
+        <Col xs={12} lg={4}>
+          <Card className="h-100 shadow-sm border" style={{ borderRadius: '8px' }}>
+            <Card.Body className="d-flex flex-column p-4">
+              <h3
+                className="text-uppercase text-muted fw-bold mb-3"
+                style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}
               >
-                <Card.Body className="d-flex flex-column p-4">
-                  <h3
-                    className="text-uppercase text-muted fw-bold mb-3"
-                    style={{
-                      fontSize: '0.7rem',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    ACCIONES RÁPIDAS
-                  </h3>
+                ACCIONES RÁPIDAS
+              </h3>
 
-                  <Button
-                    className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
-                    style={{
-                      backgroundColor: '#16a34a',
-                      borderRadius: '8px',
-                      minHeight: '180px',
-                    }}
-                    onClick={() =>
-                      navigate(
-                        `/clasificador/clasificaciones/${nombreCarrera}/tiempo-real`,
-                      )
-                    }
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#15803d')
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#16a34a')
-                    }
-                  >
-                    <span
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle"
-                      style={{
-                        width: '64px',
-                        height: '64px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      <Clock size={28} aria-hidden="true" />
-                    </span>
+              <Button
+                className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
+                style={{
+                  backgroundColor: '#16a34a',
+                  borderRadius: '8px',
+                  minHeight: '180px',
+                }}
+                onClick={() =>
+                  navigate(`/clasificador/clasificaciones/${nombreCarrera}/tiempo-real`)
+                }
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#15803d')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#16a34a')
+                }
+              >
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  }}
+                >
+                  <Clock size={28} aria-hidden="true" />
+                </span>
 
-                    <strong className="fs-5">
-                      Clasificaciones en tiempo real
-                    </strong>
+                <strong className="fs-5">Clasificaciones en tiempo real</strong>
 
-                    <span
-                      className="text-white-50"
-                      style={{ fontSize: '0.85rem' }}
-                    >
-                      Seguimiento en directo
-                    </span>
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </>
-      )}
+                <span className="text-white-50" style={{ fontSize: '0.85rem' }}>
+                  Seguimiento en directo
+                </span>
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       <FinalizarCarreraModal
         show={mostrarFinalizar}

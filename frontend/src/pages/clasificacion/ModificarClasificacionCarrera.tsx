@@ -1,123 +1,42 @@
-
-import { useEffect, useState } from 'react'
+//frontend/src/pages/clasificacion/ModificarClasificacionCarrera.tsx
 import { useNavigate, useParams } from 'react-router-dom'
-import { Alert, Button, Card, Col, Row, Spinner } from 'react-bootstrap'
+import { Alert, Button, Card, Col, Row } from 'react-bootstrap'
 import { ArrowLeft, CalendarDays, ListOrdered, MapPin, Ruler } from 'lucide-react'
 
 import EstadoCarreraBadge from '../../components/carrera/EstadoCarreraBadge'
 import ParticipantesCard from '../../components/clasificacion/ParticipantesCard'
 import EstadisticasClasificacion from '../../components/clasificacion/EstadisticasClasificacion'
 import { useDetalleCarrera } from '../../hooks/useDetalleCarrera'
-import {
-  obtenerClasificaciones,
-  type ClasificacionDTO,
-} from '../../services/clasificacionService'
-import type { ParticipanteClasificacion } from '../../types/clasificacion'
-import { ApiError } from '../../services/apiService'
+import { useClasificacion } from '../../hooks/useClasificacion'
+import { useResumenClasificacion } from '../../hooks/useResumenClasificacion'
+import { clasificacionAParticipante } from '../../utils/clasificacionUtils'
+import type { EstadoClasificacionApi } from '../../types/clasificacionApi'
 
-const estiloPagina = {
-  minHeight: '100vh',
-  backgroundColor: '#f8f9ff',
-}
-
-function mapearParticipante(
-  clasificacion: ClasificacionDTO,
-): ParticipanteClasificacion {
-  let estado: ParticipanteClasificacion['estado']
-
-  switch (clasificacion.estado) {
-    case 'Finalizo':
-      estado = 'LLEGADO'
-      break
-    case 'Descalificado':
-      estado = 'DESCALIFICADO'
-      break
-    case 'No_finalizo':
-      estado = 'NO FINALIZÓ'
-      break
-    case 'No_largo':
-      estado = 'NO LARGÓ'
-      break
-    default:
-      estado = 'PENDIENTE'
-  }
-
-  const tiempo = clasificacion.resultado?.tiempoLlegada
-
-  let tiempoFormateado: string | undefined
-
-  if (tiempo !== null && tiempo !== undefined) {
-    const segundosTotales = Math.floor(tiempo / 1000)
-    const horas = Math.floor(segundosTotales / 3600)
-    const minutos = Math.floor((segundosTotales % 3600) / 60)
-    const segundos = segundosTotales % 60
-
-    tiempoFormateado = [horas, minutos, segundos]
-      .map((valor) => String(valor).padStart(2, '0'))
-      .join(':')
-  }
-
-  return {
-    id: clasificacion.id,
-    dorsal: clasificacion.dorsal
-      ? `#${clasificacion.dorsal}`
-      : '—',
-    atleta: `${clasificacion.corredor.nombre} ${clasificacion.corredor.apellido}`,
-    dni: clasificacion.corredor.dni,
-    categoria: clasificacion.resultado?.categorias[0]?.nombre ?? '—',
-    estado,
-    tiempo: tiempoFormateado,
-  }
-}
+const estiloPagina = { minHeight: '100vh', backgroundColor: '#f8f9ff' }
 
 function ModificarClasificacionCarrera() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const { carrera, cargando, error } = useDetalleCarrera(id)
+  const { carrera, cargando: cargandoCarrera, error } = useDetalleCarrera(id)
 
-  const [participantes, setParticipantes] = useState<ParticipanteClasificacion[]>([])
-  const [cargandoClasificaciones, setCargandoClasificaciones] = useState(true)
-  const [errorClasificaciones, setErrorClasificaciones] = useState<string | null>(null)
+  const {
+    datos,
+    total,
+    totalPaginas,
+    cargando,
+    error: errorClasificacion,
+    filtros,
+    cambiarFiltro,
+    cambiarPagina,
+  } = useClasificacion(id)
 
-  useEffect(() => {
-    let cancelado = false
-
-    const cargarClasificaciones = async () => {
-      if (!id || !carrera) return
-
-      setCargandoClasificaciones(true)
-      setErrorClasificaciones(null)
-
-      try {
-        const clasificaciones = await obtenerClasificaciones(id)
-
-        if (cancelado) return
-
-        setParticipantes(clasificaciones.map(mapearParticipante))
-      } catch (e) {
-        if (cancelado) return
-
-        setErrorClasificaciones(
-          e instanceof ApiError
-            ? e.message
-            : 'No se pudieron cargar las clasificaciones.',
-        )
-      } finally {
-        if (!cancelado) setCargandoClasificaciones(false)
-      }
-    }
-
-    void cargarClasificaciones()
-
-    return () => {
-      cancelado = true
-    }
-  }, [id, carrera])
+  // Totales de la carrera (independientes de la página y los filtros de la tabla)
+  const resumen = useResumenClasificacion(id)
 
   const volverAlDetalle = () => navigate(`/administrador/carreras/${id}`)
 
-  if (cargando) {
+  if (cargandoCarrera) {
     return (
       <main className="p-4" style={estiloPagina}>
         <p className="text-secondary">Cargando carrera...</p>
@@ -164,13 +83,7 @@ function ModificarClasificacionCarrera() {
     .map((item) => `${item.kilometraje}K`)
     .join(', ')
 
-  const totalParticipantes = participantes.length
-  const llegados = participantes.filter((p) => p.estado === 'LLEGADO').length
-  const pendientes = totalParticipantes - llegados
-  const progreso =
-    totalParticipantes === 0
-      ? 0
-      : Math.round((llegados / totalParticipantes) * 100)
+  const participantesTabla = datos.map(clasificacionAParticipante)
 
   return (
     <main className="p-4" style={estiloPagina}>
@@ -229,99 +142,89 @@ function ModificarClasificacionCarrera() {
         </Card.Body>
       </Card>
 
-      {errorClasificaciones && (
-        <Alert variant="danger">{errorClasificaciones}</Alert>
+      {errorClasificacion && (
+        <Alert variant="danger">{errorClasificacion}</Alert>
       )}
 
-      {cargandoClasificaciones ? (
-        <div className="d-flex justify-content-center py-5">
-          <Spinner animation="border" />
-        </div>
-      ) : (
-        <>
-          <EstadisticasClasificacion
-            participantes={totalParticipantes}
-            llegados={llegados}
-            pendientes={pendientes}
-            progreso={progreso}
+      <EstadisticasClasificacion
+        participantes={resumen?.participantes ?? 0}
+        llegados={resumen?.llegados ?? 0}
+        pendientes={resumen?.pendientes ?? 0}
+        progreso={resumen?.progreso ?? 0}
+      />
+
+      <Row className="g-3">
+        <Col xs={12} lg={8}>
+          <ParticipantesCard
+            participantes={participantesTabla}
+            textoAccion="Modificar clasificación"
+            onVerClasificacion={(p) =>
+              navigate(`/administrador/carreras/${carrera.id}/clasificacion/${p.id}`)
+            }
+            paginaActual={filtros.pagina ?? 1}
+            totalPaginas={totalPaginas}
+            total={total}
+            onCambiarPagina={cambiarPagina}
+            busqueda={filtros.busqueda ?? ''}
+            onBusquedaChange={(v) => cambiarFiltro('busqueda', v || undefined)}
+            filtroEstado={filtros.estado ?? ''}
+            onFiltroEstadoChange={(v) => cambiarFiltro('estado', (v || undefined) as EstadoClasificacionApi | undefined)}
+            filtroDistancia={filtros.distancia ? String(filtros.distancia) : ''}
+            onFiltroDistanciaChange={(v) => cambiarFiltro('distancia', v ? Number(v) : undefined)}
+            filtroSexo={filtros.sexo ?? ''}
+            onFiltroSexoChange={(v) => cambiarFiltro('sexo', (v || undefined) as 'Masculino' | 'Femenino' | undefined)}
+            cargando={cargando}
           />
+        </Col>
 
-          <Row className="g-3">
-            <Col xs={12} lg={8}>
-              <ParticipantesCard
-                participantes={participantes}
-                textoAccion="Modificar clasificación"
-                onVerClasificacion={(p) =>
-                  navigate(
-                    `/administrador/carreras/${carrera.id}/clasificacion/${p.id}`,
-                  )
-                }
-              />
-            </Col>
-
-            <Col xs={12} lg={4}>
-              <Card
-                className="h-100 shadow-sm border"
-                style={{ borderRadius: '8px' }}
+        <Col xs={12} lg={4}>
+          <Card className="h-100 shadow-sm border" style={{ borderRadius: '8px' }}>
+            <Card.Body className="d-flex flex-column p-4">
+              <h3
+                className="text-uppercase text-muted fw-bold mb-3"
+                style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}
               >
-                <Card.Body className="d-flex flex-column p-4">
-                  <h3
-                    className="text-uppercase text-muted fw-bold mb-3"
-                    style={{
-                      fontSize: '0.7rem',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    ACCIONES RÁPIDAS
-                  </h3>
+                ACCIONES RÁPIDAS
+              </h3>
 
-                  <Button
-                    className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
-                    style={{
-                      backgroundColor: '#16a34a',
-                      borderRadius: '8px',
-                      minHeight: '180px',
-                    }}
-                    onClick={() =>
-                      navigate(
-                        `/administrador/carreras/${carrera.id}/clasificacion/completa`,
-                      )
-                    }
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#15803d')
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#16a34a')
-                    }
-                  >
-                    <span
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle"
-                      style={{
-                        width: '64px',
-                        height: '64px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      <ListOrdered size={28} aria-hidden="true" />
-                    </span>
+              <Button
+                className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center gap-2 p-4 text-white border-0"
+                style={{
+                  backgroundColor: '#16a34a',
+                  borderRadius: '8px',
+                  minHeight: '180px',
+                }}
+                onClick={() =>
+                  navigate(`/administrador/carreras/${carrera.id}/clasificacion/completa`)
+                }
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#15803d')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#16a34a')
+                }
+              >
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  }}
+                >
+                  <ListOrdered size={28} aria-hidden="true" />
+                </span>
 
-                    <strong className="fs-5">
-                      Ver clasificación completa
-                    </strong>
+                <strong className="fs-5">Ver clasificación completa</strong>
 
-                    <span
-                      className="text-white-50"
-                      style={{ fontSize: '0.85rem' }}
-                    >
-                      Revisar y modificar posiciones
-                    </span>
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </>
-      )}
+                <span className="text-white-50" style={{ fontSize: '0.85rem' }}>
+                  Revisar y modificar posiciones
+                </span>
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </main>
   )
 }
