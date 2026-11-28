@@ -4,7 +4,7 @@ import * as entregaKitService from "../services/entregaKit.service";
 import { dniQuerySchema, limiteQuerySchema } from "../validations/dorsal.validations";
 
 export async function entregar(req: Request, res: Response) {
-    return res.status(201).json(await entregaKitService.entregarKit(req.params.id as string, req.body));
+    return res.status(201).json(await entregaKitService.entregarKit(req.params.id as string, req.body, req.usuario!.id));
 }
 
 export async function obtener(req: Request, res: Response) {
@@ -12,7 +12,7 @@ export async function obtener(req: Request, res: Response) {
 }
 
 export async function deshacer(req: Request, res: Response) {
-    await entregaKitService.deshacerEntrega(req.params.id as string);
+    await entregaKitService.deshacerEntrega(req.params.id as string, req.usuario!.id);
     return res.status(204).end();
 }
 

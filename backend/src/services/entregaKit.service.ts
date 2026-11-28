@@ -8,6 +8,7 @@ import { asociarChip, obtenerOCrearDorsal } from "./dorsal.service";
 import type { EntregarKit } from "../validations/dorsal.validations";
 import { requiereAptoMedico, vencimientoVigente } from "../rules/aptoMedico.rules";
 import { estaPagada } from "../rules/compra.rules";
+import { registrarModificacion } from "./registroModificacion.service";
 
 // Estados de la carrera en los que se puede entregar (o deshacer) un kit
 const ESTADOS_ENTREGA_KITS: readonly EstadoCarrera[] = ["Entrega_kits"];
@@ -83,7 +84,7 @@ export function motivosNoHabilitado(i: InscripcionParaEntrega): string[] {
 
 // Casos de uso
 
-export async function entregarKit(inscripcionId: string, datos: EntregarKit): Promise<EntregaKitDTO> {
+export async function entregarKit(inscripcionId: string, datos: EntregarKit, usuarioId: string): Promise<EntregaKitDTO> {
     return prisma.$transaction(async (tx) => {
         const inscripcion = await tx.inscripcion.findUnique({
             where: { id: inscripcionId },
@@ -116,6 +117,27 @@ export async function entregarKit(inscripcionId: string, datos: EntregarKit): Pr
         });
         await tx.inscripcion.update({ where: { id: inscripcionId }, data: { estado: "Confirmada" } });
 
+        const carreraId = inscripcion.distanciaCarrera.idCarrera;
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId,
+            entidad: "EntregaKit",
+            entidadId: entrega.id,
+            accion: "Creacion",
+            cambios: [
+                { campo: "dorsal", anterior: null, nuevo: datos.numero },
+                { campo: "chip", anterior: null, nuevo: datos.chipNumero },
+            ],
+        });
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId,
+            entidad: "Inscripcion",
+            entidadId: inscripcionId,
+            accion: "Modificacion",
+            cambios: [{ campo: "estado", anterior: inscripcion.estado, nuevo: "Confirmada" }],
+        });
+
         return toEntregaKitDto(entrega);
     });
 }
@@ -126,11 +148,11 @@ export async function obtenerEntrega(inscripcionId: string): Promise<EntregaKitD
     return toEntregaKitDto(entrega);
 }
 
-export async function deshacerEntrega(inscripcionId: string): Promise<void> {
+export async function deshacerEntrega(inscripcionId: string, usuarioId: string): Promise<void> {
     const inscripcion = await prisma.inscripcion.findUnique({
         where: { id: inscripcionId },
         include: {
-            entregaKit: true,
+            entregaKit: { include: { dorsal: { include: { chip: true } } } },
             clasificacion: true,
             distanciaCarrera: { include: { carrera: true } },
         },
@@ -145,10 +167,32 @@ export async function deshacerEntrega(inscripcionId: string): Promise<void> {
     }
 
     // El Dorsal y su Chip se conservan: son piezas físicas reutilizables
-    await prisma.$transaction([
-        prisma.entregaKit.delete({ where: { inscripcionId } }),
-        prisma.inscripcion.update({ where: { id: inscripcionId }, data: { estado: "Pagada" } }),
-    ]);
+    const entregaKit = inscripcion.entregaKit; // ya se verificó arriba que existe
+    await prisma.$transaction(async (tx) => {
+        await tx.entregaKit.delete({ where: { inscripcionId } });
+        await tx.inscripcion.update({ where: { id: inscripcionId }, data: { estado: "Pagada" } });
+
+        const carreraId = inscripcion.distanciaCarrera.idCarrera;
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId,
+            entidad: "EntregaKit",
+            entidadId: entregaKit.id,
+            accion: "Eliminacion",
+            cambios: [
+                { campo: "dorsal", anterior: entregaKit.dorsal.numero, nuevo: null },
+                { campo: "chip", anterior: entregaKit.dorsal.chip?.numero, nuevo: null },
+            ],
+        });
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId,
+            entidad: "Inscripcion",
+            entidadId: inscripcionId,
+            accion: "Modificacion",
+            cambios: [{ campo: "estado", anterior: inscripcion.estado, nuevo: "Pagada" }],
+        });
+    });
 }
 
 export async function entregasRecientes(carreraId: string, limite: number): Promise<EntregaRecienteDTO[]> {
