@@ -10,6 +10,7 @@ Complementa la decisión [04]. El schema de Prisma es **compartido** entre la we
 | `EjecucionCarrera` | Hora real de inicio y fin de la carrera (decisión [02]) |
 | `PlantillaCertificado` | Plantillas de certificado |
 | `ClaveRespaldo`, `UsoClaveRespaldo` | Claves de ingreso de contingencia (decisión [05]) |
+| `RegistroModificacion` | Trazabilidad de las modificaciones manuales: una fila por campo cambiado, con usuario, fecha y hora, valor anterior y valor nuevo (decisión [07]) |
 
 La web **no usa** `EjecucionCarrera` en su lógica: la aloja para que quede el registro de la hora real y para que todos los equipos puedan descargarla. `clasificacion.service.ts` la lee para calcular tiempos.
 

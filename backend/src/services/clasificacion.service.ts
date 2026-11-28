@@ -1,7 +1,8 @@
 //backend/src/services/clasificacion.service.ts
 
-//NO importa otros services ni sabe de dónde viene un resultado: lo carga una
-// persona (manual) hoy y podrá hacerlo la captura RFID, llamando a las mismas funciones.
+//NO importa otros services de negocio (solo el registro de trazabilidad, que no tiene lógica propia)
+// ni sabe de dónde viene un resultado: lo carga una persona (manual) hoy y podrá hacerlo la captura RFID,
+// llamando a las mismas funciones.
 import { prisma } from "../config/prisma";
 import { EstadoClasificacion, Prisma } from "../generated/prisma/client";
 import { ErrorNoEncontrado } from "../errors/errorNoEncontrado.error";
@@ -10,6 +11,7 @@ import { clasificacionInclude, toClasificacionDto, type ClasificacionDTO, type C
 import { toPaginaDto, type PaginaDTO } from "../dtos/pagina.dto";
 import type { FiltrosClasificacion, RegistrarResultado } from "../validations/clasificacion.validations";
 import * as reglas from "./clasificacion.reglas";
+import { registrarModificacion } from "./registroModificacion.service";
 import { notificarClasificacionActualizada } from "../events/clasificacion.events";
 
 const deCarrera = (carreraId: string) =>
@@ -152,7 +154,7 @@ export async function obtenerPorId(id: string): Promise<ClasificacionDTO> {
 }
 
 // Cambio manual de estado (por ejemplo, descalificar a un corredor)
-export async function cambiarEstado(id: string, nuevoEstado: EstadoClasificacion): Promise<ClasificacionDTO> {
+export async function cambiarEstado(id: string, nuevoEstado: EstadoClasificacion, usuarioId: string): Promise<ClasificacionDTO> {
     const { dto, carreraId } = await prisma.$transaction(async (tx) => {
         const clasificacion = await tx.clasificacion.findUnique({
             where: { id },
@@ -173,6 +175,15 @@ export async function cambiarEstado(id: string, nuevoEstado: EstadoClasificacion
             if (!cambio.permitido) throw new ErrorReglaDeNegocio(cambio.motivo);
 
             await tx.clasificacion.update({ where: { id }, data: { estado: nuevoEstado } });
+
+            await registrarModificacion(tx, {
+                usuarioId,
+                carreraId: carrera.id,
+                entidad: "Clasificacion",
+                entidadId: id,
+                accion: "Modificacion",
+                cambios: [{ campo: "estado", anterior: clasificacion.estado, nuevo: nuevoEstado }],
+            });
         }
 
         const actualizada = await tx.clasificacion.findUniqueOrThrow({ where: { id }, include: clasificacionInclude });
@@ -188,6 +199,7 @@ export async function cambiarEstado(id: string, nuevoEstado: EstadoClasificacion
 export async function registrarResultado(
     id: string,
     datos: RegistrarResultado,
+    usuarioId: string,
     ahora: Date = new Date()
 ): Promise<ClasificacionDTO> {
         const { dto, carreraId } = await prisma.$transaction(async (tx) => {
@@ -267,12 +279,36 @@ export async function registrarResultado(
 
         const estadoResultado = datos.estado ?? clasificacion.resultado?.estado ?? "Oficial";
 
-        await tx.resultado.upsert({
+        const resultadoGuardado = await tx.resultado.upsert({
             where: { clasificacionId: id },
             create: { clasificacionId: id, tiempoLlegada, puestoGeneral: datos.puestoGeneral, estado: estadoResultado },
             update: { tiempoLlegada, puestoGeneral: datos.puestoGeneral, estado: estadoResultado },
         });
         await tx.clasificacion.update({ where: { id }, data: { estado: "Finalizo" } });
+
+        // Trazabilidad: qué cambió en el resultado y en el estado de la clasificación
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId: carrera.id,
+            entidad: "Resultado",
+            entidadId: resultadoGuardado.id,
+            accion: clasificacion.resultado ? "Modificacion" : "Creacion",
+            cambios: [
+                { campo: "tiempoLlegada", anterior: clasificacion.resultado?.tiempoLlegada, nuevo: tiempoLlegada },
+                { campo: "puestoGeneral", anterior: clasificacion.resultado?.puestoGeneral, nuevo: datos.puestoGeneral },
+                { campo: "estado", anterior: clasificacion.resultado?.estado, nuevo: estadoResultado },
+            ],
+            ahora,
+        });
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId: carrera.id,
+            entidad: "Clasificacion",
+            entidadId: id,
+            accion: "Modificacion",
+            cambios: [{ campo: "estado", anterior: clasificacion.estado, nuevo: "Finalizo" }],
+            ahora,
+        });
 
         const actualizada = await tx.clasificacion.findUniqueOrThrow({ where: { id }, include: clasificacionInclude });
         return { dto: toClasificacionDto(actualizada), carreraId: carrera.id };

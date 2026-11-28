@@ -32,6 +32,7 @@
 | `GET` | `/api/carreras/{id}` | Consultar el detalle de una carrera, su lugar y sus distancias |
 | `GET` | `/api/carreras/{id}/detalle` | Consultar el detalle de una carrera, con la cantidad de inscriptos, inscriptos confirmados (pagados o con kit retirado), kits entregados y clasificados |
 | `GET` | `/api/carreras/{id}/actividad?limite={n}` | Últimos movimientos de una carrera (kits entregados, inscripciones presenciales y lecturas RFID), los más recientes primero |
+| `GET` | `/api/carreras/{id}/modificaciones?entidad={e}&entidadId={id}&usuarioId={id}&pagina={n}&limite={n}` | Historial de modificaciones manuales de una carrera (trazabilidad), paginado y con las más recientes primero. Solo Administrador |
 | `PATCH` | `/api/carreras/{id}` | Modificar los datos o el estado de una carrera |
 
 #### Corredores e inscripciones

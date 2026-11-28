@@ -8,6 +8,7 @@ import { toInscripcionDetalleDto, toInscripcionListadoDto, toOpcionesInscripcion
 import { toPaginaDto, type PaginaDTO } from "../dtos/pagina.dto";
 import type { CrearInscripcion, ListadoInscripciones, ModificarInscripcion, CargarAptoMedico } from "../validations/inscripcionGestion.validations";
 import { requiereAptoMedico } from "../rules/aptoMedico.rules";
+import { registrarModificacion } from "./registroModificacion.service";
 // Etapas de la carrera en las que se aceptan inscripciones presenciales
 const ESTADOS_INSCRIPCION: readonly EstadoCarrera[] = ["Activa", "Entrega_kits"];
 
@@ -101,7 +102,8 @@ export async function obtener(id: string): Promise<InscripcionDetalleDTO> {
 // Carga de apto médico para una inscripción existente
 export async function cargarAptoMedico(
     id: string,
-    datos: CargarAptoMedico
+    datos: CargarAptoMedico,
+    usuarioId: string
 ): Promise<InscripcionDetalleDTO> {
     await prisma.$transaction(async (tx) => {
         const inscripcion = await tx.inscripcion.findUnique({
@@ -141,12 +143,21 @@ export async function cargarAptoMedico(
             );
         }
 
-        await tx.aptoMedico.create({
+        const apto = await tx.aptoMedico.create({
             data: {
                 aprobado: true,
                 fechaVencimiento: datos.fechaVencimiento,
                 corredorId: inscripcion.idCorredor,
             },
+        });
+
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId: carrera.id,
+            entidad: "AptoMedico",
+            entidadId: apto.id,
+            accion: "Creacion",
+            cambios: [{ campo: "fechaVencimiento", anterior: null, nuevo: datos.fechaVencimiento }],
         });
     });
 
@@ -402,7 +413,7 @@ export async function crear(
 
 // Baja lógica
 
-export async function anular(id: string): Promise<void> {
+export async function anular(id: string, usuarioId: string): Promise<void> {
     await prisma.$transaction(async (tx) => {
         const inscripcion = await tx.inscripcion.findUnique({
             where: { id },
@@ -434,11 +445,20 @@ export async function anular(id: string): Promise<void> {
         }
 
         await tx.inscripcion.update({ where: { id }, data: { estado: "Anulada" } });
+
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId: inscripcion.idCarrera,
+            entidad: "Inscripcion",
+            entidadId: id,
+            accion: "Eliminacion",
+            cambios: [{ campo: "estado", anterior: inscripcion.estado, nuevo: "Anulada" }],
+        });
     });
 }
 
 // Modificación: el DNI queda bloqueado. Distancia y equipo solo se cambian antes de entregar el kit.
-export async function modificar(id: string, datos: ModificarInscripcion): Promise<InscripcionDetalleDTO> {
+export async function modificar(id: string, datos: ModificarInscripcion, usuarioId: string): Promise<InscripcionDetalleDTO> {
     await prisma.$transaction(async (tx) => {
         const inscripcion = await tx.inscripcion.findUnique({
             where: { id },
@@ -446,7 +466,7 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
                 detalleCompra: { include: { compra: true } },
                 equipo: true,
                 entregaKit: true,
-                corredor: { include: { persona: true , aptosMedicos: true } },
+                corredor: { include: { persona: true, aptosMedicos: true, contactoEmergencia: true } },
                 distanciaCarrera: { include: { distancia: true, carrera: true } },
             },
         });
@@ -547,8 +567,16 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
         });
 
         if (datos.aptoMedico) {
-            await tx.aptoMedico.create({
+            const apto = await tx.aptoMedico.create({
                 data: { aprobado: true, fechaVencimiento: datos.aptoMedico.fechaVencimiento, corredorId: inscripcion.idCorredor },
+            });
+            await registrarModificacion(tx, {
+                usuarioId,
+                carreraId: carrera.id,
+                entidad: "AptoMedico",
+                entidadId: apto.id,
+                accion: "Creacion",
+                cambios: [{ campo: "fechaVencimiento", anterior: null, nuevo: datos.aptoMedico.fechaVencimiento }],
             });
         }
 
@@ -570,7 +598,48 @@ export async function modificar(id: string, datos: ModificarInscripcion): Promis
             });
             await tx.compra.update({ where: { id: compra.id }, data: { montoTotal } });
             await tx.comprobante.updateMany({ where: { compraId: compra.id }, data: { montoTotalPago: montoTotal } });
+
+            await registrarModificacion(tx, {
+                usuarioId,
+                carreraId: carrera.id,
+                entidad: "Inscripcion",
+                entidadId: id,
+                accion: "Modificacion",
+                cambios: [{ campo: "montoTotal", anterior: compra.montoTotal, nuevo: montoTotal }],
+            });
         }
+
+        // Trazabilidad: datos personales del corredor y de su contacto de emergencia
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId: carrera.id,
+            entidad: "Corredor",
+            entidadId: inscripcion.idCorredor,
+            accion: "Modificacion",
+            cambios: [
+                { campo: "nombre", anterior: inscripcion.corredor.persona.nombre, nuevo: datos.corredor.nombre },
+                { campo: "apellido", anterior: inscripcion.corredor.persona.apellido, nuevo: datos.corredor.apellido },
+                { campo: "telefono", anterior: inscripcion.corredor.persona.telefono, nuevo: datos.corredor.telefono },
+                { campo: "fechaNacimiento", anterior: inscripcion.corredor.fechaNacimiento, nuevo: datos.corredor.fechaNacimiento },
+                { campo: "sexo", anterior: inscripcion.corredor.sexo, nuevo: datos.corredor.sexo },
+                { campo: "discapacidad", anterior: inscripcion.corredor.discapacidad, nuevo: datos.corredor.discapacidad },
+                { campo: "contactoEmergenciaDni", anterior: inscripcion.corredor.contactoEmergencia.dni, nuevo: datos.contactoEmergencia.dni },
+            ],
+        });
+
+        // Trazabilidad: distancia y equipo de la inscripción
+        await registrarModificacion(tx, {
+            usuarioId,
+            carreraId: carrera.id,
+            entidad: "Inscripcion",
+            entidadId: id,
+            accion: "Modificacion",
+            cambios: [
+                { campo: "distancia", anterior: `${distancia.kilometraje} ${distancia.tipoDistancia}`, nuevo: `${datos.distancia.kilometraje} ${datos.distancia.tipoDistancia}` },
+                { campo: "equipo", anterior: inscripcion.equipo?.nombre, nuevo: equipo?.nombre },
+                { campo: "codigoEquipo", anterior: inscripcion.equipo?.codigoEquipo, nuevo: equipo?.codigoEquipo },
+            ],
+        });
     });
 
     return obtener(id);

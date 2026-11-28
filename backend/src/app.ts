@@ -20,6 +20,7 @@ import resultadoCategoriaRoutes from './routes/resultadoCategoria.routes'
 import usuarioGestionRoutes from "./routes/usuarioGestion.routes"
 import plantillaCertificadoRoutes from "./routes/plantillaCertificado.routes"
 import actividadRoutes from "./routes/actividad.routes"
+import registroModificacionRoutes from './routes/registroModificacion.routes'
 import { registrarListenerResultadosCategoria } from "./listeners/resultadoCategoria.listener";
 import { registrarListenerClasificacionEnVivo } from "./listeners/clasificacionEnVivo.listener";
 import { iniciarMantenimientoClaves } from "./jobs/claveRespaldo.job";
@@ -54,6 +55,7 @@ app.use("/api/carreras", carreraRoutes);
 app.use('/api', carreraEstadoRoutes)
 app.use('/api', clasificacionRoutes)
 app.use('/api', resultadoCategoriaRoutes)
+app.use('/api', registroModificacionRoutes)
 app.use("/api/categorias", categoriaRoutes);
 app.use("/api/claves-respaldo", claveRespaldoRoutes);
 app.use("/api/usuarios", usuarioGestionRoutes);
