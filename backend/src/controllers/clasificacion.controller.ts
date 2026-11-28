@@ -35,11 +35,11 @@ export async function getById(req: Request, res: Response) {
 }
 
 export async function patchEstado(req: Request, res: Response) {
-    const clasificacion = await clasificacionService.cambiarEstado(req.params.id as string, req.body.estado);
+    const clasificacion = await clasificacionService.cambiarEstado(req.params.id as string, req.body.estado, req.usuario!.id);
     return res.json(clasificacion);
 }
 
 export async function putResultado(req: Request, res: Response) {
-    const clasificacion = await clasificacionService.registrarResultado(req.params.id as string, req.body);
+    const clasificacion = await clasificacionService.registrarResultado(req.params.id as string, req.body, req.usuario!.id);
     return res.json(clasificacion);
 }
