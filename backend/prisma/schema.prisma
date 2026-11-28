@@ -77,6 +77,7 @@ model Usuario {
     compras Compra[]
 
     clavesRespaldo ClaveRespaldo[]
+    registrosModificacion RegistroModificacion[] //Lo que modificó a mano (trazabilidad)
 
     fechaHoraCreacion     DateTime @default(now())
     fechaHoraModificacion DateTime @updatedAt
@@ -466,6 +467,30 @@ model LecturaHuerfana {
     lectorRFID       LectorRFID @relation(fields: [lectorRFIDId], references: [id], onDelete: Cascade)
 }
 
+//DIFIERE: tabla exclusiva de este sistema (no existe en el sistema web)
+//Trazabilidad: cada fila es UN campo que una persona modificó a mano (usuario, fecha y hora, valor anterior y nuevo).
+//entidadId y carreraId no son claves foráneas a propósito: el registro tiene que sobrevivir al borrado de lo que describe.
+model RegistroModificacion {
+    id             String @id @default(uuid())
+
+    entidad        EntidadAuditada
+    entidadId      String           //Id de la fila modificada (Clasificacion, Resultado, EntregaKit, Inscripcion, Corredor o AptoMedico)
+    accion         AccionAuditada
+    campo          String
+    valorAnterior  String?
+    valorNuevo     String?
+
+    carreraId      String           //Carrera a la que pertenece lo modificado
+
+    usuarioId      String
+    usuario        Usuario @relation(fields: [usuarioId], references: [id])
+
+    fechaHora      DateTime
+
+    @@index([carreraId, fechaHora])
+    @@index([entidad, entidadId])
+}
+
 model Clasificacion {
     id                    String @id @default(uuid())
 
@@ -609,6 +634,21 @@ enum TipoDistancia {
 enum MetodoPago {
     Pago_virtual
     Pago_presencial
+}
+
+enum EntidadAuditada {
+    Clasificacion
+    Resultado
+    EntregaKit
+    Inscripcion
+    Corredor //Datos personales del corredor y de su contacto de emergencia
+    AptoMedico
+}
+
+enum AccionAuditada {
+    Creacion
+    Modificacion
+    Eliminacion
 }
 
 enum EstadoClaveRespaldo {
